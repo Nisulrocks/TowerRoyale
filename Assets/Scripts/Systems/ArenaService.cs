@@ -123,6 +123,8 @@ namespace TR.Systems
                 // Player advanced to a higher arena; set the floor to the new arena's trophy requirement
                 int req = Mathf.Max(0, afterArena.TrophyRequirement);
                 TR.Systems.PlayerProfile.SetTrophyFloorAtLeast(req);
+                // Also queue a lobby notification to celebrate the unlock
+                TR.Systems.PlayerProfile.SetPendingArenaUnlock(afterArena.DisplayName);
             }
 
 

@@ -362,6 +362,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 71273773}
   m_CullTransparentMesh: 1
+--- !u!1 &93517998
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 93518000}
+  - component: {fileID: 93517999}
+  m_Layer: 0
+  m_Name: Notif
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &93517999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93517998}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7093ef0ce910e7f4b8e372b1de0cdb65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  popupPrefab: {fileID: 962332526613303033, guid: ec57f8fa8b87cf9468d4bb7bbed0d7d0, type: 3}
+  parent: {fileID: 825768650}
+  headerText: New Arena Unlocked!
+  encouragingText: Keep pushing forward, {0}!
+  initialDelay: 0.5
+  fadeInTime: 0.25
+  holdTime: 2
+  fadeOutTime: 0.3
+  slideOffset: {x: 0, y: 40}
+  sfxKey: 
+--- !u!4 &93518000
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93517998}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 937.6262, y: 541.6924, z: -17.88171}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &99664188
 GameObject:
   m_ObjectHideFlags: 0
@@ -7774,3 +7828,4 @@ SceneRoots:
   - {fileID: 1945811968}
   - {fileID: 825768650}
   - {fileID: 1050812544}
+  - {fileID: 93518000}

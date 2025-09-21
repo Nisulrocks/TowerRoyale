@@ -23,6 +23,9 @@ namespace TR.Systems
         public List<CardProgress> cards = new();
         public List<string> deck = new(); // list of cardIds
 
+        // Pending one-shot lobby notifications
+        public string pendingArenaUnlockName = null; // set when a new arena is reached; consumed on lobby load
+
         // Castle progression
         public int castleLevel = 1; // starts at 1
         public int castleXP = 0;    // XP toward next level
@@ -187,6 +190,24 @@ namespace TR.Systems
             Data.softCurrency = Mathf.Max(0, Data.softCurrency + Mathf.Max(0, amount));
             Save();
             OnSoftCurrencyChanged?.Invoke(Data.softCurrency);
+        }
+
+        // ===== Pending Notification helpers =====
+        public static void SetPendingArenaUnlock(string arenaDisplayName)
+        {
+            if (string.IsNullOrEmpty(arenaDisplayName)) return;
+            Data.pendingArenaUnlockName = arenaDisplayName;
+            Save();
+        }
+
+        // Returns true if a pending arena unlock was present; outputs and clears it
+        public static bool TryConsumePendingArenaUnlock(out string arenaDisplayName)
+        {
+            arenaDisplayName = Data.pendingArenaUnlockName;
+            if (string.IsNullOrEmpty(arenaDisplayName)) return false;
+            Data.pendingArenaUnlockName = null;
+            Save();
+            return true;
         }
 
         // ===== Trophy Road claimed helpers (evergreen single road) =====
