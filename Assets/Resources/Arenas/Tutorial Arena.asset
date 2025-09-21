@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7a01cae401eb841bcf012994c6ddc8, type: 3}
+  m_Name: Tutorial Arena
+  m_EditorClassIdentifier: 
+  arenaId: 0
+  displayName: Training Arena
+  arenaImage: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+  trophyRequirement: 0
+  waveCount: 5
+  waveInterval: 10
+  mediumStartPercent: 0.25
+  hardStartPercent: 0.6
+  easyEnemies:
+  - {fileID: 11400000, guid: c947a42474025a74095f6551f1617495, type: 2}
+  mediumEnemies:
+  - {fileID: 11400000, guid: b1db68c322e4f884594d14deea6ba849, type: 2}
+  hardEnemies:
+  - {fileID: 11400000, guid: 00c7478f63bf46e4fb4741db77afec53, type: 2}
+  waveEnemyCounts:
+  - min: 3
+    max: 3
+  - min: 4
+    max: 4
+  - min: 5
+    max: 5
+  - min: 6
+    max: 6
+  - min: 7
+    max: 7
+  bossEnemy: {fileID: 11400000, guid: 9894189fb3258ed4eb8b46d214f8e670, type: 2}
+  spawnBossOnSpecificWave: 0
+  bossSpecificWave: 1
+  bossEveryXWaves: 2
+  easyKillMin: 5
+  easyKillMax: 10
+  mediumKillMin: 10
+  mediumKillMax: 20
+  hardKillMin: 20
+  hardKillMax: 40
+  bossKillMin: 50
+  bossKillMax: 100
+  victoryMoneyMin: 100
+  victoryMoneyMax: 150
+  victoryXPMin: 10
+  victoryXPMax: 25
+  defeatXPMin: 5
+  defeatXPMax: 10
+  victoryTrophiesMin: 5
+  victoryTrophiesMax: 10
+  defeatTrophiesMin: 1
+  defeatTrophiesMax: 1

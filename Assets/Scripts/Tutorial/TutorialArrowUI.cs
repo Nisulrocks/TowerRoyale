@@ -1,0 +1,101 @@
+using UnityEngine;
+using TMPro;
+
+namespace TR.Tutorial
+{
+    // Simple arrow using a TMP text glyph that follows a RectTransform target with a bob animation.
+    public class TutorialArrowUI : MonoBehaviour
+    {
+        [SerializeField] private RectTransform target;
+        [SerializeField] private Vector2 screenOffset = new Vector2(0, 60);
+        [SerializeField] private float bobAmplitude = 8f;
+        [SerializeField] private float bobSpeed = 3f;
+        [SerializeField] private string arrowGlyph = "➤"; // can change to any glyph
+        [SerializeField] private float arrowSize = 36f;
+        [SerializeField] private Vector2 pivot = new Vector2(0.5f, 0f);
+
+        private RectTransform _rt;
+        private TextMeshProUGUI _text;
+        private float _t;
+        private bool _hasTarget;
+
+        private void Awake()
+        {
+            // Ensure RectTransform present
+            _rt = GetComponent<RectTransform>();
+            if (_rt == null) _rt = gameObject.AddComponent<RectTransform>();
+
+            // Respect prefab: reuse existing TMP text if present; only create if none found
+            _text = GetComponentInChildren<TextMeshProUGUI>(true);
+            if (_text == null)
+            {
+                var go = new GameObject("ArrowText", typeof(RectTransform));
+                go.transform.SetParent(transform, false);
+                _text = go.AddComponent<TextMeshProUGUI>();
+                _text.alignment = TextAlignmentOptions.Center;
+                _text.raycastTarget = false;
+                var tr = _text.rectTransform;
+                tr.anchorMin = tr.anchorMax = new Vector2(0.5f, 0.5f);
+                tr.pivot = new Vector2(0.5f, 0.5f);
+            }
+            // Apply runtime settings
+            _text.text = arrowGlyph;
+            _text.fontSize = arrowSize;
+            gameObject.name = "TutorialArrowUI";
+
+            // Start hidden to avoid a single-frame flash at (0,0)
+            _hasTarget = false;
+            gameObject.SetActive(false);
+        }
+
+        public void Follow(RectTransform newTarget, Vector2 offset)
+        {
+            target = newTarget;
+            screenOffset = offset;
+            _hasTarget = (target != null);
+            if (_rt != null)
+            {
+                _rt.anchorMin = _rt.anchorMax = new Vector2(0.5f, 0.5f);
+                _rt.pivot = pivot;
+            }
+            // If we have a target, make visible and snap immediately to correct position
+            if (_hasTarget)
+            {
+                var pos = GetWorldToCanvasPosition(target) + screenOffset;
+                _rt.anchoredPosition = pos;
+                if (!gameObject.activeSelf) gameObject.SetActive(true);
+            }
+            else
+            {
+                // No target, keep hidden
+                if (gameObject.activeSelf) gameObject.SetActive(false);
+            }
+        }
+
+        private void Update()
+        {
+            if (!_hasTarget || target == null || _rt == null) return;
+            _t += Time.unscaledDeltaTime * bobSpeed;
+            float bob = Mathf.Sin(_t) * bobAmplitude;
+            // Position arrow at target center + offset + bob up
+            Vector2 pos = GetWorldToCanvasPosition(target) + screenOffset + new Vector2(0f, bob);
+            _rt.anchoredPosition = pos;
+        }
+
+        private Vector2 GetWorldToCanvasPosition(RectTransform rt)
+        {
+            // Assuming this sits under the same screen-space canvas as target
+            Vector3[] corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            Vector3 center = (corners[0] + corners[2]) * 0.5f;
+            var canvasRT = transform.parent as RectTransform;
+            Vector2 localPoint;
+            if (canvasRT == null)
+            {
+                return Vector2.zero;
+            }
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRT, RectTransformUtility.WorldToScreenPoint(null, center), null, out localPoint);
+            return localPoint;
+        }
+    }
+}

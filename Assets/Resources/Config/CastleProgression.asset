@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb26349a4713114081f9a447fb241cd, type: 3}
+  m_Name: CastleProgression
+  m_EditorClassIdentifier: 
+  maxLevel: 10
+  xpPerLevel: 0000000064000000c80000002c010000f4010000e8030000dc050000d0070000c4090000b80b0000a00f0000
+  healthPerLevel: 0000000064000000c80000002c010000c201000026020000ee02000084030000b004000078050000d0070000

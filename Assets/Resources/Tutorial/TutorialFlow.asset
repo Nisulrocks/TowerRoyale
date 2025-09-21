@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c62005cc125d693429d9753545d4f81d, type: 3}
+  m_Name: TutorialFlow
+  m_EditorClassIdentifier: 
+  autoStartForFreshProfiles: 1
+  steps:
+  - targetMode: 0
+    targetObjectName: Shop Tab
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Open The Shop to get your first pack
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+  - targetMode: 1
+    targetObjectName: 
+    targetPackId: starter_pack
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: Shop Tab
+    maxArrows: 12
+    dialogueText: Open Your First Starter Pack
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+  - targetMode: 0
+    targetObjectName: Deck Tab
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Build Your First Deck by heading over to the Deck builder Tab
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+  - targetMode: 2
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: Deck Tab
+    maxArrows: 12
+    dialogueText: Click on your owned Cards to Build a Deck
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 0
+  - targetMode: 0
+    targetObjectName: Play Tab
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Go to the Play Menu and Enter a Game To test Your Deck
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+  - targetMode: 0
+    targetObjectName: Play
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Click Play to Go Into your First Arrena Match
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+  - targetMode: 2
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Arena0BattleScene
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Drag and place down a tower onto a snap point
+    typewriterCharDelay: 0.04
+    waitMode: 3
+    waitSeconds: 0
+    blockOutside: 0
+  - targetMode: 0
+    targetObjectName: Start
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Arena0BattleScene
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Click on Start to Start the wave of enemies and Prepare to Defend
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 0
+  - targetMode: 0
+    targetObjectName: Castle
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Arena0BattleScene
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: 'Protect Your Castle From in Coming Enemies '
+    typewriterCharDelay: 0.04
+    waitMode: 1
+    waitSeconds: 3
+    blockOutside: 0
+  - targetMode: 0
+    targetObjectName: Arena Icon
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: 'Click on the Arena to Open the trohpy Road '
+    typewriterCharDelay: 0.04
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1

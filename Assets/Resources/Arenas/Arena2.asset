@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7a01cae401eb841bcf012994c6ddc8, type: 3}
+  m_Name: Arena2
+  m_EditorClassIdentifier: 
+  arenaId: 2
+  displayName: Arena 2
+  arenaImage: {fileID: 0}
+  trophyRequirement: 300
+  waveCount: 15
+  waveInterval: 60
+  mediumStartPercent: 0.25
+  hardStartPercent: 0.6
+  easyEnemies: []
+  mediumEnemies: []
+  hardEnemies: []
+  waveEnemyCounts:
+  - min: 3
+    max: 3
+  - min: 4
+    max: 4
+  - min: 5
+    max: 5
+  - min: 6
+    max: 6
+  - min: 7
+    max: 7
+  - min: 8
+    max: 8
+  - min: 9
+    max: 9
+  - min: 10
+    max: 10
+  - min: 11
+    max: 11
+  - min: 12
+    max: 12
+  - min: 13
+    max: 13
+  - min: 14
+    max: 14
+  - min: 15
+    max: 15
+  - min: 16
+    max: 16
+  - min: 17
+    max: 17
+  bossEnemy: {fileID: 0}
+  spawnBossOnSpecificWave: 0
+  bossSpecificWave: 1
+  bossEveryXWaves: 5
+  easyKillMin: 5
+  easyKillMax: 10
+  mediumKillMin: 10
+  mediumKillMax: 20
+  hardKillMin: 20
+  hardKillMax: 40
+  bossKillMin: 50
+  bossKillMax: 100
+  victoryMoneyMin: 100
+  victoryMoneyMax: 150
+  victoryXPMin: 50
+  victoryXPMax: 75
+  defeatXPMin: 25
+  defeatXPMax: 40
+  victoryTrophiesMin: 5
+  victoryTrophiesMax: 10
+  defeatTrophiesMin: 0
+  defeatTrophiesMax: 3

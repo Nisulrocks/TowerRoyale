@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a65f71261299cc6469b6d331643465a3, type: 3}
+  m_Name: elite_pack
+  m_EditorClassIdentifier: 
+  packId: elite_pack
+  displayName: Elite Pack
+  cost: 1
+  cardsPerPack: 5
+  rarityWeights:
+  - rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+    weight: 400
+  - rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+    weight: 380
+  - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+    weight: 180
+  - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
+    weight: 40
+  guaranteedRarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}

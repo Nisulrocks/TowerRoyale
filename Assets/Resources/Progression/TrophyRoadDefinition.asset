@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40e5f91a9b7767e46bf5c56b42f131aa, type: 3}
+  m_Name: TrophyRoadDefinition
+  m_EditorClassIdentifier: 
+  roadId: main
+  maxTrophies: 200
+  retroactiveClaim: 1
+  milestones:
+  - trophyRequired: 10
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 11
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 12
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 13
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 14
+    reward: {fileID: 11400000, guid: 5b2812da073f2cc48817fc0aaabb69ec, type: 2}
+    oneTimeOnly: 1

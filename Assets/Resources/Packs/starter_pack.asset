@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a65f71261299cc6469b6d331643465a3, type: 3}
+  m_Name: starter_pack
+  m_EditorClassIdentifier: 
+  packId: starter_pack
+  displayName: Starter Pack
+  cost: 0
+  cardsPerPack: 3
+  rarityWeights: []
+  guaranteedRarity: {fileID: 0}
+  giveSpecificCardOnly: 1
+  specificCard: {fileID: 11400000, guid: f12a766e75134bf42829b8fc7f0745ea, type: 2}
+  packArtPrefab: {fileID: 7600798260355237007, guid: 06e33fb3f08a015468ff0fcfca9ced68, type: 3}
+  packArtSprite: {fileID: 0}
+  sealCrackKey: 
+  openWhooshKey: 

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1faefee48e06f014aa03911c9deba557, type: 3}
+  m_Name: EconomyCardDefinition
+  m_EditorClassIdentifier: 
+  cardId: 3
+  displayName: Money Generator
+  icon: {fileID: 0}
+  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  towerPrefab: {fileID: 1212263692359996816, guid: bcdb25e70af5ed54ea6d529066e1e692, type: 3}
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  dpsBase: 5
+  dpsPerLevel: 2
+  fireRateBase: 1
+  fireRatePerLevel: 0.1
+  rangeBase: 3
+  rangePerLevel: 0.3
+  splashBase: 0
+  splashPerLevel: 0
+  costBase: 50
+  costPerLevel: 7
+  burnDpsBase: 0
+  burnDpsPerLevel: 0
+  burnDurBase: 0
+  burnDurPerLevel: 0
+  poisonDpsBase: 0
+  poisonDpsPerLevel: 0
+  poisonDurBase: 0
+  poisonDurPerLevel: 0
+  rotateToTarget: 1
+  rotateSpeedDegPerSec: 360
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  incomePerSecBase: 3
+  incomePerSecPerLevel: 1
+  maxHealthBase: 50
+  maxHealthPerLevel: 15
+  decayPerSecBase: 5
+  decayPerSecPerLevel: 1

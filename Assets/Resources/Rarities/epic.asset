@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b33fc824f4728a4f9a928ad3a0be370, type: 3}
+  m_Name: epic
+  m_EditorClassIdentifier: 
+  rarityId: epic
+  displayName: Epic
+  color: {r: 0.7, g: 0.3, b: 1, a: 1}
+  maxLevel: 6
+  pointsBase: 25
+  pointsPerLevel: 25
+  dupPointsMin: 5
+  dupPointsMax: 8
+  upgradeCostBase: 50
+  upgradeCostPerLevel: 75
+  castleXpBase: 20
+  castleXpPerLevel: 20

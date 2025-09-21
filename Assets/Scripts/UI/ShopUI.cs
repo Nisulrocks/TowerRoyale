@@ -1,0 +1,410 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using TR.Systems;
+using TR.Infrastructure;
+using TR.Data;
+
+namespace TR.UI
+{
+    // Lists all PackDefinitions found in GameDB and allows opening a dedicated PackOpening scene.
+    public class ShopUI : MonoBehaviour
+    {
+        [Header("Refs")]
+        [SerializeField] private Transform listRoot;
+        [SerializeField] private ShopPackItemUI itemPrefab;
+        [SerializeField] private TMP_Text softCurrencyText; // new
+        [Header("Card Points Offers")]
+        [SerializeField] private ShopCardPointsItemUI cardPointsItemPrefab; // assign your prefab here
+        [SerializeField] private RectTransform offersSectionParent; // optional: parent to create section under if no custom section provided
+        [SerializeField] private RectTransform offersSectionRoot; // optional: your custom section (already in scene)
+        [SerializeField] private RectTransform offersItemsRoot;  // optional: where offer items will be instantiated
+        [SerializeField] private TMP_Text offersHeaderText;       // optional: your header TMP_Text
+        [SerializeField] private TMP_Text offersCountdownText;    // optional: your countdown TMP_Text
+        [SerializeField] private bool devEnableRefreshHotkey = false; // press F5 to refresh offers in dev
+        private TMP_Text _offersCountdown;
+        private System.Collections.Generic.List<ShopCardPointsItemUI> _offerItems = new System.Collections.Generic.List<ShopCardPointsItemUI>();
+        // Soft currency flash state
+        private Coroutine _softFlashCo;
+        private Color _softBaseColor = Color.white;
+        private Vector3 _softBaseScale = Vector3.one;
+
+        [Header("Daily Entry")]
+        [SerializeField] private bool showDailyEntry = true;
+        [SerializeField] private string dailyPackId = "normal_pack";
+        [SerializeField] private int dailyCooldownHours = 24;
+        [SerializeField] private Color dailyDisabledColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+
+        [Header("Starter Pack")]
+        [SerializeField] private string starterPackId = "starter_pack"; // was hardcoded to normal_pack
+
+        [Header("Scene Names")]
+        [SerializeField] private string packOpeningSceneName = "PackOpening";
+
+        private void OnEnable()
+        {
+            Refresh();
+        }
+
+        private ShopPackItemUI _dailyItem;
+        private long _cooldownSeconds;
+        private float _nextUiTick;
+
+        public void Refresh()
+        {
+            foreach (Transform child in listRoot) Destroy(child.gameObject);
+            GameDB.EnsureLoaded();
+            if (softCurrencyText)
+            {
+                softCurrencyText.text = $"Coins: {PlayerProfile.GetSoftCurrency()}";
+                // Cache base visuals after we update text once
+                if (_softBaseColor == default(Color)) _softBaseColor = softCurrencyText.color;
+                if (_softBaseScale == Vector3.zero) _softBaseScale = softCurrencyText.transform.localScale;
+            }
+
+            // Daily pack claim entry
+            _dailyItem = null;
+            _cooldownSeconds = Mathf.Max(1, dailyCooldownHours) * 3600L;
+            if (showDailyEntry)
+            {
+                var def = GameDB.GetPackById(string.IsNullOrEmpty(dailyPackId) ? "normal_pack" : dailyPackId);
+                if (def == null && GameDB.Packs != null && GameDB.Packs.Count > 0)
+                    def = GameDB.Packs[0];
+                if (def != null)
+                {
+                    _dailyItem = Instantiate(itemPrefab, listRoot);
+                    _dailyItem.Bind(def, OnClaimDailyPack, 0);
+                    UpdateDailyItemState(force: true);
+                }
+            }
+            // If starter not yet claimed, offer a free starter pack at the top
+            bool starterClaimed = PlayerProfile.Data.starterClaimed;
+            if (!starterClaimed)
+            {
+                // Prefer a known id if present, else first pack available
+                var starter = GameDB.GetPackById(string.IsNullOrEmpty(starterPackId) ? "starter_pack" : starterPackId);
+                if (starter == null && GameDB.Packs != null && GameDB.Packs.Count > 0)
+                    starter = GameDB.Packs[0];
+                if (starter != null)
+                {
+                    var item = Instantiate(itemPrefab, listRoot);
+                    // Override cost to zero to make it free
+                    item.Bind(starter, OnOpenStarterPack, 0);
+                    // Optionally rename display to make it obvious
+                    var tmp = item.GetComponentInChildren<TMP_Text>();
+                    // Leave original name; cost label shows Free
+                }
+            }
+
+            // Owned packs section (open from inventory)
+            var ids = PlayerProfile.Data.packIds;
+            var counts = PlayerProfile.Data.packCounts;
+            if (ids != null && counts != null)
+            {
+                for (int i = 0; i < ids.Count && i < counts.Count; i++)
+                {
+                    int count = counts[i];
+                    if (count <= 0) continue;
+                    var def = GameDB.GetPackById(ids[i]);
+                    if (def == null) continue;
+                    var ownedItem = Instantiate(itemPrefab, listRoot);
+                    // Show as free and route to owned open (consumes inventory)
+                    ownedItem.Bind(def, OnOpenOwnedPack, 0);
+                    // Optionally, append count to name label for clarity
+                    // (Assumes first TMP_Text under item shows name)
+                    var texts = ownedItem.GetComponentsInChildren<TMP_Text>();
+                    if (texts != null && texts.Length > 0)
+                    {
+                        texts[0].text = $"{def.DisplayName} (x{count})";
+                    }
+                }
+            }
+            // General for-sale packs (exclude the configured starter pack)
+            string starterId = string.IsNullOrEmpty(starterPackId) ? "starter_pack" : starterPackId;
+            foreach (var pack in GameDB.Packs)
+            {
+                if (pack == null) continue;
+                if (!string.IsNullOrEmpty(starterId) && pack.PackId == starterId) continue; // don't list starter pack for sale
+                var item = Instantiate(itemPrefab, listRoot);
+                item.Bind(pack, OnOpenPack);
+            }
+
+            // ==== Card Points Offers (separate section below packs) ====
+            BuildCardPointsSection();
+        }
+
+        private void OnOpenPack(string packId)
+        {
+            // Stash chosen packId and count=1 into SceneParams and load scene.
+            SceneParams.Set("packId", packId);
+            SceneParams.Set("openCount", 1);
+            _ = SceneFader.Instance.LoadSceneWithFade(packOpeningSceneName);
+        }
+
+        private void Update()
+        {
+            if (Time.unscaledTime < _nextUiTick) return;
+            _nextUiTick = Time.unscaledTime + 1f; // update every second
+            // Daily pack timer
+            if (showDailyEntry && _dailyItem != null)
+            {
+                UpdateDailyItemState(force: false);
+            }
+            // Card points countdown
+            UpdateCardPointsCountdown();
+            // Dev hotkey
+            if (devEnableRefreshHotkey && Input.GetKeyDown(KeyCode.L))
+            {
+                OnClickDevRefreshOffers();
+            }
+        }
+
+        private void UpdateCardPointsCountdown()
+        {
+            if (_offersCountdown == null) return;
+            var remain = ShopService.GetTimeUntilNextRefresh();
+            if (remain.TotalSeconds < 0) { _offersCountdown.text = "--:--:--"; return; }
+            string hh = Mathf.FloorToInt((float)remain.TotalHours).ToString("00");
+            string mm = Mathf.FloorToInt((float)remain.Minutes).ToString("00");
+            string ss = Mathf.FloorToInt((float)remain.Seconds).ToString("00");
+            _offersCountdown.text = $"Refresh in {hh}:{mm}:{ss}";
+        }
+
+        private void OnBuyCardPoints(int index)
+        {
+            if (ShopService.TryPurchaseCardPointsOffer(index))
+            {
+                // currency changed event will update soft currency elsewhere
+                Refresh();
+            }
+            else
+            {
+                // If not enough currency, flash the specific offer item red
+                var offers = ShopService.GetOrGenerateDailyCardPointOffers();
+                if (offers != null && index >= 0 && index < offers.Count)
+                {
+                    var off = offers[index];
+                    if (off != null && PlayerProfile.GetSoftCurrency() < off.cost)
+                    {
+                        if (_offerItems != null && index < _offerItems.Count && _offerItems[index] != null)
+                            _offerItems[index].FlashInsufficientFunds();
+                        FlashSoftCurrencyInsufficient();
+                    }
+                    else
+                    {
+                        Debug.Log("[Shop] Purchase card points failed");
+                    }
+                }
+                else
+                {
+                    Debug.Log("[Shop] Purchase card points failed");
+                }
+            }
+        }
+
+        private void OnDisable()
+        {
+            StopSoftFlash();
+            RestoreSoftCurrencyVisuals();
+        }
+
+        private void FlashSoftCurrencyInsufficient()
+        {
+            if (softCurrencyText == null) return;
+            StopSoftFlash();
+            _softFlashCo = StartCoroutine(SoftFlashCo());
+        }
+
+        private System.Collections.IEnumerator SoftFlashCo()
+        {
+            const float dur = 0.35f;
+            float t = 0f;
+            if (_softBaseScale == Vector3.zero) _softBaseScale = softCurrencyText.transform.localScale;
+            if (_softBaseColor == default(Color)) _softBaseColor = softCurrencyText.color;
+            Color pulse = new Color(1f, 0.3f, 0.3f, _softBaseColor.a);
+            while (t < dur)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / dur);
+                float ping = Mathf.PingPong(u * 2f, 1f);
+                softCurrencyText.color = Color.Lerp(_softBaseColor, pulse, ping);
+                softCurrencyText.transform.localScale = _softBaseScale * (1f + 0.06f * ping);
+                yield return null;
+            }
+            RestoreSoftCurrencyVisuals();
+            _softFlashCo = null;
+        }
+
+        private void StopSoftFlash()
+        {
+            if (_softFlashCo != null)
+            {
+                StopCoroutine(_softFlashCo);
+                _softFlashCo = null;
+            }
+        }
+
+        private void RestoreSoftCurrencyVisuals()
+        {
+            if (softCurrencyText == null) return;
+            softCurrencyText.color = (_softBaseColor == default(Color)) ? softCurrencyText.color : _softBaseColor;
+            softCurrencyText.transform.localScale = _softBaseScale == Vector3.zero ? softCurrencyText.transform.localScale : _softBaseScale;
+        }
+
+        // DEV button/hotkey to force refresh offers
+        public void OnClickDevRefreshOffers()
+        {
+            ShopService.ForceRefreshOffers();
+            Refresh();
+        }
+
+        // Player-facing reroll removed
+
+        // Build the Card Points section (uses provided section/header/countdown if assigned)
+        private void BuildCardPointsSection()
+        {
+            var offers = ShopService.GetOrGenerateDailyCardPointOffers();
+            _offerItems.Clear();
+            Transform section = offersSectionRoot != null ? (Transform)offersSectionRoot : null;
+            Transform itemsParent = offersItemsRoot != null ? (Transform)offersItemsRoot : section;
+            // If user did not provide a custom section, create a simple one under offersSectionParent or listRoot
+            if (section == null)
+            {
+                Transform parent = offersSectionParent != null ? (Transform)offersSectionParent : listRoot;
+                // Clean previous auto-created section, if any
+                var existing = parent.Find("CardPointsSection");
+                if (existing != null) DestroyImmediate(existing.gameObject);
+
+                var sectionGO = new GameObject("CardPointsSection", typeof(RectTransform));
+                sectionGO.transform.SetParent(parent, false);
+                section = sectionGO.transform;
+
+                // Create header if none provided
+                var headerGO = new GameObject("Header", typeof(RectTransform));
+                headerGO.transform.SetParent(section, false);
+                var header = headerGO.AddComponent<TextMeshProUGUI>();
+                header.text = "Card Points Offers";
+                header.fontSize = 26;
+                header.alignment = TextAlignmentOptions.Left;
+                offersHeaderText = header;
+
+                // Create countdown if none provided
+                var cdGO = new GameObject("Countdown", typeof(RectTransform));
+                cdGO.transform.SetParent(section, false);
+                var cdtxt = cdGO.AddComponent<TextMeshProUGUI>();
+                cdtxt.text = "";
+                cdtxt.fontSize = 18;
+                cdtxt.alignment = TextAlignmentOptions.Left;
+                _offersCountdown = cdtxt;
+                offersCountdownText = cdtxt;
+
+                itemsParent = section; // items after header + countdown
+            }
+            else
+            {
+                // Use provided header/countdown if assigned
+                if (offersHeaderText != null) offersHeaderText.text = "Card Points Offers";
+                _offersCountdown = offersCountdownText;
+            }
+
+            // Clear previous offers from itemsParent (but preserve header/countdown when using custom section)
+            if (itemsParent != null)
+            {
+                // Destroy all children under itemsParent
+                var toDestroy = new System.Collections.Generic.List<GameObject>();
+                foreach (Transform ch in itemsParent)
+                {
+                    // If custom items root, it's safe to clear all
+                    toDestroy.Add(ch.gameObject);
+                }
+                foreach (var go in toDestroy) DestroyImmediate(go);
+            }
+
+            // Populate offers
+            if (offers != null && offers.Count > 0 && cardPointsItemPrefab != null && itemsParent != null)
+            {
+                for (int i = 0; i < offers.Count; i++)
+                {
+                    var off = offers[i];
+                    if (off == null) continue;
+                    var card = GameDB.GetCardById(off.cardId);
+                    if (card == null) continue;
+                    var ui = Instantiate(cardPointsItemPrefab, itemsParent);
+                    int index = i;
+                    ui.Bind(card, off.points, off.cost, off.sold, () => OnBuyCardPoints(index));
+                    // Ensure list has entries up to i
+                    while (_offerItems.Count <= i) _offerItems.Add(null);
+                    _offerItems[i] = ui;
+                }
+            }
+
+            UpdateCardPointsCountdown();
+        }
+
+        private void OnOpenOwnedPack(string packId)
+        {
+            // consume one owned pack, then open
+            if (!string.IsNullOrEmpty(packId))
+            {
+                if (PlayerProfile.Data.ConsumePack(packId))
+                {
+                    PlayerProfile.Save();
+                    OnOpenPack(packId);
+                }
+                else
+                {
+                    Refresh();
+                }
+            }
+        }
+
+        private void OnOpenStarterPack(string packId)
+        {
+            // mark starter claimed and open (no inventory consumed)
+            PlayerProfile.Data.starterClaimed = true;
+            PlayerProfile.Save();
+            OnOpenPack(packId);
+        }
+
+        private void OnClaimDailyPack(string packId)
+        {
+            // Only allowed if cooldown passed
+            long last = PlayerProfile.GetLastDailyPackUnix();
+            long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (now - last < _cooldownSeconds)
+            {
+                UpdateDailyItemState(force: true);
+                return;
+            }
+            var id = string.IsNullOrEmpty(packId) ? dailyPackId : packId;
+            if (!string.IsNullOrEmpty(id))
+            {
+                PlayerProfile.Data.AddPacks(id, 1);
+                PlayerProfile.SetLastDailyPackNow();
+                PlayerProfile.Save();
+                UpdateDailyItemState(force: true);
+            }
+        }
+
+        private void UpdateDailyItemState(bool force)
+        {
+            if (_dailyItem == null) return;
+            long last = PlayerProfile.GetLastDailyPackUnix();
+            long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long remain = (last + _cooldownSeconds) - now;
+            if (remain <= 0)
+            {
+                _dailyItem.SetButtonInteractable(true);
+                _dailyItem.SetCostLabel("Free (Daily)", new Color(0.8f, 1f, 0.8f, 1f));
+            }
+            else
+            {
+                _dailyItem.SetButtonInteractable(false);
+                string hh = Mathf.FloorToInt(remain / 3600f).ToString("00");
+                string mm = Mathf.FloorToInt((remain % 3600) / 60f).ToString("00");
+                string ss = Mathf.FloorToInt(remain % 60f).ToString("00");
+                _dailyItem.SetCostLabel($"{hh}:{mm}:{ss}", dailyDisabledColor);
+            }
+        }
+    }
+}
