@@ -26,6 +26,13 @@ namespace TR.Systems
         // Pending one-shot lobby notifications
         public string pendingArenaUnlockName = null; // set when a new arena is reached; consumed on lobby load
 
+        // Integrity & moderation
+        public int saveVersion = 1;               // bump when schema/policy changes
+        public string integrityHash = "";        // HMAC-SHA256 of canonical JSON without this field
+        public int tamperCount = 0;               // number of detected integrity failures
+        public long lastTamperUnix = 0;           // when we last detected tampering
+        public long banUntilUnix = 0;             // UTC seconds until which the user is soft-banned
+
         // Castle progression
         public int castleLevel = 1; // starts at 1
         public int castleXP = 0;    // XP toward next level
@@ -78,6 +85,7 @@ namespace TR.Systems
     {
         private static PlayerProfileDTO _data;
         public static PlayerProfileDTO Data => _data ?? (_data = LoadOrCreate());
+        private const string Pepper = "tr_pepper_v1_!@#Ch33rs"; // lightweight obfuscation only
 
         // Events
         public static event Action<int> OnSoftCurrencyChanged; // new balance
@@ -90,7 +98,35 @@ namespace TR.Systems
                 if (!string.IsNullOrEmpty(json))
                 {
                     var dto = JsonUtility.FromJson<PlayerProfileDTO>(json);
-                    if (dto != null) return dto;
+                    if (dto != null)
+                    {
+                        if (VerifyIntegrity(dto))
+                        {
+                            return dto;
+                        }
+                        else
+                        {
+                            // Attempt restore from backup
+                            string bak = SaveSystem.LoadBackup();
+                            if (!string.IsNullOrEmpty(bak))
+                            {
+                                var backupDto = JsonUtility.FromJson<PlayerProfileDTO>(bak);
+                                if (backupDto != null && VerifyIntegrity(backupDto))
+                                {
+                                    // Apply ban escalation and keep backup data for strikes < 3, otherwise reset
+                                    var moderated = HandleTamperAndModerate(backupDto);
+                                    Save();
+                                    return moderated;
+                                }
+                            }
+                            // No valid backup: escalate and reset profile entirely
+                            var fresh = new PlayerProfileDTO();
+                            var moderatedFresh = HandleTamperAndModerate(fresh);
+                            _data = moderatedFresh;
+                            Save();
+                            return _data;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -104,13 +140,89 @@ namespace TR.Systems
         {
             try
             {
+                // Compute integrity before writing
+                Data.saveVersion = Mathf.Max(1, Data.saveVersion);
+                Data.integrityHash = ComputeIntegrityHash(Data);
                 string json = JsonUtility.ToJson(Data, true);
                 SaveSystem.Save(json);
+                // Also write a backup of the last known-good profile
+                SaveSystem.SaveBackup(json);
             }
             catch (Exception ex)
             {
                 Debug.LogError($"TR Profile save error: {ex}");
             }
+        }
+
+        private static bool VerifyIntegrity(PlayerProfileDTO dto)
+        {
+            if (dto == null) return false;
+            if (string.IsNullOrEmpty(dto.integrityHash)) return false;
+            string expected = ComputeIntegrityHash(dto);
+            return string.Equals(dto.integrityHash, expected, StringComparison.Ordinal);
+        }
+
+        private static string ComputeIntegrityHash(PlayerProfileDTO dto)
+        {
+            try
+            {
+                // Temporarily capture and clear the hash so it isn't included in the HMAC input
+                string originalHash = dto.integrityHash;
+                dto.integrityHash = string.Empty;
+                string canonical = JsonUtility.ToJson(dto, false);
+                dto.integrityHash = originalHash;
+
+                // Key = pepper + device id (device id may be empty on some platforms, that's fine)
+                string keyStr = Pepper + SystemInfo.deviceUniqueIdentifier;
+                var key = System.Text.Encoding.UTF8.GetBytes(keyStr);
+                var data = System.Text.Encoding.UTF8.GetBytes(canonical);
+
+                using (var hmac = new System.Security.Cryptography.HMACSHA256(key))
+                {
+                    var hash = hmac.ComputeHash(data);
+                    return System.BitConverter.ToString(hash).Replace("-", string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Integrity hash failed: {ex}");
+                return string.Empty;
+            }
+        }
+
+        private static PlayerProfileDTO HandleTamperAndModerate(PlayerProfileDTO baseDto)
+        {
+            // Escalate tamper and ban window
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            int strikes = Mathf.Max(0, baseDto.tamperCount) + 1;
+            baseDto.tamperCount = strikes;
+            baseDto.lastTamperUnix = now;
+            int hours = strikes == 1 ? 6 : (strikes == 2 ? 12 : 24);
+            baseDto.banUntilUnix = now + hours * 3600L;
+
+            // On 3rd+ strike, reset data fully. Otherwise keep provided baseDto state (usually backup)
+            if (strikes >= 3)
+            {
+                var fresh = new PlayerProfileDTO();
+                fresh.tamperCount = strikes; // carry forward strike count
+                fresh.lastTamperUnix = now;
+                fresh.banUntilUnix = baseDto.banUntilUnix;
+                _data = fresh;
+            }
+            else
+            {
+                _data = baseDto;
+            }
+            return _data;
+        }
+
+        public static bool IsBanned(out TimeSpan remaining)
+        {
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long until = System.Math.Max(0L, Data.banUntilUnix);
+            long left = System.Math.Max(0L, until - now);
+            remaining = TimeSpan.FromSeconds(left);
+            return left > 0;
         }
 
         // Daily pack helpers (correct location)

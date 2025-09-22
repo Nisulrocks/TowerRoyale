@@ -67,16 +67,28 @@ namespace TR.UI
                 softCurrencyText.text = $"Coins: {newBalance}";
             }
 
-            // Deck gating: require at least 1 card in deck to play
+            // Deck gating + ban gating
             bool hasDeck = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
+            bool banned = PlayerProfile.IsBanned(out var remaining);
             if (playButton)
             {
-                playButton.interactable = hasDeck;
+                playButton.interactable = hasDeck && !banned;
             }
             if (deckWarningText)
             {
-                deckWarningText.gameObject.SetActive(!hasDeck);
-                if (!hasDeck) deckWarningText.text = "Build a deck to play";
+                if (banned)
+                {
+                    deckWarningText.gameObject.SetActive(true);
+                    string timeStr = remaining.TotalHours >= 1
+                        ? $"{Mathf.CeilToInt((float)remaining.TotalHours)}h"
+                        : $"{Mathf.CeilToInt((float)remaining.TotalMinutes)}m";
+                    deckWarningText.text = $"Temporarily restricted: {timeStr} remaining";
+                }
+                else
+                {
+                    deckWarningText.gameObject.SetActive(!hasDeck);
+                    if (!hasDeck) deckWarningText.text = "Build a deck to play";
+                }
             }
         }
 
@@ -144,16 +156,28 @@ namespace TR.UI
                 }
             }
 
-            // Deck gating on refresh as well (so UI is correct on open)
+            // Deck + ban gating on refresh as well (so UI is correct on open)
             bool hasDeckNow = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
+            bool bannedNow = PlayerProfile.IsBanned(out var remainingNow);
             if (playButton)
             {
-                playButton.interactable = hasDeckNow;
+                playButton.interactable = hasDeckNow && !bannedNow;
             }
             if (deckWarningText)
             {
-                deckWarningText.gameObject.SetActive(!hasDeckNow);
-                if (!hasDeckNow) deckWarningText.text = "Build a deck to play";
+                if (bannedNow)
+                {
+                    deckWarningText.gameObject.SetActive(true);
+                    string timeStr = remainingNow.TotalHours >= 1
+                        ? $"{Mathf.CeilToInt((float)remainingNow.TotalHours)}h"
+                        : $"{Mathf.CeilToInt((float)remainingNow.TotalMinutes)}m";
+                    deckWarningText.text = $"Temporarily restricted: {timeStr} remaining";
+                }
+                else
+                {
+                    deckWarningText.gameObject.SetActive(!hasDeckNow);
+                    if (!hasDeckNow) deckWarningText.text = "Build a deck to play";
+                }
             }
         }
 
