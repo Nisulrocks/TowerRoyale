@@ -87,6 +87,27 @@ namespace TR.Systems
         public static PlayerProfileDTO Data => _data ?? (_data = LoadOrCreate());
         private const string Pepper = "tr_pepper_v1_!@#Ch33rs"; // lightweight obfuscation only
 
+        // ===== Ban Test Mode (quickly tweak ban durations during development) =====
+        // When enabled, ban durations use seconds instead of hours for fast testing.
+        // Example: strike 1 => 10s, strike 2 => 20s, strike 3+ => 30s (configurable via the helpers below)
+        public static bool BanTestModeEnabled = false;
+        public static int BanTestStrike1Seconds = 10;
+        public static int BanTestStrike2Seconds = 20;
+        public static int BanTestStrike3Seconds = 30;
+
+        // Helpers to quickly toggle test mode
+        public static void EnableBanTestMode(int strike1Seconds = 10, int strike2Seconds = 20, int strike3Seconds = 30)
+        {
+            BanTestModeEnabled = true;
+            BanTestStrike1Seconds = Mathf.Max(1, strike1Seconds);
+            BanTestStrike2Seconds = Mathf.Max(1, strike2Seconds);
+            BanTestStrike3Seconds = Mathf.Max(1, strike3Seconds);
+        }
+        public static void DisableBanTestMode()
+        {
+            BanTestModeEnabled = false;
+        }
+
         // Events
         public static event Action<int> OnSoftCurrencyChanged; // new balance
 
@@ -197,8 +218,17 @@ namespace TR.Systems
             int strikes = Mathf.Max(0, baseDto.tamperCount) + 1;
             baseDto.tamperCount = strikes;
             baseDto.lastTamperUnix = now;
-            int hours = strikes == 1 ? 6 : (strikes == 2 ? 12 : 24);
-            baseDto.banUntilUnix = now + hours * 3600L;
+            long seconds;
+            if (BanTestModeEnabled)
+            {
+                seconds = strikes == 1 ? BanTestStrike1Seconds : (strikes == 2 ? BanTestStrike2Seconds : BanTestStrike3Seconds);
+            }
+            else
+            {
+                int hours = strikes == 1 ? 6 : (strikes == 2 ? 12 : 24);
+                seconds = hours * 3600L;
+            }
+            baseDto.banUntilUnix = now + seconds;
 
             // On 3rd+ strike, reset data fully. Otherwise keep provided baseDto state (usually backup)
             if (strikes >= 3)

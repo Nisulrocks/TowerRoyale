@@ -17,6 +17,14 @@ namespace TR.UI
         [Tooltip("Optional parent RectTransform (Canvas). If null, auto-find a Canvas in scene.")]
         [SerializeField] private RectTransform parent;
 
+        [Header("Backdrop (Optional)")]
+        [Tooltip("If provided, a fullscreen Image is created behind the popup. Assign a blur material here for a blurred backdrop, otherwise a dim scrim is used.")]
+        [SerializeField] private Material backdropMaterial;
+        [Tooltip("RGBA color for the backdrop when no blur material is provided.")]
+        [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.35f);
+        [Tooltip("Max alpha to animate the backdrop to on show. Ignored if the material handles its own visuals.")]
+        [SerializeField] private float backdropMaxAlpha = 0.35f;
+
         [Header("Texts")]
         [SerializeField] private string titleText = "Temporary Restriction";
         [SerializeField] private string bodyFormat = "We detected corrupted game data and temporarily restricted gameplay.\n\nTime remaining: {0}";
@@ -38,6 +46,10 @@ namespace TR.UI
         private CanvasGroup _cg;
         private RectTransform _rt;
         private bool _isDismissing;
+        private Image _backdrop;
+        private CanvasGroup _backdropCg;
+        private TMP_Text[] _texts; // cache to live-update remaining time
+        private Coroutine _countdownCo;
 
         private void Start()
         {
@@ -58,6 +70,7 @@ namespace TR.UI
                 yield break;
 
             var parentRt = parent != null ? parent : GetDefaultCanvasParent();
+            EnsureBackdrop(parentRt);
             _instance = Instantiate(banPopupPrefab, parentRt);
             _instance.SetActive(true);
 
@@ -68,22 +81,17 @@ namespace TR.UI
             }
 
             // Fill texts (try to find multiple TMP_Texts if available)
-            var texts = _instance.GetComponentsInChildren<TMP_Text>(true);
-            string timeStr = FormatRemaining(remaining);
-            string body = string.Format(bodyFormat, timeStr);
-            if (texts != null && texts.Length > 0)
+            _texts = _instance.GetComponentsInChildren<TMP_Text>(true);
+            if (_texts != null && _texts.Length > 0)
             {
-                if (texts.Length == 1)
+                // Assume first 1-3 texts are title/body/footer in order (robust against prefab differences)
+                if (_texts.Length >= 1) _texts[0].text = titleText;
+                if (_texts.Length >= 2)
                 {
-                    texts[0].text = string.IsNullOrEmpty(titleText) ? body : ($"{titleText}\n\n{body}\n\n{footerText}");
+                    string timeStr = FormatRemaining(remaining);
+                    _texts[1].text = string.Format(bodyFormat, timeStr);
                 }
-                else
-                {
-                    // Heuristic: first = title, second = body, third (if any) = footer
-                    texts[0].text = titleText;
-                    texts[1].text = body;
-                    if (texts.Length >= 3) texts[2].text = footerText;
-                }
+                if (_texts.Length >= 3) _texts[2].text = footerText;
             }
 
             // Try to animate (CanvasGroup + anchored slide)
@@ -93,6 +101,9 @@ namespace TR.UI
             StartCoroutine(AnimateIn(_cg, _rt));
             // Begin monitoring; when ban expires, fade out using fadeOutTime
             StartCoroutine(MonitorBanUntilCleared());
+            // Live countdown updates
+            if (_countdownCo != null) StopCoroutine(_countdownCo);
+            _countdownCo = StartCoroutine(CountdownUpdater());
             // Also auto-dismiss after a short hold time to avoid covering the lobby forever
             if (visibleHoldTime > 0f)
                 StartCoroutine(AutoDismissAfterHold());
@@ -117,6 +128,15 @@ namespace TR.UI
             Vector2 startPos = basePos + slideOffset;
             rt.anchoredPosition = startPos;
             cg.alpha = 0f;
+            // Backdrop fade in
+            if (_backdropCg != null)
+            {
+                _backdropCg.alpha = 0f;
+                if (_backdrop != null && _backdrop.material == null)
+                {
+                    _backdrop.color = new Color(backdropColor.r, backdropColor.g, backdropColor.b, 0f);
+                }
+            }
             float t = 0f;
             while (t < 1f)
             {
@@ -124,10 +144,23 @@ namespace TR.UI
                 float e = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
                 cg.alpha = e;
                 rt.anchoredPosition = Vector2.Lerp(startPos, basePos, e);
+                if (_backdropCg != null)
+                {
+                    float ba = Mathf.Lerp(0f, backdropMaxAlpha, e);
+                    _backdropCg.alpha = ba;
+                    if (_backdrop != null && _backdrop.material == null)
+                    {
+                        _backdrop.color = new Color(backdropColor.r, backdropColor.g, backdropColor.b, ba);
+                    }
+                }
                 yield return null;
             }
             cg.alpha = 1f;
             rt.anchoredPosition = basePos;
+            if (_backdropCg != null)
+            {
+                _backdropCg.alpha = backdropMaxAlpha;
+            }
         }
 
         private IEnumerator AnimateOut(CanvasGroup cg, RectTransform rt)
@@ -142,11 +175,25 @@ namespace TR.UI
                 float e = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
                 cg.alpha = 1f - e;
                 rt.anchoredPosition = Vector2.Lerp(basePos, endPos, e);
+                if (_backdropCg != null)
+                {
+                    float ba = Mathf.Lerp(backdropMaxAlpha, 0f, e);
+                    _backdropCg.alpha = ba;
+                    if (_backdrop != null && _backdrop.material == null)
+                    {
+                        _backdrop.color = new Color(backdropColor.r, backdropColor.g, backdropColor.b, ba);
+                    }
+                }
                 yield return null;
             }
             cg.alpha = 0f;
             if (_instance != null) Destroy(_instance);
             _instance = null; _cg = null; _rt = null;
+            if (_backdrop != null)
+            {
+                Destroy(_backdrop.gameObject);
+                _backdrop = null; _backdropCg = null;
+            }
         }
 
         private IEnumerator MonitorBanUntilCleared()
@@ -157,6 +204,18 @@ namespace TR.UI
                 yield return null;
             }
             yield return Dismiss();
+        }
+
+        private IEnumerator CountdownUpdater()
+        {
+            while (_instance != null && PlayerProfile.IsBanned(out var remaining))
+            {
+                if (_texts != null && _texts.Length >= 2)
+                {
+                    _texts[1].text = string.Format(bodyFormat, FormatRemaining(remaining));
+                }
+                yield return new WaitForSecondsRealtime(1f);
+            }
         }
 
         private IEnumerator AutoDismissAfterHold()
@@ -189,11 +248,48 @@ namespace TR.UI
                 int m = Mathf.Max(0, Mathf.CeilToInt((float)(remaining.TotalMinutes % 60)));
                 return m > 0 ? $"{h}h {m}m" : $"{h}h";
             }
-            else
+            else if (remaining.TotalMinutes >= 1.0)
             {
                 int m = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalMinutes));
                 return $"{m}m";
             }
+            else
+            {
+                int s = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalSeconds));
+                return $"{s}s";
+            }
+        }
+
+        private void EnsureBackdrop(RectTransform parentRt)
+        {
+            if (parentRt == null) return;
+            if (_backdrop != null) return;
+            // Create a full-screen Image under the same parent, ensure it renders behind popup by inserting as first child
+            var go = new GameObject("BanBackdrop", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
+            var rt = go.GetComponent<RectTransform>();
+            rt.SetParent(parentRt, false);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            // Move to bottom of hierarchy so it sits behind the popup instance
+            go.transform.SetAsFirstSibling();
+
+            _backdrop = go.GetComponent<Image>();
+            _backdropCg = go.GetComponent<CanvasGroup>();
+            _backdrop.raycastTarget = true; // block clicks to lobby while visible
+            if (backdropMaterial != null)
+            {
+                _backdrop.material = backdropMaterial;
+                // If the blur material expects a base color alpha, keep the color alpha matching backdropMaxAlpha
+                _backdrop.color = new Color(1f, 1f, 1f, backdropMaxAlpha);
+            }
+            else
+            {
+                _backdrop.material = null;
+                _backdrop.color = new Color(backdropColor.r, backdropColor.g, backdropColor.b, 0f);
+            }
+            _backdropCg.alpha = 0f;
         }
     }
 }

@@ -15,18 +15,34 @@ namespace TR.UI
         [SerializeField] private CollectionItemUI itemPrefab;
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private TMP_Text softCurrencyText; // shows current coins
+        [Header("Sorting")]
+        [Tooltip("Optional dropdown to control rarity order. If not assigned, defaults to ascending (Common -> Legendary).")]
+        [SerializeField] private TMP_Dropdown raritySortDropdown;
+        [Tooltip("If true, rarity order is reversed (Legendary -> Common)")]
+        [SerializeField] private bool rarityDescending = false;
 
         private readonly List<CollectionItemUI> _items = new();
 
+        private void Awake()
+        {
+            // Preload data database so the first time opening the panel doesn't hitch
+            GameDB.EnsureLoaded();
+        }
+
         private void OnEnable()
         {
+            HoverCardDetailsUI.SetCollectionContext(true);
             Refresh();
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
+            SetupSortingUI();
+            if (raritySortDropdown != null) raritySortDropdown.onValueChanged.AddListener(HandleRaritySortChanged);
         }
 
         private void OnDisable()
         {
+            HoverCardDetailsUI.SetCollectionContext(false);
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
+            if (raritySortDropdown != null) raritySortDropdown.onValueChanged.RemoveListener(HandleRaritySortChanged);
         }
 
         private void HandleSoftCurrencyChanged(int newBalance)
@@ -41,8 +57,6 @@ namespace TR.UI
         {
             if (headerText) headerText.text = "Collection";
             if (softCurrencyText) softCurrencyText.text = $"Coins: {PlayerProfile.GetSoftCurrency()}";
-            foreach (var it in _items) if (it) Destroy(it.gameObject);
-            _items.Clear();
 
             GameDB.EnsureLoaded();
             // Compute rarity priority using order in GameDB.Rarities (lower index = more common)
@@ -77,19 +91,162 @@ namespace TR.UI
 
                 int ar = GetRarityPriority(a.Rarity);
                 int br = GetRarityPriority(b.Rarity);
-                if (ar != br) return ar.CompareTo(br);
+                if (ar != br)
+                {
+                    return rarityDescending ? br.CompareTo(ar) : ar.CompareTo(br);
+                }
 
                 return string.Compare(a.DisplayName, b.DisplayName, System.StringComparison.OrdinalIgnoreCase);
             });
 
-            // Build UI in sorted order
+            // Build/reuse UI instances and animate reordering
+            bool firstBuild = _items.Count == 0;
+            var existingById = new Dictionary<string, CollectionItemUI>();
+            foreach (var it in _items)
+            {
+                if (it != null && it.Card != null && !string.IsNullOrEmpty(it.Card.CardId))
+                    existingById[it.Card.CardId] = it;
+            }
+
+            var ordered = new List<CollectionItemUI>(sorted.Count);
+            var newlyCreated = new HashSet<CollectionItemUI>();
             foreach (var card in sorted)
             {
-                var ui = Instantiate(itemPrefab, listRoot);
-                var cp = PlayerProfile.GetOrCreateCard(card.CardId);
-                ui.Bind(card);
-                // No extra wiring needed: CardItemUI handles hover details
-                _items.Add(ui);
+                if (!existingById.TryGetValue(card.CardId, out var ui) || ui == null)
+                {
+                    ui = Instantiate(itemPrefab, listRoot);
+                    ui.Bind(card);
+                    _items.Add(ui);
+                    newlyCreated.Add(ui);
+                }
+                else
+                {
+                    // Ensure binding reflects latest player state
+                    ui.Bind(card);
+                }
+                ordered.Add(ui);
+            }
+
+            if (firstBuild)
+            {
+                // On the very first build, skip animations for instant display
+                foreach (var ui in ordered)
+                {
+                    ui.transform.SetSiblingIndex(ordered.IndexOf(ui));
+                }
+                Canvas.ForceUpdateCanvases();
+                var rootRt0 = listRoot as RectTransform;
+                if (rootRt0 != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rootRt0);
+                return;
+            }
+
+            // Capture old world positions
+            var oldPos = new Dictionary<RectTransform, Vector3>(ordered.Count);
+            foreach (var ui in ordered)
+            {
+                var rt = ui.transform as RectTransform;
+                if (rt != null) oldPos[rt] = rt.position;
+            }
+
+            // Reorder hierarchy to new order
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                ordered[i].transform.SetSiblingIndex(i);
+            }
+
+            // Force layout to compute target positions
+            Canvas.ForceUpdateCanvases();
+            var rootRt = listRoot as RectTransform;
+            if (rootRt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rootRt);
+
+            // Animate items from old -> new positions
+            foreach (var ui in ordered)
+            {
+                var rt = ui.transform as RectTransform; if (rt == null) continue;
+                var le = ui.GetComponent<LayoutElement>();
+                if (le == null) le = ui.gameObject.AddComponent<LayoutElement>();
+                Vector3 startPos;
+                bool isNew = newlyCreated.Contains(ui);
+                if (!oldPos.TryGetValue(rt, out startPos)) startPos = rt.position;
+                Vector3 targetPos = rt.position;
+
+                le.ignoreLayout = true;
+                if (isNew)
+                {
+                    // Spawn from target with small scale (no alpha tween to avoid clashing with existing CanvasGroups)
+                    rt.position = targetPos;
+                    rt.localScale = Vector3.one * 0.88f;
+                    StartCoroutine(AnimateNewAppear(rt, le));
+                }
+                else
+                {
+                    // Move from previous world position to new layout position
+                    rt.position = startPos;
+                    StartCoroutine(AnimateMoveTo(rt, targetPos, le));
+                }
+            }
+        }
+
+        private System.Collections.IEnumerator AnimateMoveTo(RectTransform rt, Vector3 targetWorldPos, LayoutElement le)
+        {
+            float t = 0f; const float dur = 0.22f;
+            Vector3 from = rt.position;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / Mathf.Max(0.01f, dur);
+                float e = 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
+                rt.position = Vector3.LerpUnclamped(from, targetWorldPos, e);
+                yield return null;
+            }
+            rt.position = targetWorldPos;
+            if (le != null) le.ignoreLayout = false;
+            Canvas.ForceUpdateCanvases();
+        }
+
+        private System.Collections.IEnumerator AnimateNewAppear(RectTransform rt, LayoutElement le)
+        {
+            float t = 0f; const float dur = 0.16f;
+            Vector3 fromScale = rt.localScale;
+            Vector3 toScale = Vector3.one;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / Mathf.Max(0.01f, dur);
+                float e = 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
+                rt.localScale = Vector3.LerpUnclamped(fromScale, toScale, e);
+                yield return null;
+            }
+            rt.localScale = toScale;
+            if (le != null) le.ignoreLayout = false;
+            Canvas.ForceUpdateCanvases();
+        }
+
+        // Initialize rarity sort dropdown options and sync with current setting
+        private void SetupSortingUI()
+        {
+            if (raritySortDropdown == null) return;
+            if (raritySortDropdown.options == null || raritySortDropdown.options.Count == 0)
+            {
+                raritySortDropdown.options = new List<TMP_Dropdown.OptionData>
+                {
+                    new TMP_Dropdown.OptionData("Rarity: Common → Legendary"),
+                    new TMP_Dropdown.OptionData("Rarity: Legendary → Common"),
+                };
+            }
+            int desired = rarityDescending ? 1 : 0;
+            if (raritySortDropdown.value != desired)
+            {
+                raritySortDropdown.SetValueWithoutNotify(desired);
+            }
+        }
+
+        // Handle dropdown change and refresh collection
+        private void HandleRaritySortChanged(int index)
+        {
+            bool desc = (index == 1);
+            if (desc != rarityDescending)
+            {
+                rarityDescending = desc;
+                Refresh();
             }
         }
     }

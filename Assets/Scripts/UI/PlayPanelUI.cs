@@ -39,6 +39,9 @@ namespace TR.UI
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
             if (deckWarningText != null) _deckWarnBaseColor = deckWarningText.color;
             if (playButton != null) _playBtnBaseScale = playButton.transform.localScale;
+            // Start a lightweight updater to refresh ban countdown every second
+            if (_banCountdownCo != null) StopCoroutine(_banCountdownCo);
+            _banCountdownCo = StartCoroutine(BanCountdownUpdater());
         }
 
         // Hook this to the arena image/button to open the Trophy Road panel
@@ -58,6 +61,7 @@ namespace TR.UI
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
             StopDeckFlash();
             RestoreDeckWarningVisuals();
+            if (_banCountdownCo != null) { StopCoroutine(_banCountdownCo); _banCountdownCo = null; }
         }
 
         private void HandleSoftCurrencyChanged(int newBalance)
@@ -66,30 +70,7 @@ namespace TR.UI
             {
                 softCurrencyText.text = $"Coins: {newBalance}";
             }
-
-            // Deck gating + ban gating
-            bool hasDeck = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
-            bool banned = PlayerProfile.IsBanned(out var remaining);
-            if (playButton)
-            {
-                playButton.interactable = hasDeck && !banned;
-            }
-            if (deckWarningText)
-            {
-                if (banned)
-                {
-                    deckWarningText.gameObject.SetActive(true);
-                    string timeStr = remaining.TotalHours >= 1
-                        ? $"{Mathf.CeilToInt((float)remaining.TotalHours)}h"
-                        : $"{Mathf.CeilToInt((float)remaining.TotalMinutes)}m";
-                    deckWarningText.text = $"Temporarily restricted: {timeStr} remaining";
-                }
-                else
-                {
-                    deckWarningText.gameObject.SetActive(!hasDeck);
-                    if (!hasDeck) deckWarningText.text = "Build a deck to play";
-                }
-            }
+            UpdateBanGatingUI();
         }
 
         public void Refresh()
@@ -157,28 +138,7 @@ namespace TR.UI
             }
 
             // Deck + ban gating on refresh as well (so UI is correct on open)
-            bool hasDeckNow = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
-            bool bannedNow = PlayerProfile.IsBanned(out var remainingNow);
-            if (playButton)
-            {
-                playButton.interactable = hasDeckNow && !bannedNow;
-            }
-            if (deckWarningText)
-            {
-                if (bannedNow)
-                {
-                    deckWarningText.gameObject.SetActive(true);
-                    string timeStr = remainingNow.TotalHours >= 1
-                        ? $"{Mathf.CeilToInt((float)remainingNow.TotalHours)}h"
-                        : $"{Mathf.CeilToInt((float)remainingNow.TotalMinutes)}m";
-                    deckWarningText.text = $"Temporarily restricted: {timeStr} remaining";
-                }
-                else
-                {
-                    deckWarningText.gameObject.SetActive(!hasDeckNow);
-                    if (!hasDeckNow) deckWarningText.text = "Build a deck to play";
-                }
-            }
+            UpdateBanGatingUI();
         }
 
         // Optional: call this from a button to re-pull data after a match or debug grant
@@ -267,6 +227,60 @@ namespace TR.UI
         {
             if (deckWarningText) deckWarningText.color = _deckWarnBaseColor == default(Color) ? deckWarningText.color : _deckWarnBaseColor;
             if (playButton) playButton.transform.localScale = _playBtnBaseScale;
+        }
+
+        private Coroutine _banCountdownCo;
+        private System.Collections.IEnumerator BanCountdownUpdater()
+        {
+            var wait = new WaitForSecondsRealtime(1f);
+            while (isActiveAndEnabled)
+            {
+                UpdateBanGatingUI();
+                yield return wait;
+            }
+        }
+
+        private void UpdateBanGatingUI()
+        {
+            bool hasDeck = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
+            bool banned = PlayerProfile.IsBanned(out var remaining);
+            if (playButton)
+            {
+                playButton.interactable = hasDeck && !banned;
+            }
+            if (deckWarningText)
+            {
+                if (banned)
+                {
+                    deckWarningText.gameObject.SetActive(true);
+                    deckWarningText.text = $"Temporarily restricted: {FormatRemaining(remaining)} remaining";
+                }
+                else
+                {
+                    deckWarningText.gameObject.SetActive(!hasDeck);
+                    if (!hasDeck) deckWarningText.text = "Build a deck to play";
+                }
+            }
+        }
+
+        private static string FormatRemaining(System.TimeSpan remaining)
+        {
+            if (remaining.TotalHours >= 1.0)
+            {
+                int h = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalHours));
+                int m = Mathf.Max(0, Mathf.CeilToInt((float)(remaining.TotalMinutes % 60)));
+                return m > 0 ? $"{h}h {m}m" : $"{h}h";
+            }
+            else if (remaining.TotalMinutes >= 1.0)
+            {
+                int m = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalMinutes));
+                return $"{m}m";
+            }
+            else
+            {
+                int s = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalSeconds));
+                return $"{s}s";
+            }
         }
     }
 }

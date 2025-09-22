@@ -32,6 +32,11 @@ namespace TR.UI
         [SerializeField] private TMP_Text effectText; // shows Burn or Poison if present, otherwise '-'
 
         public static HoverCardDetailsUI Instance { get; private set; }
+        // Collection context flag: when true, and if upgrade is available for a card,
+        // hover details will show current -> next level values. This should be toggled
+        // by the Collection UI panel only.
+        private static bool s_inCollectionContext = false;
+        public static void SetCollectionContext(bool on) => s_inCollectionContext = on;
 
         private Coroutine _anim;
         private bool _visible;
@@ -88,56 +93,92 @@ namespace TR.UI
             if (card is BuffCardDefinition buff)
             {
                 int lvb = Mathf.Max(1, level);
+                // Determine if we should show upgrade comparisons in Collection context
+                bool showNext = false;
+                int nextLv = lvb;
+                if (s_inCollectionContext && cp != null)
+                {
+                    var rarity = card.Rarity;
+                    int maxL = rarity != null ? rarity.MaxLevel : lvb;
+                    int nlv = Mathf.Min(lvb + 1, maxL);
+                    if (nlv > lvb)
+                    {
+                        int needed = rarity != null ? rarity.GetPointsRequiredForLevel(nlv) : int.MaxValue;
+                        int cost = rarity != null ? rarity.GetUpgradeCostForLevel(nlv) : int.MaxValue;
+                        showNext = (cp.points >= needed) && (PlayerProfile.GetSoftCurrency() >= cost);
+                        if (showNext) nextLv = nlv;
+                    }
+                }
                 // Header
                 if (inst.icon) inst.icon.sprite = card.Icon;
                 if (inst.rarityStripe && card.Rarity) inst.rarityStripe.color = card.Rarity.Color;
                 if (inst.nameText) inst.nameText.text = card.DisplayName;
-                if (inst.levelText) inst.levelText.text = $"Lv {lvb}";
+                if (inst.levelText) inst.levelText.text = showNext ? $"Lv {lvb} -> {nextLv}" : $"Lv {lvb}";
                 float auraRange = buff.GetBuffRange(lvb);
-                inst.SetLine(inst.dpsText, $"Aura Range: {auraRange:0.#}");
+                if (showNext)
+                {
+                    float nextAura = buff.GetBuffRange(nextLv);
+                    inst.SetLine(inst.dpsText, $"Aura Range: {auraRange:0.#} -> {nextAura:0.#}");
+                }
+                else
+                {
+                    inst.SetLine(inst.dpsText, $"Aura Range: {auraRange:0.#}");
+                }
 
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                if (buff.BuffDps) sb.Append($"DPS +{buff.GetDpsPercent(lvb) * 100f:0.#}%");
+                if (buff.BuffDps)
+                {
+                    if (showNext) sb.Append($"DPS +{buff.GetDpsPercent(lvb) * 100f:0.#}% -> +{buff.GetDpsPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"DPS +{buff.GetDpsPercent(lvb) * 100f:0.#}%");
+                }
                 if (buff.BuffFireRate)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"FireRate +{buff.GetFireRatePercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"FireRate +{buff.GetFireRatePercent(lvb) * 100f:0.#}% -> +{buff.GetFireRatePercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"FireRate +{buff.GetFireRatePercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffRange)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Range +{buff.GetRangePercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Range +{buff.GetRangePercent(lvb) * 100f:0.#}% -> +{buff.GetRangePercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Range +{buff.GetRangePercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffSplash)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Splash +{buff.GetSplashPercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Splash +{buff.GetSplashPercent(lvb) * 100f:0.#}% -> +{buff.GetSplashPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Splash +{buff.GetSplashPercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffBurn)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Burn Dmg +{buff.GetBurnDpsBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetBurnDurBuffPercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Burn Dmg +{buff.GetBurnDpsBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetBurnDpsBuffPercent(nextLv) * 100f:0.#}%  Dur +{buff.GetBurnDurBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetBurnDurBuffPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Burn Dmg +{buff.GetBurnDpsBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetBurnDurBuffPercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffPoison)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Poison Dmg +{buff.GetPoisonDpsBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetPoisonDurBuffPercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Poison Dmg +{buff.GetPoisonDpsBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetPoisonDpsBuffPercent(nextLv) * 100f:0.#}%  Dur +{buff.GetPoisonDurBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetPoisonDurBuffPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Poison Dmg +{buff.GetPoisonDpsBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetPoisonDurBuffPercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffSlow)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Slow % +{buff.GetSlowPercentBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetSlowDurBuffPercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Slow % +{buff.GetSlowPercentBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetSlowPercentBuffPercent(nextLv) * 100f:0.#}%  Dur +{buff.GetSlowDurBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetSlowDurBuffPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Slow % +{buff.GetSlowPercentBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetSlowDurBuffPercent(lvb) * 100f:0.#}%");
                 }
                 if (buff.BuffStun)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetStunDurBuffPercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetStunChanceBuffPercent(nextLv) * 100f:0.#}%  Dur +{buff.GetStunDurBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetStunDurBuffPercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetStunDurBuffPercent(lvb) * 100f:0.#}%");
                 }
                 // Economy income buff (new)
                 if (buff.BuffEconomyIncome)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
-                    sb.Append($"Econ Income +{buff.GetEconomyIncomePercent(lvb) * 100f:0.#}%");
+                    if (showNext) sb.Append($"Econ Income +{buff.GetEconomyIncomePercent(lvb) * 100f:0.#}% -> +{buff.GetEconomyIncomePercent(nextLv) * 100f:0.#}%");
+                    else sb.Append($"Econ Income +{buff.GetEconomyIncomePercent(lvb) * 100f:0.#}%");
                 }
                 inst.SetLine(inst.fireRateText, sb.Length > 0 ? sb.ToString() : null);
                 // Rarity filter display
@@ -161,7 +202,7 @@ namespace TR.UI
                 }
                 inst.SetLine(inst.rangeText, affects);
                 inst.SetLine(inst.splashText, null);
-                { var cstats = card.GetStatsForLevel(lvb); inst.SetLine(inst.costText, $"Cost: {cstats.cost}"); }
+                { var cstats = card.GetStatsForLevel(lvb); if (showNext) { var nstats = card.GetStatsForLevel(nextLv); inst.SetLine(inst.costText, $"Cost: {cstats.cost} -> {nstats.cost}"); } else inst.SetLine(inst.costText, $"Cost: {cstats.cost}"); }
                 inst.SetLine(inst.effectText, "Effect: Buff Aura");
                 inst.RebuildLayout();
                 inst.SetVisible(true);
@@ -489,18 +530,44 @@ namespace TR.UI
                 RebuildLayout();
                 return;
             }
-
+            // Determine if upgrade comparison should be shown (Collection context + upgrade available)
+            bool showNext = false; int nextLv = lv;
+            if (s_inCollectionContext && cp != null)
+            {
+                var rarity = card.Rarity;
+                int maxL = rarity != null ? rarity.MaxLevel : lv;
+                int nlv = Mathf.Min(lv + 1, maxL);
+                if (nlv > lv)
+                {
+                    int needed = rarity != null ? rarity.GetPointsRequiredForLevel(nlv) : int.MaxValue;
+                    int cost = rarity != null ? rarity.GetUpgradeCostForLevel(nlv) : int.MaxValue;
+                    showNext = (cp.points >= needed) && (PlayerProfile.GetSoftCurrency() >= cost);
+                    if (showNext) nextLv = nlv;
+                }
+            }
             // Pulse cards (preview): show pulse stats
             if (card is PulseCardDefinition pulseDef)
             {
                 float dmg = pulseDef.GetPulseDamage(lv);
                 float interval = pulseDef.GetPulseInterval(lv);
                 float radius = pulseDef.GetPulseRadius(lv);
-                SetLine(dpsText, $"Pulse Dmg: {dmg:0.#}");
-                SetLine(fireRateText, $"Interval: {interval:0.##}s");
-                SetLine(rangeText, $"Pulse Radius: {radius:0.#}");
+                if (showNext)
+                {
+                    float ndmg = pulseDef.GetPulseDamage(nextLv);
+                    float nint = pulseDef.GetPulseInterval(nextLv);
+                    float nrad = pulseDef.GetPulseRadius(nextLv);
+                    SetLine(dpsText, $"Pulse Dmg: {dmg:0.#} -> {ndmg:0.#}");
+                    SetLine(fireRateText, $"Interval: {interval:0.##}s -> {nint:0.##}s");
+                    SetLine(rangeText, $"Pulse Radius: {radius:0.#} -> {nrad:0.#}");
+                }
+                else
+                {
+                    SetLine(dpsText, $"Pulse Dmg: {dmg:0.#}");
+                    SetLine(fireRateText, $"Interval: {interval:0.##}s");
+                    SetLine(rangeText, $"Pulse Radius: {radius:0.#}");
+                }
                 SetLine(splashText, null);
-                { var cstats = card.GetStatsForLevel(lv); SetLine(costText, $"Cost: {cstats.cost}"); }
+                { var cstats = card.GetStatsForLevel(lv); if (showNext) { var nstats = card.GetStatsForLevel(nextLv); SetLine(costText, $"Cost: {cstats.cost} -> {nstats.cost}"); } else SetLine(costText, $"Cost: {cstats.cost}"); }
                 // Keep effect summary below (card-level values)
                 goto EffectSummaryPreview;
             }
@@ -511,11 +578,23 @@ namespace TR.UI
                 float income = econ.GetIncomePerSecond(lv);
                 float decay = econ.GetDecayPerSecond(lv);
                 float maxHp = econ.GetMaxHealth(lv);
-                SetLine(dpsText, $"Income/s: {income:0.#}");
-                SetLine(fireRateText, $"Decay/s: {decay:0.#}");
-                SetLine(rangeText, $"Max HP: {maxHp:0.#}");
+                if (showNext)
+                {
+                    float nincome = econ.GetIncomePerSecond(nextLv);
+                    float ndecay = econ.GetDecayPerSecond(nextLv);
+                    float nmaxHp = econ.GetMaxHealth(nextLv);
+                    SetLine(dpsText, $"Income/s: {income:0.#} -> {nincome:0.#}");
+                    SetLine(fireRateText, $"Decay/s: {decay:0.#} -> {ndecay:0.#}");
+                    SetLine(rangeText, $"Max HP: {maxHp:0.#} -> {nmaxHp:0.#}");
+                }
+                else
+                {
+                    SetLine(dpsText, $"Income/s: {income:0.#}");
+                    SetLine(fireRateText, $"Decay/s: {decay:0.#}");
+                    SetLine(rangeText, $"Max HP: {maxHp:0.#}");
+                }
                 SetLine(splashText, null);
-                { var cstats = card.GetStatsForLevel(lv); SetLine(costText, $"Cost: {cstats.cost}"); }
+                { var cstats = card.GetStatsForLevel(lv); if (showNext) { var nstats = card.GetStatsForLevel(nextLv); SetLine(costText, $"Cost: {cstats.cost} -> {nstats.cost}"); } else SetLine(costText, $"Cost: {cstats.cost}"); }
                 SetLine(effectText, null);
                 RebuildLayout();
                 return;
@@ -529,12 +608,27 @@ namespace TR.UI
                 float rampUp = inferno.GetRampUpPerSecond(lv);
                 float rampMax = inferno.GetRampMaxMultiplier(lv);
                 float penalty = inferno.GetMultiTargetPenalty(lv);
-
-                SetLine(dpsText, $"Base DPS: {statsInf.dps:0.#}");
-                SetLine(fireRateText, $"Ramp: +{rampUp:0.##}/s to {rampMax:0.#}x");
-                SetLine(rangeText, $"Range: {statsInf.range:0.#}");
-                SetLine(splashText, $"Max Targets: {maxTargets} (pen {penalty:0.##})");
-                SetLine(costText, $"Cost: {statsInf.cost}");
+                if (showNext)
+                {
+                    var nstats = inferno.GetStatsForLevel(nextLv);
+                    int nmaxTargets = inferno.GetMaxTargets(nextLv);
+                    float nrampUp = inferno.GetRampUpPerSecond(nextLv);
+                    float nrampMax = inferno.GetRampMaxMultiplier(nextLv);
+                    float npenalty = inferno.GetMultiTargetPenalty(nextLv);
+                    SetLine(dpsText, $"Base DPS: {statsInf.dps:0.#} -> {nstats.dps:0.#}");
+                    SetLine(fireRateText, $"Ramp: +{rampUp:0.##}/s -> +{nrampUp:0.##}/s to {rampMax:0.#}x -> {nrampMax:0.#}x");
+                    SetLine(rangeText, $"Range: {statsInf.range:0.#} -> {nstats.range:0.#}");
+                    SetLine(splashText, $"Max Targets: {maxTargets} -> {nmaxTargets} (pen {penalty:0.##} -> {npenalty:0.##})");
+                    SetLine(costText, $"Cost: {statsInf.cost} -> {nstats.cost}");
+                }
+                else
+                {
+                    SetLine(dpsText, $"Base DPS: {statsInf.dps:0.#}");
+                    SetLine(fireRateText, $"Ramp: +{rampUp:0.##}/s to {rampMax:0.#}x");
+                    SetLine(rangeText, $"Range: {statsInf.range:0.#}");
+                    SetLine(splashText, $"Max Targets: {maxTargets} (pen {penalty:0.##})");
+                    SetLine(costText, $"Cost: {statsInf.cost}");
+                }
 
                 // Keep on-hit effect summary if any (Burn/Poison/Slow)
                 if (effectText)
@@ -585,11 +679,23 @@ namespace TR.UI
             }
 
             var stats = card.GetStatsForLevel(lv);
-            SetLine(dpsText, $"DPS: {stats.dps:0.#}");
-            SetLine(fireRateText, $"Fire Rate: {stats.fireRate:0.##}/s");
-            SetLine(rangeText, $"Range: {stats.range:0.#}");
-            SetLine(splashText, stats.splashRadius > 0 ? $"Splash: {stats.splashRadius:0.#}" : null);
-            SetLine(costText, $"Cost: {stats.cost}");
+            if (showNext)
+            {
+                var nstats = card.GetStatsForLevel(nextLv);
+                SetLine(dpsText, $"DPS: {stats.dps:0.#} -> {nstats.dps:0.#}");
+                SetLine(fireRateText, $"Fire Rate: {stats.fireRate:0.##}/s -> {nstats.fireRate:0.##}/s");
+                SetLine(rangeText, $"Range: {stats.range:0.#} -> {nstats.range:0.#}");
+                SetLine(splashText, stats.splashRadius > 0 || nstats.splashRadius > 0 ? $"Splash: {stats.splashRadius:0.#} -> {nstats.splashRadius:0.#}" : null);
+                SetLine(costText, $"Cost: {stats.cost} -> {nstats.cost}");
+            }
+            else
+            {
+                SetLine(dpsText, $"DPS: {stats.dps:0.#}");
+                SetLine(fireRateText, $"Fire Rate: {stats.fireRate:0.##}/s");
+                SetLine(rangeText, $"Range: {stats.range:0.#}");
+                SetLine(splashText, stats.splashRadius > 0 ? $"Splash: {stats.splashRadius:0.#}" : null);
+                SetLine(costText, $"Cost: {stats.cost}");
+            }
 
         EffectSummaryPreview:
             // On-hit effect summary (Burn/Poison/Slow, multiple if present)
