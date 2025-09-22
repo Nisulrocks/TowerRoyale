@@ -75,6 +75,15 @@ namespace TR.UI
             }
             // Unbind any previous tower; this path is card-only (e.g., collection hover)
             inst.UnbindTower();
+            // If the card is undiscovered, always show obfuscated stats (???) regardless of type
+            var cp = TR.Systems.PlayerProfile.GetOrCreateCard(card.CardId);
+            bool undiscovered = cp != null && cp.ownedCount <= 0;
+            if (undiscovered)
+            {
+                inst.SetData(card, level); // SetData handles the ??? lines for undiscovered
+                inst.SetVisible(true);
+                return;
+            }
             // Buff cards: show aura stats and full buff breakdown (same as placed tower view)
             if (card is BuffCardDefinition buff)
             {
