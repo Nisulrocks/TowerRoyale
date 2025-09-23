@@ -18,6 +18,15 @@ namespace TR.UI
         [SerializeField] private TMP_Text castleLevelText;   // new
         [SerializeField] private TMP_Text castleXPText;      // new
         [SerializeField] private TMP_Text softCurrencyText;  // new
+        [Header("Castle Progress UI")]
+        [Tooltip("Slider for castle XP progress (0-1 value)")]
+        [SerializeField] private Slider castleProgressSlider;
+        [Tooltip("Optional text for showing '+XP' when gains are applied")]
+        [SerializeField] private TMP_Text castleXPGainText;
+        [Tooltip("Delay before showing the '+XP' splash (seconds)")]
+        [SerializeField] private float castleXPGainDelay = 0.25f;
+        [Tooltip("Castle XP bar animation speed (XP per second, visual only)")]
+        [SerializeField] private float castleXpAnimSpeed = 250f;
         [Header("Arena Image")]
         [SerializeField] private Image arenaImage;           // shows current arena image and opens Trophy Road
 
@@ -111,30 +120,21 @@ namespace TR.UI
                 }
             }
 
-            // Castle info
-            if (castleLevelText)
+            // Castle info + progress bar
+            // If there is pending XP to present, render PREVIOUS state first to avoid a visual snap-back,
+            // then animate forward to current. Otherwise, just show current instantly.
+            if (PlayerProfile.TryConsumePendingCastleXp(out var pendingDelta) && pendingDelta > 0 && castleCfg != null)
             {
-                castleLevelText.text = $"Castle Lv {castleLevel}";
+                var prev = ComputePreviousCastleState(castleCfg, castleLevel, castleXP, pendingDelta);
+                // Show previous state immediately
+                UpdateCastleUIInstant(castleCfg, prev.level, prev.xp);
+                // Then animate to current
+                if (_castleAnimCo != null) StopCoroutine(_castleAnimCo);
+                _castleAnimCo = StartCoroutine(AnimateCastleXpGain(castleCfg, prev.level, prev.xp, castleLevel, castleXP, pendingDelta));
             }
-            if (castleXPText)
+            else
             {
-                if (castleCfg != null)
-                {
-                    int maxL = Mathf.Max(1, castleCfg.MaxLevel);
-                    if (castleLevel >= maxL)
-                    {
-                        castleXPText.text = $"XP: MAX";
-                    }
-                    else
-                    {
-                        int needed = castleCfg.GetXPForLevel(castleLevel);
-                        castleXPText.text = $"XP: {castleXP}/{needed}";
-                    }
-                }
-                else
-                {
-                    castleXPText.text = $"XP: {castleXP}";
-                }
+                UpdateCastleUIInstant(castleCfg, castleLevel, castleXP);
             }
 
             // Deck + ban gating on refresh as well (so UI is correct on open)
@@ -227,6 +227,157 @@ namespace TR.UI
         {
             if (deckWarningText) deckWarningText.color = _deckWarnBaseColor == default(Color) ? deckWarningText.color : _deckWarnBaseColor;
             if (playButton) playButton.transform.localScale = _playBtnBaseScale;
+        }
+
+        // ===== Castle Progress Animation =====
+        private Coroutine _castleAnimCo;
+        private struct CastleState { public int level; public int xp; }
+
+        private void UpdateCastleUIInstant(TR.Data.CastleProgression castleCfg, int level, int xp)
+        {
+            if (castleLevelText) castleLevelText.text = $"Castle Lv {level}";
+            if (castleXPText)
+            {
+                if (castleCfg != null)
+                {
+                    int maxL = Mathf.Max(1, castleCfg.MaxLevel);
+                    if (level >= maxL)
+                    {
+                        castleXPText.text = "XP: MAX";
+                    }
+                    else
+                    {
+                        int needed = castleCfg.GetXPForLevel(level);
+                        castleXPText.text = $"XP: {xp}/{needed}";
+                    }
+                }
+                else castleXPText.text = $"XP: {xp}";
+            }
+            if (castleProgressSlider)
+            {
+                if (castleCfg != null)
+                {
+                    int maxL = Mathf.Max(1, castleCfg.MaxLevel);
+                    if (level >= maxL)
+                    {
+                        castleProgressSlider.value = 1f;
+                    }
+                    else
+                    {
+                        int needed = Mathf.Max(1, castleCfg.GetXPForLevel(level));
+                        castleProgressSlider.value = Mathf.Clamp01((float)xp / needed);
+                    }
+                }
+                else castleProgressSlider.value = 0f;
+            }
+        }
+
+        private CastleState ComputePreviousCastleState(TR.Data.CastleProgression castleCfg, int currentLevel, int currentXp, int addedDelta)
+        {
+            int level = currentLevel;
+            int xp = currentXp;
+            int remain = Mathf.Max(0, addedDelta);
+            while (remain > 0 && level > 1)
+            {
+                if (xp >= remain)
+                {
+                    xp -= remain; remain = 0; break;
+                }
+                else
+                {
+                    remain -= xp;
+                    int prevLevel = level - 1;
+                    int prevNeeded = Mathf.Max(1, castleCfg.GetXPForLevel(prevLevel));
+                    xp = prevNeeded;
+                    level = prevLevel;
+                }
+            }
+            if (remain > 0)
+            {
+                xp = Mathf.Max(0, xp - remain);
+                remain = 0;
+            }
+            return new CastleState { level = level, xp = xp };
+        }
+
+        private System.Collections.IEnumerator AnimateCastleXpGain(TR.Data.CastleProgression castleCfg,
+            int fromLevel, int fromXp, int toLevel, int toXp, int totalDelta)
+        {
+            // Show +XP splash after a small delay
+            if (castleXPGainText)
+            {
+                float d = Mathf.Max(0f, castleXPGainDelay);
+                if (d > 0f) yield return new WaitForSecondsRealtime(d);
+                castleXPGainText.gameObject.SetActive(true);
+                castleXPGainText.text = $"+{totalDelta} XP";
+                // quick fade/pulse
+                var cg = castleXPGainText.GetComponent<CanvasGroup>();
+                if (cg == null) cg = castleXPGainText.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = 1f;
+                StartCoroutine(FadeOut(cg, 0.9f));
+            }
+
+            int curLevel = fromLevel;
+            float curXpF = fromXp; // use float accumulator for smooth fill and counting
+            UpdateCastleUIInstant(castleCfg, curLevel, Mathf.FloorToInt(curXpF));
+
+            // Animate forward to target, handling level-ups
+            float speed = Mathf.Max(1f, castleXpAnimSpeed); // XP per second visual speed
+            float remainingVisual = ComputeVisualDistance(castleCfg, fromLevel, fromXp, toLevel, toXp);
+            float progressed = 0f;
+            while (progressed < remainingVisual - 0.5f)
+            {
+                float step = speed * Time.unscaledDeltaTime;
+                progressed += step;
+                // advance xp/levels accordingly
+                curXpF += step;
+                int needed = curLevel < castleCfg.MaxLevel ? Mathf.Max(1, castleCfg.GetXPForLevel(curLevel)) : 1;
+                while (curLevel < castleCfg.MaxLevel && curXpF >= needed)
+                {
+                    curXpF -= needed;
+                    curLevel++;
+                    needed = curLevel < castleCfg.MaxLevel ? Mathf.Max(1, castleCfg.GetXPForLevel(curLevel)) : 1;
+                }
+                if (curLevel >= toLevel)
+                {
+                    // clamp to target at the end
+                    if (curLevel == toLevel && curXpF > toXp) curXpF = toXp;
+                }
+                UpdateCastleUIInstant(castleCfg, curLevel, Mathf.FloorToInt(curXpF));
+                yield return null;
+            }
+            UpdateCastleUIInstant(castleCfg, toLevel, toXp);
+            _castleAnimCo = null;
+        }
+
+        private float ComputeVisualDistance(TR.Data.CastleProgression castleCfg, int fromLevel, int fromXp, int toLevel, int toXp)
+        {
+            if (toLevel < fromLevel || (toLevel == fromLevel && toXp < fromXp)) return 0f;
+            float dist = 0f;
+            int l = fromLevel;
+            int x = fromXp;
+            while (l < toLevel)
+            {
+                int need = Mathf.Max(1, castleCfg.GetXPForLevel(l));
+                dist += Mathf.Max(0, need - x);
+                l++;
+                x = 0;
+            }
+            dist += Mathf.Max(0, toXp - x);
+            return dist;
+        }
+
+        private System.Collections.IEnumerator FadeOut(CanvasGroup cg, float duration)
+        {
+            float t = 0f; float d = Mathf.Max(0.05f, duration);
+            while (t < d)
+            {
+                t += Time.unscaledDeltaTime;
+                cg.alpha = 1f - Mathf.Clamp01(t / d);
+                yield return null;
+            }
+            cg.alpha = 0f;
+            cg.gameObject.SetActive(false);
         }
 
         private Coroutine _banCountdownCo;

@@ -79,6 +79,9 @@ namespace TR.Systems
             packCounts[idx] -= 1;
             return true;
         }
+
+        // Pending visual rewards to present in Lobby
+        public int pendingCastleXpDelta = 0; // how much XP was recently added (for UI animation)
     }
 
     public static class PlayerProfile
@@ -318,6 +321,19 @@ namespace TR.Systems
             }
             Save();
         }
+
+        // Consume and clear the pending castle XP delta for UI presentation
+        public static bool TryConsumePendingCastleXp(out int delta)
+        {
+            delta = Mathf.Max(0, Data.pendingCastleXpDelta);
+            if (delta > 0)
+            {
+                Data.pendingCastleXpDelta = 0;
+                Save();
+                return true;
+            }
+            return false;
+        }
         public static void RemoveTrophies(int amount)
         {
             int sub = Mathf.Max(0, amount);
@@ -384,6 +400,8 @@ namespace TR.Systems
             if (amount <= 0) return;
             var cfg = TR.Systems.GameDB.GetCastleProgression();
             Data.castleXP += amount;
+            // Accumulate pending delta for lobby FX
+            Data.pendingCastleXpDelta = Mathf.Max(0, Data.pendingCastleXpDelta + amount);
             if (cfg != null)
             {
                 int maxLevel = Mathf.Max(1, cfg.MaxLevel);
