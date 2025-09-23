@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
+  m_Name: Guard Tower
+  m_EditorClassIdentifier: 
+  cardId: guard_tower
+  displayName: Guard Tower
+  icon: {fileID: 0}
+  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  towerPrefab: {fileID: 0}
+  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
+  dpsBase: 5
+  dpsPerLevel: 1
+  fireRateBase: 1
+  fireRatePerLevel: 0.25
+  rangeBase: 2
+  rangePerLevel: 0
+  splashBase: 0
+  splashPerLevel: 0
+  costBase: 15
+  costPerLevel: 7
+  critChanceBase: 0
+  critChancePerLevel: 0
+  critMultiplierBase: 0
+  critMultiplierPerLevel: 0
+  critBurstText: CRIT!
+  burnDpsBase: 0
+  burnDpsPerLevel: 0
+  burnDurBase: 0
+  burnDurPerLevel: 0
+  poisonDpsBase: 0
+  poisonDpsPerLevel: 0
+  poisonDurBase: 0
+  poisonDurPerLevel: 0
+  useLightningZapOnHit: 0
+  zapDuration: 0.12
+  zapWidth: 0.06
+  zapJitter: 0.18
+  zapSegments: 12
+  zapColor: {r: 0.7, g: 0.9, b: 1, a: 1}
+  zapHitVfxKey: 
+  forceDefaultZapMaterial: 0
+  zapMaterial: {fileID: 0}
+  zapGlowEnabled: 0
+  zapGlowBoost: 2
+  chainGlowEnabled: 0
+  chainGlowBoost: 2
+  tornadoOnHit: 0
+  tornadoRadiusBase: 0
+  tornadoRadiusPerLevel: 0
+  tornadoStrengthBase: 0
+  tornadoStrengthPerLevel: 0
+  tornadoDurationBase: 0
+  tornadoDurationPerLevel: 0
+  tornadoMaxPullTargets: 6
+  tornadoAllowEasy: 0
+  tornadoAllowMedium: 0
+  tornadoAllowHard: 0
+  tornadoAllowBoss: 0
+  tornadoVfxKey: 
+  tornadoVfxScaleMultiplier: 1
+  tornadoAllowCenterStack: 0
+  tornadoFalloffPower: 1
+  moveOnAfterEffect: 0
+  moveOnIgnoreSeconds: 0.6
+  focusOnHighestHp: 0
+  slowOnHit: 0
+  slowPercentBase: 0
+  slowPercentPerLevel: 0
+  slowDurationBase: 0
+  slowDurationPerLevel: 0
+  stunOnHit: 0
+  stunChanceBase: 0
+  stunChancePerLevel: 0
+  stunDurationBase: 0
+  stunDurationPerLevel: 0
+  frostbiteOnHit: 0
+  frostbiteDpsBase: 0
+  frostbiteDpsPerLevel: 0
+  frostbiteDurBase: 0
+  frostbiteDurPerLevel: 0
+  sfxFireKey: 
+  sfxHitKey: 
+  sfxSplashKey: 
+  sfxChainJumpKey: 
+  sfxZapFireKey: 
+  sfxZapHitKey: 
+  sfxBeamKey: 
+  sfxTornadoKey: 
+  sfxBurnApplyKey: 
+  sfxPoisonApplyKey: 
+  sfxSlowApplyKey: 
+  sfxStunApplyKey: 
+  sfxCritKey: 
+  rotateToTarget: 1
+  rotateSpeedDegPerSec: 360
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 8
+  projectileImpactVfxKey: 
+  idleVfxKey: 
+  defeatDestroyVfxKey: 
+  defeatDestroySfxKey: 
+  chainOnHit: 0
+  chainMaxJumpsBase: 0
+  chainMaxJumpsPerLevel: 0
+  chainFalloffPerJumpBase: 0.7
+  chainFalloffPerJumpPerLevel: 0
+  chainZapColor: {r: 0.6, g: 0.85, b: 1, a: 1}
+  chainZapDuration: 0.08
+  chainZapWidth: 0.04
+  chainZapJitter: 0.15
+  chainZapSegments: 10
+  chainTransfersOnHitEffects: 0
