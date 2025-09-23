@@ -20,6 +20,9 @@ namespace TR.UI
         [SerializeField] private TMP_Dropdown raritySortDropdown;
         [Tooltip("If true, rarity order is reversed (Legendary -> Common)")]
         [SerializeField] private bool rarityDescending = false;
+        [Header("Search")]
+        [Tooltip("Optional input field to filter cards by name (case-insensitive)")]
+        [SerializeField] private TMP_InputField searchInput;
 
         private readonly List<CollectionItemUI> _items = new();
 
@@ -36,6 +39,7 @@ namespace TR.UI
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
             SetupSortingUI();
             if (raritySortDropdown != null) raritySortDropdown.onValueChanged.AddListener(HandleRaritySortChanged);
+            if (searchInput != null) searchInput.onValueChanged.AddListener(HandleSearchChanged);
         }
 
         private void OnDisable()
@@ -43,6 +47,7 @@ namespace TR.UI
             HoverCardDetailsUI.SetCollectionContext(false);
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
             if (raritySortDropdown != null) raritySortDropdown.onValueChanged.RemoveListener(HandleRaritySortChanged);
+            if (searchInput != null) searchInput.onValueChanged.RemoveListener(HandleSearchChanged);
         }
 
         private void HandleSoftCurrencyChanged(int newBalance)
@@ -59,6 +64,7 @@ namespace TR.UI
             if (softCurrencyText) softCurrencyText.text = $"Coins: {PlayerProfile.GetSoftCurrency()}";
 
             GameDB.EnsureLoaded();
+            bool searching = !string.IsNullOrWhiteSpace(_searchQuery);
             // Compute rarity priority using order in GameDB.Rarities (lower index = more common)
             int GetRarityPriority(RarityDefinition r)
             {
@@ -74,6 +80,13 @@ namespace TR.UI
             // 3) Then cards locked by higher arenas
             // Within each group: sort by rarity (GameDB.Rarities order), then by display name
             var sorted = new List<CardDefinition>(GameDB.Cards);
+            // Apply name filter if provided
+            if (searching)
+            {
+                string q = _searchQuery.Trim();
+                sorted.RemoveAll(card => card == null || string.IsNullOrEmpty(card.DisplayName) ||
+                    card.DisplayName.IndexOf(q, System.StringComparison.OrdinalIgnoreCase) < 0);
+            }
             sorted.Sort((a, b) =>
             {
                 var cpa = PlayerProfile.GetOrCreateCard(a.CardId);
@@ -124,7 +137,27 @@ namespace TR.UI
                     // Ensure binding reflects latest player state
                     ui.Bind(card);
                 }
+                ui.gameObject.SetActive(true);
                 ordered.Add(ui);
+            }
+
+            // If searching, hide all non-matches and skip animations. Keep pool for reuse.
+            if (searching)
+            {
+                var keep = new HashSet<CollectionItemUI>(ordered);
+                foreach (var it in _items)
+                {
+                    if (it == null) continue;
+                    if (!keep.Contains(it)) it.gameObject.SetActive(false);
+                }
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    ordered[i].transform.SetSiblingIndex(i);
+                }
+                Canvas.ForceUpdateCanvases();
+                var rtS = listRoot as RectTransform;
+                if (rtS != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rtS);
+                return;
             }
 
             if (firstBuild)
@@ -248,6 +281,14 @@ namespace TR.UI
                 rarityDescending = desc;
                 Refresh();
             }
+        }
+
+        // Handle search input change
+        private string _searchQuery = string.Empty;
+        private void HandleSearchChanged(string text)
+        {
+            _searchQuery = text ?? string.Empty;
+            Refresh();
         }
     }
 }

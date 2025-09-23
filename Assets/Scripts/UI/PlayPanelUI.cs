@@ -27,6 +27,18 @@ namespace TR.UI
         [SerializeField] private float castleXPGainDelay = 0.25f;
         [Tooltip("Castle XP bar animation speed (XP per second, visual only)")]
         [SerializeField] private float castleXpAnimSpeed = 250f;
+        [Header("Castle Level-Up VFX")]
+        [Tooltip("Particle/VFX key to play when castle levels up (uses ParticleManager via reflection)")]
+        [SerializeField] private string levelUpVfxKey = "";
+        [Tooltip("Optional transform to use as spawn parent/anchor for level-up VFX")]
+        [SerializeField] private Transform levelUpVfxParent;
+        [Tooltip("If true, pressing 'L' will trigger the level-up VFX for testing")] 
+        [SerializeField] private bool debugTriggerLevelUpVfxWithL = true;
+        [Tooltip("Delay between each VFX burst (seconds)")]
+        [SerializeField] private float levelUpVfxBurstStagger = 0.08f;
+        [Header("SFX")]
+        [Tooltip("SFX key to play when castle levels up (uses SFXManager)")]
+        [SerializeField] private string levelUpSfxKey = "";
         [Header("Arena Image")]
         [SerializeField] private Image arenaImage;           // shows current arena image and opens Trophy Road
 
@@ -336,6 +348,8 @@ namespace TR.UI
                 {
                     curXpF -= needed;
                     curLevel++;
+                    // VFX should play after the splash delay has already occurred, so do not add extra delay here
+                    TryPlayLevelUpVfx(0f);
                     needed = curLevel < castleCfg.MaxLevel ? Mathf.Max(1, castleCfg.GetXPForLevel(curLevel)) : 1;
                 }
                 if (curLevel >= toLevel)
@@ -348,6 +362,78 @@ namespace TR.UI
             }
             UpdateCastleUIInstant(castleCfg, toLevel, toXp);
             _castleAnimCo = null;
+        }
+
+        // Trigger level-up VFX using the project's ParticleManager static API
+        // delaySeconds is an additional delay; pass 0 during the XP animation since we already waited for the splash delay.
+        private void TryPlayLevelUpVfx(float delaySeconds)
+        {
+            if (string.IsNullOrWhiteSpace(levelUpVfxKey)) return;
+            float d = Mathf.Max(0f, delaySeconds);
+            StartCoroutine(SpawnLevelUpVfxAfterDelay(d));
+        }
+
+        private System.Collections.IEnumerator SpawnLevelUpVfxAfterDelay(float delay)
+        {
+            if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+            // Play level-up SFX once
+            if (!string.IsNullOrWhiteSpace(levelUpSfxKey) && TR.Audio.SFXManager.Instance != null)
+            {
+                TR.Audio.SFXManager.Instance.Play(levelUpSfxKey);
+            }
+            // Default: world-space spawns under ParticleManager (parent = null)
+            // If a parent is explicitly provided, use its position for all three spawns
+            var cam = Camera.main;
+            var positions = new System.Collections.Generic.List<Vector3>(3);
+            Transform parent = null;
+            if (levelUpVfxParent != null)
+            {
+                Vector3 basePos = levelUpVfxParent.position;
+                parent = levelUpVfxParent;
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector3 jitter = new Vector3(Random.Range(-0.4f, 0.4f), Random.Range(-0.2f, 0.2f), 0f);
+                    positions.Add(basePos + jitter);
+                }
+            }
+            else if (cam != null)
+            {
+                float z = 5f; // distance in front of camera
+                float[] xs = new float[] { 0.2f, 0.5f, 0.8f };
+                for (int i = 0; i < xs.Length; i++)
+                {
+                    float vx = xs[i] + Random.Range(-0.05f, 0.05f);
+                    float vy = 0.55f + Random.Range(-0.1f, 0.1f);
+                    Vector3 wp = cam.ViewportToWorldPoint(new Vector3(Mathf.Clamp01(vx), Mathf.Clamp01(vy), z));
+                    positions.Add(wp);
+                }
+                parent = null;
+            }
+            else
+            {
+                // Fallback: around this transform in world space
+                Vector3 center = transform.position + Vector3.up * 1.5f;
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector3 offset = new Vector3((i - 1) * 1.2f, 0f, 0f) + new Vector3(Random.Range(-0.2f, 0.2f), Random.Range(-0.2f, 0.2f), 0f);
+                    positions.Add(center + offset);
+                }
+                parent = null;
+            }
+
+            for (int i = 0; i < positions.Count; i++)
+            {
+                try
+                {
+                    TR.VFX.ParticleManager.Spawn(levelUpVfxKey, positions[i], Quaternion.identity, parent, true);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[PlayPanelUI] Failed to spawn level-up VFX with key '{levelUpVfxKey}': {ex.Message}");
+                }
+                if (levelUpVfxBurstStagger > 0f && i < positions.Count - 1)
+                    yield return new WaitForSecondsRealtime(levelUpVfxBurstStagger);
+            }
         }
 
         private float ComputeVisualDistance(TR.Data.CastleProgression castleCfg, int fromLevel, int fromXp, int toLevel, int toXp)
@@ -365,6 +451,16 @@ namespace TR.UI
             }
             dist += Mathf.Max(0, toXp - x);
             return dist;
+        }
+
+        private void Update()
+        {
+            if (debugTriggerLevelUpVfxWithL && Input.GetKeyDown(KeyCode.L))
+            {
+                // For debug trigger, spawn immediately
+                TryPlayLevelUpVfx(0f);
+                Debug.Log("Level up vfx played");
+            }
         }
 
         private System.Collections.IEnumerator FadeOut(CanvasGroup cg, float duration)
