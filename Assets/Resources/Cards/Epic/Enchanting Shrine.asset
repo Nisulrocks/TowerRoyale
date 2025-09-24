@@ -9,28 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
-  m_Name: Guard Tower
+  m_Script: {fileID: 11500000, guid: 7c5ac58196bd85c48bd091db7dff6762, type: 3}
+  m_Name: Enchanting Shrine
   m_EditorClassIdentifier: 
-  cardId: guard_tower
-  displayName: Guard Tower
+  cardId: enchanting_shrine
+  displayName: Enchanting Shrine
   icon: {fileID: 0}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
-  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
-  dpsBase: 5
-  dpsPerLevel: 1
-  fireRateBase: 1
-  fireRatePerLevel: 0.25
-  rangeBase: 2
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  dpsBase: 0
+  dpsPerLevel: 0
+  fireRateBase: 0
+  fireRatePerLevel: 0
+  rangeBase: 0
   rangePerLevel: 0
   splashBase: 0
   splashPerLevel: 0
-  costBase: 15
-  costPerLevel: 5
+  costBase: 90
+  costPerLevel: 50
   critChanceBase: 0
   critChancePerLevel: 0
-  critMultiplierBase: 0
+  critMultiplierBase: 2
   critMultiplierPerLevel: 0
   critBurstText: CRIT!
   burnDpsBase: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
   sfxSlowApplyKey: 
   sfxStunApplyKey: 
   sfxCritKey: 
-  rotateToTarget: 1
+  rotateToTarget: 0
   rotateSpeedDegPerSec: 360
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
@@ -120,3 +120,49 @@ MonoBehaviour:
   chainZapJitter: 0.15
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
+  buffRangeBase: 3
+  buffRangePerLevel: 0.25
+  buffDps: 1
+  buffFireRate: 0
+  buffRange: 0
+  buffSplash: 0
+  allowedRarities:
+  - {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  - {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+  - {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+  - {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
+  dpsPercentBase: 0.5
+  dpsPercentPerLevel: 0.05
+  fireRatePercentBase: 0
+  fireRatePercentPerLevel: 0
+  rangePercentBase: 0
+  rangePercentPerLevel: 0
+  splashPercentBase: 0
+  splashPercentPerLevel: 0
+  buffBurn: 0
+  burnDpsPercentBase: 0
+  burnDpsPercentPerLevel: 0
+  burnDurPercentBase: 0
+  burnDurPercentPerLevel: 0
+  buffPoison: 0
+  poisonDpsPercentBase: 0
+  poisonDpsPercentPerLevel: 0
+  poisonDurPercentBase: 0
+  poisonDurPercentPerLevel: 0
+  buffSlow: 0
+  slowPercentBuffBase: 0
+  slowPercentBuffPerLevel: 0
+  slowDurPercentBase: 0
+  slowDurPercentPerLevel: 0
+  buffStun: 0
+  stunChancePercentBase: 0
+  stunChancePercentPerLevel: 0
+  stunDurPercentBase: 0
+  stunDurPercentPerLevel: 0
+  buffEconomyIncome: 0
+  economyIncomePercentBase: 0
+  economyIncomePercentPerLevel: 0
+  maxHealthBase: 45
+  maxHealthPerLevel: 10
+  decayPerSecBase: 1
+  decayPerSecPerLevel: 2

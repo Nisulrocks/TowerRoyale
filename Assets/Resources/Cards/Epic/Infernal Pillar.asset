@@ -9,25 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
-  m_Name: Guard Tower
+  m_Script: {fileID: 11500000, guid: 7b4eb4483d824cc41b853d705619a420, type: 3}
+  m_Name: Infernal Pillar
   m_EditorClassIdentifier: 
-  cardId: guard_tower
-  displayName: Guard Tower
+  cardId: infernal_piller
+  displayName: Infernal Pillar
   icon: {fileID: 0}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
-  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
-  dpsBase: 5
-  dpsPerLevel: 1
-  fireRateBase: 1
-  fireRatePerLevel: 0.25
-  rangeBase: 2
-  rangePerLevel: 0
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  dpsBase: 16
+  dpsPerLevel: 8
+  fireRateBase: 0
+  fireRatePerLevel: 0
+  rangeBase: 3.5
+  rangePerLevel: 0.25
   splashBase: 0
   splashPerLevel: 0
-  costBase: 15
-  costPerLevel: 5
+  costBase: 95
+  costPerLevel: 15
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
   sfxSlowApplyKey: 
   sfxStunApplyKey: 
   sfxCritKey: 
-  rotateToTarget: 1
+  rotateToTarget: 0
   rotateSpeedDegPerSec: 360
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
@@ -120,3 +120,20 @@ MonoBehaviour:
   chainZapJitter: 0.15
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
+  maxTargetsBase: 3
+  maxTargetsPerLevel: 0
+  rampUpPerSecBase: 0.5
+  rampUpPerSecPerLevel: 0.25
+  rampMaxMultiplierBase: 3
+  rampMaxMultiplierPerLevel: 0
+  multiTargetPenaltyBase: 0.25
+  multiTargetPenaltyPerLevel: 0
+  rampDownPerSecBase: 0
+  rampDownPerSecPerLevel: 0
+  beamStartColor: {r: 1, g: 0.6, b: 0.2, a: 1}
+  beamEndColor: {r: 1, g: 0.2, b: 0, a: 1}
+  beamBaseWidth: 0.04
+  beamMaxWidth: 0.1
+  beamJitter: 1
+  beamJitterAmplitude: 0.05
+  beamMaterial: {fileID: 2100000, guid: 5a53a251763edd64bafa33ff9eb2c9dc, type: 2}

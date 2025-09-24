@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
-  m_Name: Guard Tower
+  m_Name: Cobweb Tower
   m_EditorClassIdentifier: 
-  cardId: guard_tower
-  displayName: Guard Tower
+  cardId: cobweb_tower
+  displayName: Cobweb Tower
   icon: {fileID: 0}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
   towerPrefab: {fileID: 0}
-  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 5
-  dpsPerLevel: 1
+  dpsPerLevel: 0
   fireRateBase: 1
-  fireRatePerLevel: 0.25
-  rangeBase: 2
-  rangePerLevel: 0
+  fireRatePerLevel: 0
+  rangeBase: 4
+  rangePerLevel: 0.5
   splashBase: 0
   splashPerLevel: 0
-  costBase: 15
-  costPerLevel: 5
+  costBase: 30
+  costPerLevel: 10
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 0
@@ -73,11 +73,11 @@ MonoBehaviour:
   moveOnAfterEffect: 0
   moveOnIgnoreSeconds: 0.6
   focusOnHighestHp: 0
-  slowOnHit: 0
-  slowPercentBase: 0
-  slowPercentPerLevel: 0
-  slowDurationBase: 0
-  slowDurationPerLevel: 0
+  slowOnHit: 1
+  slowPercentBase: 0.6
+  slowPercentPerLevel: 0.01
+  slowDurationBase: 3
+  slowDurationPerLevel: 0.25
   stunOnHit: 0
   stunChanceBase: 0
   stunChancePerLevel: 0

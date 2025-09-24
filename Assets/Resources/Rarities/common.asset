@@ -15,7 +15,7 @@ MonoBehaviour:
   rarityId: common
   displayName: Common
   color: {r: 0.5471698, g: 0.5471698, b: 0.5471698, a: 1}
-  maxLevel: 10
+  maxLevel: 20
   pointsBase: 100
   pointsPerLevel: 100
   dupPointsMin: 10

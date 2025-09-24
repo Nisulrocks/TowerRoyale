@@ -9,28 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
-  m_Name: Guard Tower
+  m_Script: {fileID: 11500000, guid: a59e5dec83df2884c8a44f52f194cc5d, type: 3}
+  m_Name: War Gong
   m_EditorClassIdentifier: 
-  cardId: guard_tower
-  displayName: Guard Tower
+  cardId: war_gong
+  displayName: War Gong
   icon: {fileID: 0}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
-  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
-  dpsBase: 5
-  dpsPerLevel: 1
-  fireRateBase: 1
-  fireRatePerLevel: 0.25
-  rangeBase: 2
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  dpsBase: 0
+  dpsPerLevel: 0
+  fireRateBase: 0
+  fireRatePerLevel: 0
+  rangeBase: 0
   rangePerLevel: 0
   splashBase: 0
   splashPerLevel: 0
-  costBase: 15
-  costPerLevel: 5
+  costBase: 80
+  costPerLevel: 40
   critChanceBase: 0
   critChancePerLevel: 0
-  critMultiplierBase: 0
+  critMultiplierBase: 2
   critMultiplierPerLevel: 0
   critBurstText: CRIT!
   burnDpsBase: 0
@@ -50,9 +50,9 @@ MonoBehaviour:
   zapHitVfxKey: 
   forceDefaultZapMaterial: 0
   zapMaterial: {fileID: 0}
-  zapGlowEnabled: 0
+  zapGlowEnabled: 1
   zapGlowBoost: 2
-  chainGlowEnabled: 0
+  chainGlowEnabled: 1
   chainGlowBoost: 2
   tornadoOnHit: 0
   tornadoRadiusBase: 0
@@ -73,16 +73,16 @@ MonoBehaviour:
   moveOnAfterEffect: 0
   moveOnIgnoreSeconds: 0.6
   focusOnHighestHp: 0
-  slowOnHit: 0
-  slowPercentBase: 0
-  slowPercentPerLevel: 0
-  slowDurationBase: 0
-  slowDurationPerLevel: 0
-  stunOnHit: 0
-  stunChanceBase: 0
-  stunChancePerLevel: 0
-  stunDurationBase: 0
-  stunDurationPerLevel: 0
+  slowOnHit: 1
+  slowPercentBase: 0.6
+  slowPercentPerLevel: 0.02
+  slowDurationBase: 3
+  slowDurationPerLevel: 0.2
+  stunOnHit: 1
+  stunChanceBase: 0.7
+  stunChancePerLevel: 0.01
+  stunDurationBase: 3
+  stunDurationPerLevel: 0.2
   frostbiteOnHit: 0
   frostbiteDpsBase: 0
   frostbiteDpsPerLevel: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
   sfxSlowApplyKey: 
   sfxStunApplyKey: 
   sfxCritKey: 
-  rotateToTarget: 1
+  rotateToTarget: 0
   rotateSpeedDegPerSec: 360
   projectilePrefab: {fileID: 0}
   projectileSpeed: 8
@@ -120,3 +120,16 @@ MonoBehaviour:
   chainZapJitter: 0.15
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
+  pulseIntervalBase: 5
+  pulseIntervalPerLevel: 0
+  pulseRadiusBase: 4
+  pulseRadiusPerLevel: 0
+  pulseDamageBase: 5
+  pulseDamagePerLevel: 0
+  pulseAppliesOnHitEffects: 1
+  shockwaveVfxKey: 
+  sfxPulseKey: 
+  rippleDuration: 0.25
+  rippleLineWidth: 0.05
+  rippleColor: {r: 0.7, g: 0.9, b: 1, a: 0.6}
+  rippleSegments: 64

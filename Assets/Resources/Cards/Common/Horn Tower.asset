@@ -26,8 +26,8 @@ MonoBehaviour:
   rangePerLevel: 0
   splashBase: 0
   splashPerLevel: 0
-  costBase: 10
-  costPerLevel: 7
+  costBase: 20
+  costPerLevel: 5
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 2

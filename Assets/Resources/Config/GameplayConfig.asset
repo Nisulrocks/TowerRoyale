@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc7dd7ba142780e44891cdbf2c47589b, type: 3}
   m_Name: GameplayConfig
   m_EditorClassIdentifier: 
-  maxDeckSize: 4
+  maxDeckSize: 5
   cardPointsOfferSlots:
   - rarityId: legendary
     pointsMin: 10

@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad7e483f358063443a260b256b454a22, type: 3}
-  m_Name: Guard Tower
+  m_Name: Toxic Fortress
   m_EditorClassIdentifier: 
-  cardId: guard_tower
-  displayName: Guard Tower
+  cardId: toxic_fortress
+  displayName: Toxic Fortress
   icon: {fileID: 0}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
-  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
-  dpsBase: 5
-  dpsPerLevel: 1
-  fireRateBase: 1
-  fireRatePerLevel: 0.25
-  rangeBase: 2
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  dpsBase: 8
+  dpsPerLevel: 0
+  fireRateBase: 0.5
+  fireRatePerLevel: 0
+  rangeBase: 5
   rangePerLevel: 0
-  splashBase: 0
-  splashPerLevel: 0
-  costBase: 15
-  costPerLevel: 5
+  splashBase: 2.5
+  splashPerLevel: 0.5
+  costBase: 100
+  costPerLevel: 25
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 0
@@ -37,10 +37,10 @@ MonoBehaviour:
   burnDpsPerLevel: 0
   burnDurBase: 0
   burnDurPerLevel: 0
-  poisonDpsBase: 0
-  poisonDpsPerLevel: 0
-  poisonDurBase: 0
-  poisonDurPerLevel: 0
+  poisonDpsBase: 10
+  poisonDpsPerLevel: 5
+  poisonDurBase: 5
+  poisonDurPerLevel: 0.5
   useLightningZapOnHit: 0
   zapDuration: 0.12
   zapWidth: 0.06

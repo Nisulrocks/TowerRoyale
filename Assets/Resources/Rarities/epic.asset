@@ -15,7 +15,7 @@ MonoBehaviour:
   rarityId: epic
   displayName: Epic
   color: {r: 0.7, g: 0.3, b: 1, a: 1}
-  maxLevel: 6
+  maxLevel: 10
   pointsBase: 25
   pointsPerLevel: 25
   dupPointsMin: 5

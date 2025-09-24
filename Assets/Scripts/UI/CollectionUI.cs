@@ -20,11 +20,21 @@ namespace TR.UI
         [SerializeField] private TMP_Dropdown raritySortDropdown;
         [Tooltip("If true, rarity order is reversed (Legendary -> Common)")]
         [SerializeField] private bool rarityDescending = false;
+        [Header("Rarity Order Override")]
+        [Tooltip("Optional explicit rarity order from lowest to highest (e.g., Common, Rare, Epic, Legendary). Leave empty to use GameDB order.")]
+        [SerializeField] private List<RarityDefinition> rarityOrderOverride;
         [Header("Search")]
         [Tooltip("Optional input field to filter cards by name (case-insensitive)")]
         [SerializeField] private TMP_InputField searchInput;
+        [Tooltip("Debounce time before applying search filter (seconds)")]
+        [SerializeField] private float searchDebounceSeconds = 0.08f;
+        [Tooltip("When typing continuously (e.g., holding backspace), apply updates at most this often (seconds)")]
+        [SerializeField] private float searchThrottleSeconds = 0.10f;
 
         private readonly List<CollectionItemUI> _items = new();
+        // Track running per-item animations to cancel on rapid refreshes
+        private readonly System.Collections.Generic.Dictionary<CollectionItemUI, Coroutine> _moveCoByItem = new();
+        private readonly System.Collections.Generic.Dictionary<CollectionItemUI, Coroutine> _appearCoByItem = new();
 
         private void Awake()
         {
@@ -48,6 +58,7 @@ namespace TR.UI
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
             if (raritySortDropdown != null) raritySortDropdown.onValueChanged.RemoveListener(HandleRaritySortChanged);
             if (searchInput != null) searchInput.onValueChanged.RemoveListener(HandleSearchChanged);
+            CancelSearchDebounce();
         }
 
         private void HandleSoftCurrencyChanged(int newBalance)
@@ -65,10 +76,26 @@ namespace TR.UI
 
             GameDB.EnsureLoaded();
             bool searching = !string.IsNullOrWhiteSpace(_searchQuery);
+            // Cancel any running item animations to avoid overlap/duplicates when layout changes rapidly
+            StopAllItemAnimations();
             // Compute rarity priority using order in GameDB.Rarities (lower index = more common)
+            // Build override lookup if provided
+            System.Collections.Generic.Dictionary<RarityDefinition, int> rarityPriorityOverride = null;
+            if (rarityOrderOverride != null && rarityOrderOverride.Count > 0)
+            {
+                rarityPriorityOverride = new System.Collections.Generic.Dictionary<RarityDefinition, int>(rarityOrderOverride.Count);
+                for (int i = 0; i < rarityOrderOverride.Count; i++)
+                {
+                    var rr = rarityOrderOverride[i];
+                    if (rr != null && !rarityPriorityOverride.ContainsKey(rr)) rarityPriorityOverride[rr] = i;
+                }
+            }
+
             int GetRarityPriority(RarityDefinition r)
             {
                 if (r == null) return int.MaxValue;
+                if (rarityPriorityOverride != null && rarityPriorityOverride.TryGetValue(r, out var idx))
+                    return idx;
                 var rs = GameDB.Rarities;
                 for (int i = 0; i < rs.Count; i++) if (rs[i] == r) return i;
                 return int.MaxValue - 1;
@@ -123,8 +150,11 @@ namespace TR.UI
 
             var ordered = new List<CollectionItemUI>(sorted.Count);
             var newlyCreated = new HashSet<CollectionItemUI>();
+            var seenIds = new HashSet<string>();
             foreach (var card in sorted)
             {
+                if (card == null || string.IsNullOrEmpty(card.CardId)) continue;
+                if (!seenIds.Add(card.CardId)) continue; // guard against duplicates in data or race
                 if (!existingById.TryGetValue(card.CardId, out var ui) || ui == null)
                 {
                     ui = Instantiate(itemPrefab, listRoot);
@@ -209,18 +239,51 @@ namespace TR.UI
                     // Spawn from target with small scale (no alpha tween to avoid clashing with existing CanvasGroups)
                     rt.position = targetPos;
                     rt.localScale = Vector3.one * 0.88f;
-                    StartCoroutine(AnimateNewAppear(rt, le));
+                    StopItemAnimation(ui);
+                    var co = StartCoroutine(AnimateNewAppearTracked(ui, rt, le));
+                    _appearCoByItem[ui] = co;
                 }
                 else
                 {
                     // Move from previous world position to new layout position
                     rt.position = startPos;
-                    StartCoroutine(AnimateMoveTo(rt, targetPos, le));
+                    StopItemAnimation(ui);
+                    var co = StartCoroutine(AnimateMoveToTracked(ui, rt, targetPos, le));
+                    _moveCoByItem[ui] = co;
                 }
             }
         }
 
-        private System.Collections.IEnumerator AnimateMoveTo(RectTransform rt, Vector3 targetWorldPos, LayoutElement le)
+        private void StopAllItemAnimations()
+        {
+            // Stop and clear tracked coroutines, and ensure layout is not ignored
+            foreach (var kv in _moveCoByItem)
+            {
+                if (kv.Value != null) StopCoroutine(kv.Value);
+                var ui = kv.Key; if (ui == null) continue;
+                var le = ui.GetComponent<LayoutElement>(); if (le != null) le.ignoreLayout = false;
+            }
+            foreach (var kv in _appearCoByItem)
+            {
+                if (kv.Value != null) StopCoroutine(kv.Value);
+                var ui = kv.Key; if (ui == null) continue;
+                var le = ui.GetComponent<LayoutElement>(); if (le != null) le.ignoreLayout = false;
+            }
+            _moveCoByItem.Clear();
+            _appearCoByItem.Clear();
+        }
+
+        private void StopItemAnimation(CollectionItemUI ui)
+        {
+            if (ui == null) return;
+            if (_moveCoByItem.TryGetValue(ui, out var mco) && mco != null) { StopCoroutine(mco); }
+            if (_appearCoByItem.TryGetValue(ui, out var aco) && aco != null) { StopCoroutine(aco); }
+            _moveCoByItem.Remove(ui);
+            _appearCoByItem.Remove(ui);
+            var le = ui.GetComponent<LayoutElement>(); if (le != null) le.ignoreLayout = false;
+        }
+
+        private System.Collections.IEnumerator AnimateMoveToTracked(CollectionItemUI ui, RectTransform rt, Vector3 targetWorldPos, LayoutElement le)
         {
             float t = 0f; const float dur = 0.22f;
             Vector3 from = rt.position;
@@ -233,10 +296,11 @@ namespace TR.UI
             }
             rt.position = targetWorldPos;
             if (le != null) le.ignoreLayout = false;
+            _moveCoByItem.Remove(ui);
             Canvas.ForceUpdateCanvases();
         }
 
-        private System.Collections.IEnumerator AnimateNewAppear(RectTransform rt, LayoutElement le)
+        private System.Collections.IEnumerator AnimateNewAppearTracked(CollectionItemUI ui, RectTransform rt, LayoutElement le)
         {
             float t = 0f; const float dur = 0.16f;
             Vector3 fromScale = rt.localScale;
@@ -250,6 +314,7 @@ namespace TR.UI
             }
             rt.localScale = toScale;
             if (le != null) le.ignoreLayout = false;
+            _appearCoByItem.Remove(ui);
             Canvas.ForceUpdateCanvases();
         }
 
@@ -285,10 +350,57 @@ namespace TR.UI
 
         // Handle search input change
         private string _searchQuery = string.Empty;
+        private Coroutine _searchDebounceCo;
+        private float _lastSearchRefreshTime = -999f;
+        private float _pendingSearchDelay = 0f;
         private void HandleSearchChanged(string text)
         {
             _searchQuery = text ?? string.Empty;
+            // Hybrid throttle + debounce: update immediately if enough time has passed since last refresh,
+            // otherwise schedule a short delayed refresh.
+            float now = Time.unscaledTime;
+            float sinceLast = now - _lastSearchRefreshTime;
+            float throttle = Mathf.Max(0f, searchThrottleSeconds);
+            if (sinceLast >= throttle)
+            {
+                CancelSearchDebounce();
+                _lastSearchRefreshTime = now;
+                Refresh();
+            }
+            else
+            {
+                // Schedule a refresh after the remaining throttle window or the debounce window, whichever is larger
+                float remainingThrottle = Mathf.Max(0f, throttle - sinceLast);
+                _pendingSearchDelay = Mathf.Max(searchDebounceSeconds, remainingThrottle);
+                if (_searchDebounceCo != null) StopCoroutine(_searchDebounceCo);
+                _searchDebounceCo = StartCoroutine(SearchDebounceCo());
+            }
+        }
+
+        private System.Collections.IEnumerator SearchDebounceCo()
+        {
+            float wait = Mathf.Max(0f, _pendingSearchDelay > 0f ? _pendingSearchDelay : searchDebounceSeconds);
+            if (wait > 0f)
+            {
+                float t = 0f;
+                while (t < wait)
+                {
+                    t += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+            }
+            _searchDebounceCo = null;
+            _lastSearchRefreshTime = Time.unscaledTime;
             Refresh();
+        }
+
+        private void CancelSearchDebounce()
+        {
+            if (_searchDebounceCo != null)
+            {
+                StopCoroutine(_searchDebounceCo);
+                _searchDebounceCo = null;
+            }
         }
     }
 }

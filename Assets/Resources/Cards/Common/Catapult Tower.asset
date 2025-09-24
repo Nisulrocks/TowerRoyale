@@ -27,7 +27,7 @@ MonoBehaviour:
   splashBase: 1.5
   splashPerLevel: 0.25
   costBase: 65
-  costPerLevel: 7
+  costPerLevel: 8
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 0

@@ -3188,6 +3188,11 @@ MonoBehaviour:
   softCurrencyText: {fileID: 1306840462}
   raritySortDropdown: {fileID: 244655492}
   rarityDescending: 0
+  rarityOrderOverride:
+  - {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  - {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+  - {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+  - {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
   searchInput: {fileID: 867674944}
 --- !u!114 &569010801
 MonoBehaviour:
@@ -9098,8 +9103,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -307.93427}
-  m_SizeDelta: {x: 1800, y: 1980.9594}
+  m_AnchoredPosition: {x: 0, y: -1780.3148}
+  m_SizeDelta: {x: 1800, y: 4925.72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1948350824
 MonoBehaviour:
