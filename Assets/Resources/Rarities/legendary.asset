@@ -24,3 +24,4 @@ MonoBehaviour:
   upgradeCostPerLevel: 75
   castleXpBase: 40
   castleXpPerLevel: 40
+  confettiOnReveal: 1

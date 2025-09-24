@@ -50,6 +50,10 @@ namespace TR.UI
         [Header("Result Label (NEW!/points)")]
         [Tooltip("Offset applied to the result label under each card (x,y) in anchored pixels")]
         [SerializeField] private Vector2 resultLabelOffset = new Vector2(0f, -28f);
+        [Tooltip("Text color used when the card is NEW!")]
+        [SerializeField] private Color resultLabelNewColor = new Color(0.2f, 1f, 0.4f);
+        [Tooltip("Text color used when awarding duplicate points (e.g., +15 pts)")]
+        [SerializeField] private Color resultLabelPointsColor = new Color(1f, 0.9f, 0.3f);
 
         [Header("Hover Spread")]
         [SerializeField] private float hoverSpread = 60f;         // how much neighbors move away
@@ -386,12 +390,12 @@ namespace TR.UI
             if (res.isNew)
             {
                 msg = "NEW!";
-                tmp.color = new Color(0.2f, 1f, 0.4f);
+                tmp.color = resultLabelNewColor;
             }
             else
             {
                 msg = $"+{res.pointsAwarded} pts";
-                tmp.color = new Color(1f, 0.9f, 0.3f);
+                tmp.color = resultLabelPointsColor;
             }
 
             // If enough points for next level, show upgrade available instead of level delta
@@ -454,8 +458,8 @@ namespace TR.UI
                     // Rarity pulse color feedback
                     PulseRarityColor(card, res.card?.Rarity);
                     TryPlayRarityHit(res.card?.Rarity);
-                    // Legendary flare-ups
-                    if (IsLegendary(res.card?.Rarity))
+                    // Rarity-based confetti (exposed on RarityDefinition)
+                    if (res.card?.Rarity != null && res.card.Rarity.ConfettiOnReveal)
                     {
                         StartCoroutine(ConfettiBurst(card));
                         StartCoroutine(ShakeTransform(card, 0.2f, 6f));

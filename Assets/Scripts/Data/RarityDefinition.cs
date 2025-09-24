@@ -33,11 +33,16 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int castleXpBase = 5;
         [Min(0)] [SerializeField] private int castleXpPerLevel = 5;
 
+        [Header("Pack Reveal FX")]
+        [Tooltip("If enabled, pack opening will play confetti when a card of this rarity is revealed.")]
+        [SerializeField] private bool confettiOnReveal = false;
+
         // Getters
         public string RarityId => rarityId;
         public string DisplayName => displayName;
         public Color Color => color;
         public int MaxLevel => maxLevel;
+        public bool ConfettiOnReveal => confettiOnReveal;
 
         // Points required to go from (level-1) -> level using linear formula
         public int GetPointsRequiredForLevel(int targetLevel)
