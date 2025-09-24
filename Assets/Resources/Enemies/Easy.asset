@@ -15,8 +15,8 @@ MonoBehaviour:
   enemyId: 1
   displayName: noob
   movementSpeed: 1.5
-  maxHealth: 100
-  damagePerHit: 10
+  maxHealth: 750
+  damagePerHit: 5
   prefab: {fileID: 7063429890210703705, guid: 15ee138101c50c34a94d0d300bbf549c, type: 3}
   useRegenAbility: 0
   regenPerSecondBase: 0.2

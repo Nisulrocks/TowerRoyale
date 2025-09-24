@@ -28,7 +28,7 @@ namespace TR.Systems
                 return results;
             }
 
-            var weights = BuildWeights(pack.RarityWeights);
+            var weights = BuildWeights(pack);
             int count = Mathf.Max(0, pack.CardsPerPack);
 
             // If a guaranteed rarity is specified, reserve one slot for it
@@ -75,13 +75,48 @@ namespace TR.Systems
             return OpenPack(pack, rng);
         }
 
-        private static int[] BuildWeights(RarityWeight[] entries)
+        private static int[] BuildWeights(PackDefinition pack)
         {
+            var entries = pack != null ? pack.RarityWeights : null;
             if (entries == null || entries.Length == 0) return System.Array.Empty<int>();
             var weights = new int[entries.Length];
-            for (int i = 0; i < entries.Length; i++)
+            if (pack.UsePercentages)
             {
-                weights[i] = Mathf.Max(0, entries[i]?.weight ?? 0);
+                // Convert percents to integer weights, normalizing to sum 100 if possible
+                float sum = 0f;
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    sum += Mathf.Max(0f, entries[i]?.percent ?? 0f);
+                }
+                if (sum <= 0.0001f)
+                {
+                    // Even distribution fallback
+                    for (int i = 0; i < entries.Length; i++) weights[i] = 1;
+                    return weights;
+                }
+                // Scale to 100 then round to ints while ensuring total >= 1
+                int totalInt = 0;
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    float p = Mathf.Max(0f, entries[i].percent);
+                    int w = Mathf.Max(0, Mathf.RoundToInt((p / sum) * 100f));
+                    weights[i] = w;
+                    totalInt += w;
+                }
+                // Ensure at least one slot has weight if rounding dropped all to 0
+                if (totalInt == 0)
+                {
+                    int idx = 0;
+                    for (int i = 1; i < entries.Length; i++) if ((entries[i]?.percent ?? 0f) > (entries[idx]?.percent ?? 0f)) idx = i;
+                    weights[idx] = 1;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    weights[i] = Mathf.Max(0, entries[i]?.weight ?? 0);
+                }
             }
             return weights;
         }

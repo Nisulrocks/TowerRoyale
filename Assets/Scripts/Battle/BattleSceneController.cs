@@ -96,6 +96,13 @@ namespace TR.Battle
             {
                 economy.BeginMatch();
             }
+            // Initialize per-arena effect caps
+            TR.Systems.EffectLimitService.Initialize(_arena);
+            // Apply arena-provided battle toast prefab if any (falls back to built-in otherwise)
+            if (_arena != null && _arena.BattleToastPrefab != null)
+            {
+                TR.UI.BattleToast.SetPrefab(_arena.BattleToastPrefab);
+            }
             if (deckBar != null)
             {
                 deckBar.BindFromPlayerDeck();

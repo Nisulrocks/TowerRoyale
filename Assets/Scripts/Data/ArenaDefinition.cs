@@ -79,10 +79,36 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int victoryTrophiesMin = 5;
         [Min(0)] [SerializeField] private int victoryTrophiesMax = 10;
 
+        [Header("Battle UI Prefabs (optional)")]
+        [Tooltip("If set, this prefab will be used for on-screen battle toasts in this arena. Prefab must contain a TextMeshProUGUI.")]
+        [SerializeField] private GameObject battleToastPrefab;
+
         [Header("Defeat Penalties (Trophies)")]
         [Tooltip("Range of trophies lost by the player on defeat in this arena.")]
         [Min(0)] [SerializeField] private int defeatTrophiesMin = 0;
         [Min(0)] [SerializeField] private int defeatTrophiesMax = 3;
+
+        [System.Serializable]
+        public struct EffectLimit
+        {
+            public EffectType type;
+            [Min(0)] public int maxCount;
+        }
+
+        [Header("Effect Limits (per battle)")]
+        [Tooltip("Optional caps per effect type (e.g., Slow=2 means at most 2 towers that apply Slow). Leave empty for no caps.")]
+        [SerializeField] private EffectLimit[] effectLimits;
+
+        [System.Serializable]
+        public struct CardLimit
+        {
+            public CardDefinition card;
+            [Min(0)] public int maxCount;
+        }
+
+        [Header("Card Limits (per battle)")]
+        [Tooltip("Optional caps per specific card (e.g., Only 1 Freeze Tower). Leave empty for no caps.")]
+        [SerializeField] private CardLimit[] cardLimits;
 
         public string ArenaId => arenaId;
         public string DisplayName => displayName;
@@ -113,6 +139,9 @@ namespace TR.Data
         public int VictoryTrophiesMax => Mathf.Max(victoryTrophiesMin, victoryTrophiesMax);
         public int DefeatTrophiesMin => Mathf.Min(defeatTrophiesMin, defeatTrophiesMax);
         public int DefeatTrophiesMax => Mathf.Max(defeatTrophiesMin, defeatTrophiesMax);
+        public GameObject BattleToastPrefab => battleToastPrefab;
+        public EffectLimit[] EffectLimits => effectLimits ?? System.Array.Empty<EffectLimit>();
+        public CardLimit[] CardLimits => cardLimits ?? System.Array.Empty<CardLimit>();
         public EnemyDefinition BossEnemy => bossEnemy;
         public bool SpawnBossOnSpecificWave => spawnBossOnSpecificWave;
         public int BossSpecificWave => Mathf.Clamp(bossSpecificWave, 1, WaveCount);

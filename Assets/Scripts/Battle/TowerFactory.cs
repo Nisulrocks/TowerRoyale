@@ -67,6 +67,17 @@ namespace TR.Battle
                 specialized = true;
             }
 
+            // Specialized: Pulse Tower
+            if (def is TR.Data.PulseCardDefinition)
+            {
+                var pulse = go.GetComponent<TowerPulse>();
+                if (pulse == null) pulse = go.AddComponent<TowerPulse>();
+                // Ensure the pulse component has the same definition/level initialization
+                pulse.Initialize(def, lv);
+                // TowerPulse derives from TowerBase and drives itself; no extra initialize needed beyond TowerBase.Initialize
+                specialized = true;
+            }
+
             // If a specialized behaviour exists, disable TowerBase combat so it handles only selection/range
             if (specialized)
             {

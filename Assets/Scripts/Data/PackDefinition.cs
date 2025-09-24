@@ -7,6 +7,7 @@ namespace TR.Data
     {
         public RarityDefinition rarity;
         public int weight = 1; // higher = more likely
+        [Range(0f,100f)] public float percent = 0f; // optional percentage if using percentage mode
     }
 
     [CreateAssetMenu(fileName = "PackDefinition", menuName = "TR/Data/Pack Definition")]
@@ -24,6 +25,9 @@ namespace TR.Data
         [SerializeField] private RarityWeight[] rarityWeights;
         [Tooltip("Optional: if assigned, this pack guarantees at least one card of this rarity.")]
         [SerializeField] private RarityDefinition guaranteedRarity;
+        [Header("Weights vs Percentages")]
+        [Tooltip("If ON, 'percent' fields are used and normalized to 100%. If OFF, integer 'weight' fields are used.")]
+        [SerializeField] private bool usePercentages = false;
 
         [Header("Specific Card (optional)")]
         [Tooltip("If true, this pack ignores rarity weights and always grants the specific card below for all slots.")]
@@ -47,6 +51,7 @@ namespace TR.Data
         public string DisplayName => displayName;
         public int CardsPerPack => cardsPerPack;
         public RarityWeight[] RarityWeights => rarityWeights;
+        public bool UsePercentages => usePercentages;
         public int Cost => Mathf.Max(0, cost);
         public RarityDefinition GuaranteedRarity => guaranteedRarity;
         public bool GiveSpecificCardOnly => giveSpecificCardOnly;

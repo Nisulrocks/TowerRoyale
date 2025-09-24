@@ -71,6 +71,27 @@ namespace TR.Battle
             var cp = PlayerProfile.GetOrCreateCard(card.CardId);
             level = Mathf.Max(1, cp.level);
             int cost = card.GetStatsForLevel(level).cost;
+            // Effect caps gating
+            if (TR.Systems.EffectLimitService.IsEnabled)
+            {
+                if (!TR.Systems.EffectLimitService.CanPlace(card, level, out var blockType, out var cap, out var current))
+                {
+                    Debug.LogWarning($"[Placement] Limit reached for {blockType}: {current}/{cap}. Cannot place {card.DisplayName}.");
+                    // Toast feedback
+                    TR.UI.BattleToast.Show($"Limit reached: {blockType} ({current}/{cap})");
+                    return false;
+                }
+            }
+            // Per-card caps gating
+            if (TR.Systems.EffectLimitService.CardCapsEnabled)
+            {
+                if (!TR.Systems.EffectLimitService.CanPlaceCard(card, out var capCard, out var curCard))
+                {
+                    Debug.LogWarning($"[Placement] Card limit reached for {card.DisplayName}: {curCard}/{capCard}.");
+                    TR.UI.BattleToast.Show($"Limit reached: {card.DisplayName} ({curCard}/{capCard})");
+                    return false;
+                }
+            }
             if (_economy != null && !_economy.CanAfford(cost))
             {
                 Debug.Log($"[Placement] Not enough money. Need {cost}, have {_economy.Current}.");
@@ -82,6 +103,24 @@ namespace TR.Battle
             if (_economy != null) _economy.Spend(cost);
             var pos = new Vector3(snap.position.x, snap.position.y, 0f);
             var towerGO = PlaceTower(card, level, pos);
+            // Register effects now that placement succeeded
+            if (towerGO != null && TR.Systems.EffectLimitService.IsEnabled)
+            {
+                TR.Systems.EffectLimitService.Register(card, level);
+                var eff = towerGO.GetComponent<EffectLimitBinding>();
+                if (eff == null) eff = towerGO.AddComponent<EffectLimitBinding>();
+                var types = TR.Systems.EffectLimitService.GetEffectTypesForCard(card, level);
+                eff.SetTypes(types);
+            }
+            // Register per-card now that placement succeeded
+            if (towerGO != null && TR.Systems.EffectLimitService.CardCapsEnabled)
+            {
+                TR.Systems.EffectLimitService.RegisterCard(card);
+                // Also attach a small binder to unregister per-card on destroy
+                var binder = towerGO.GetComponent<CardLimitBinding>();
+                if (binder == null) binder = towerGO.AddComponent<CardLimitBinding>();
+                binder.SetCardId(card.CardId);
+            }
             _occupied.Add(snap);
             // Attach a binding so when the tower is destroyed, the snap frees up
             if (towerGO != null)

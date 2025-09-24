@@ -15,19 +15,19 @@ MonoBehaviour:
   enemyId: 4
   displayName: dummy
   movementSpeed: 1
-  maxHealth: 250
-  damagePerHit: 100
+  maxHealth: 5000
+  damagePerHit: 20
   prefab: {fileID: 7063429890210703705, guid: 6869c0645636ea745ac798fac07577a9, type: 3}
   useRegenAbility: 1
-  regenPerSecondBase: 0.1
-  regenMissingHealthFactor: 0.2
-  regenSuppressAfterDamageSeconds: 0.1
-  regenPerSecondCap: 0.5
+  regenPerSecondBase: 0.03
+  regenMissingHealthFactor: 0.15
+  regenSuppressAfterDamageSeconds: 2.5
+  regenPerSecondCap: 0.02
   regenTotalPercentCap: 1
   regenWhileDoT: 1
-  regenDoTPenaltyMultiplier: 0
+  regenDoTPenaltyMultiplier: 0.2
   regenVfxKey: Regen
-  usePulseNukeAbility: 0
+  usePulseNukeAbility: 1
   pulseNukeRadius: 4.5
   pulseNukeCooldownMin: 45
   pulseNukeCooldownMax: 75
@@ -39,12 +39,12 @@ MonoBehaviour:
   pulseNukeRippleLineWidth: 0.12
   pulseNukeRippleSegments: 48
   pulseNukeSfxKey: 
-  useStunPulseAbility: 0
+  useStunPulseAbility: 1
   stunPulseRadius: 4.5
-  stunPulseCooldownMin: 1
-  stunPulseCooldownMax: 2
+  stunPulseCooldownMin: 45
+  stunPulseCooldownMax: 75
   stunPulseRandomCheckInterval: 1
-  stunPulseTriggerChance: 1
+  stunPulseTriggerChance: 0.3
   stunPulseDuration: 1
   stunPulseVfxKey: 
   stunPulseRippleColor: {r: 0.8, g: 0.9, b: 1, a: 0.55}

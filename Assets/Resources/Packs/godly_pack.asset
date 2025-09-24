@@ -10,26 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a65f71261299cc6469b6d331643465a3, type: 3}
-  m_Name: normal_pack
+  m_Name: godly_pack
   m_EditorClassIdentifier: 
-  packId: normal_pack
-  displayName: Normal Pack
+  packId: godly_pack
+  displayName: Godly Pack
   cost: 1
   cardsPerPack: 5
   rarityWeights:
-  - rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
-    weight: 0
-    percent: 86
-  - rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
-    weight: 0
-    percent: 10
   - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
     weight: 0
-    percent: 3
+    percent: 70
   - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
     weight: 0
-    percent: 1
-  guaranteedRarity: {fileID: 0}
+    percent: 20
+  - rarity: {fileID: 11400000, guid: dddd7cbad3b09e34b92a356a757b65b9, type: 2}
+    weight: 0
+    percent: 10
+  guaranteedRarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   usePercentages: 1
   giveSpecificCardOnly: 0
   specificCard: {fileID: 0}

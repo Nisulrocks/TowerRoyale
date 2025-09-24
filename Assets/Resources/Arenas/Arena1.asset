@@ -67,5 +67,10 @@ MonoBehaviour:
   defeatXPMax: 10
   victoryTrophiesMin: 5
   victoryTrophiesMax: 10
+  battleToastPrefab: {fileID: 7546983612998301532, guid: fd04a2c26a632ef4a8da69f2b605e2ba, type: 3}
   defeatTrophiesMin: 1
   defeatTrophiesMax: 1
+  effectLimits: []
+  cardLimits:
+  - card: {fileID: 11400000, guid: 2ff463be4d1149a49bc0a19a4258525f, type: 2}
+    maxCount: 1
