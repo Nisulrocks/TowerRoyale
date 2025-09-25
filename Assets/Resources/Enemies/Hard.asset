@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyId: 3
   displayName: Hacker
   movementSpeed: 0.5
-  maxHealth: 2000
+  maxHealth: 30
   damagePerHit: 15
   prefab: {fileID: 7063429890210703705, guid: 47d7b1ee1e2087243ae00cf93060371f, type: 3}
   useRegenAbility: 0

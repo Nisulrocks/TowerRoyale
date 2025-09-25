@@ -340,9 +340,16 @@ MonoBehaviour:
   continueButton: {fileID: 1816084719}
   headerText: {fileID: 453030516}
   allowKeyboardContinue: 1
-  resultLabelOffset: {x: 0, y: -280}
+  resultLabelOffset: {x: 0, y: -300}
   resultLabelNewColor: {r: 0, g: 0.8113208, b: 0.05319859, a: 1}
   resultLabelPointsColor: {r: 0.9245283, g: 0.79400665, b: 0, a: 1}
+  resultLabelFontSizeNew: 20
+  resultLabelFontSizePoints: 20
+  upgradeLabelOffset: {x: 0, y: -380}
+  upgradeLabelColor: {r: 0, g: 1, b: 0, a: 1}
+  upgradeLabelFontSize: 20
+  upgradeAvailableText: Upgrade Available
+  upgradeLabelFadeOutDuration: 0.6
   hoverSpread: 150
   hoverAnimDuration: 0.2
   hoverScale: 1.07

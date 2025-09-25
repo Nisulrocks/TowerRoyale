@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyId: 2
   displayName: pro
   movementSpeed: 1
-  maxHealth: 1200
+  maxHealth: 20
   damagePerHit: 10
   prefab: {fileID: 7063429890210703705, guid: ebfdce4d7e2ad764387faf5d35a75bc6, type: 3}
   useRegenAbility: 0

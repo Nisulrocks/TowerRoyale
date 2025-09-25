@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyId: 4
   displayName: dummy
   movementSpeed: 1
-  maxHealth: 5000
+  maxHealth: 100
   damagePerHit: 20
   prefab: {fileID: 7063429890210703705, guid: 6869c0645636ea745ac798fac07577a9, type: 3}
   useRegenAbility: 1

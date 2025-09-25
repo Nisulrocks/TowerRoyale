@@ -54,6 +54,21 @@ namespace TR.UI
         [SerializeField] private Color resultLabelNewColor = new Color(0.2f, 1f, 0.4f);
         [Tooltip("Text color used when awarding duplicate points (e.g., +15 pts)")]
         [SerializeField] private Color resultLabelPointsColor = new Color(1f, 0.9f, 0.3f);
+        [Tooltip("Font size for the NEW! label")] 
+        [SerializeField] private float resultLabelFontSizeNew = 22f;
+        [Tooltip("Font size for the +pts label")] 
+        [SerializeField] private float resultLabelFontSizePoints = 22f;
+        [Header("Upgrade Label (separate)")]
+        [Tooltip("Offset applied to the 'Upgrade Available' label under each card (x,y) in anchored pixels")] 
+        [SerializeField] private Vector2 upgradeLabelOffset = new Vector2(0f, -52f);
+        [Tooltip("Color for the 'Upgrade Available' label")] 
+        [SerializeField] private Color upgradeLabelColor = new Color(0.6f, 1f, 0.6f);
+        [Tooltip("Font size for the 'Upgrade Available' label")] 
+        [SerializeField] private float upgradeLabelFontSize = 20f;
+        [Tooltip("Text to show when an upgrade is available")] 
+        [SerializeField] private string upgradeAvailableText = "Upgrade Available";
+        [Tooltip("Fade-out duration for the 'Upgrade Available' label once cards compress to final overlap")] 
+        [SerializeField] private float upgradeLabelFadeOutDuration = 0.6f;
 
         [Header("Hover Spread")]
         [SerializeField] private float hoverSpread = 60f;         // how much neighbors move away
@@ -66,6 +81,7 @@ namespace TR.UI
         private readonly List<RectTransform> _backFaces = new();
         private Vector2[] _finalPositions; // compact layout positions after compress
         private readonly List<RectTransform> _resultLabels = new();
+        private readonly List<RectTransform> _upgradeLabelRects = new();
         private Coroutine _hoverTween;
         private int _currentHover = -1;
         private TR.Data.PackDefinition _currentPack;
@@ -236,6 +252,7 @@ namespace TR.UI
             _frontGroups.Clear();
             _backFaces.Clear();
             _resultLabels.Clear();
+            _upgradeLabelRects.Clear();
             float startX = -revealSpacing * (Mathf.Max(0, _results.Count - 1) * 0.5f);
             for (int i = 0; i < _results.Count; i++)
             {
@@ -364,6 +381,12 @@ namespace TR.UI
                     _finalPositions[i] = _spawned[i].anchoredPosition;
             }
 
+            // Fade out the "Upgrade Available" labels after we've reached final overlap
+            if (_upgradeLabelRects != null && _upgradeLabelRects.Count > 0)
+            {
+                StartCoroutine(FadeOutUpgradeLabels());
+            }
+
             continueButton.interactable = true;
         }
 
@@ -398,9 +421,15 @@ namespace TR.UI
                 tmp.color = resultLabelPointsColor;
             }
 
-            // If enough points for next level, show upgrade available instead of level delta
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = res.isNew ? resultLabelFontSizeNew : resultLabelFontSizePoints;
+            tmp.text = msg;
+            _resultLabels.Add(rt);
+
+            // Create a separate 'Upgrade Available' label below if eligible
             var cp = PlayerProfile.GetOrCreateCard(res.card.CardId);
             var rarity = res.card.Rarity;
+            bool showUpgrade = false;
             if (rarity != null)
             {
                 int currentLevel = Mathf.Max(1, cp.level);
@@ -408,21 +437,76 @@ namespace TR.UI
                 {
                     int nextLevel = currentLevel + 1;
                     int needed = rarity.GetPointsRequiredForLevel(nextLevel);
-                    if (cp.points >= needed)
-                    {
-                        msg += "  Upgrade Available";
-                    }
+                    showUpgrade = cp.points >= needed;
                 }
             }
-
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.fontSize = 22f;
-            tmp.text = msg;
-            _resultLabels.Add(rt);
+            if (showUpgrade)
+            {
+                var goUp = new GameObject("UpgradeLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var rtUp = goUp.GetComponent<RectTransform>();
+                rtUp.SetParent(cardRect, false);
+                rtUp.anchorMin = new Vector2(0.5f, 1f);
+                rtUp.anchorMax = new Vector2(0.5f, 1f);
+                rtUp.pivot = new Vector2(0.5f, 0f);
+                rtUp.anchoredPosition = upgradeLabelOffset;
+                var tmpUp = goUp.GetComponent<TextMeshProUGUI>();
+                tmpUp.text = upgradeAvailableText;
+                tmpUp.color = upgradeLabelColor;
+                tmpUp.fontSize = upgradeLabelFontSize;
+                tmpUp.alignment = TextAlignmentOptions.Center;
+                // Ensure we can fade it out later
+                var cgUp = goUp.GetComponent<CanvasGroup>();
+                if (cgUp == null) cgUp = goUp.AddComponent<CanvasGroup>();
+                cgUp.alpha = 1f;
+                _upgradeLabelRects.Add(rtUp);
+            }
         }
 
         // Expose read-only access so you can tweak label positions at runtime if needed
         public IReadOnlyList<RectTransform> ResultLabelRects => _resultLabels;
+        public IReadOnlyList<RectTransform> UpgradeLabelRects => _upgradeLabelRects;
+
+        private IEnumerator FadeOutUpgradeLabels()
+        {
+            float dur = Mathf.Max(0f, upgradeLabelFadeOutDuration);
+            if (dur <= 0f)
+            {
+                // Immediate hide
+                for (int i = 0; i < _upgradeLabelRects.Count; i++)
+                {
+                    var rt = _upgradeLabelRects[i]; if (rt == null) continue;
+                    var cg = rt.GetComponent<CanvasGroup>() ?? rt.gameObject.AddComponent<CanvasGroup>();
+                    cg.alpha = 0f;
+                }
+                yield break;
+            }
+            float t = 0f;
+            // Snapshot starting alphas in case some were modified
+            var groups = new System.Collections.Generic.List<CanvasGroup>(_upgradeLabelRects.Count);
+            for (int i = 0; i < _upgradeLabelRects.Count; i++)
+            {
+                var rt = _upgradeLabelRects[i]; if (rt == null) { groups.Add(null); continue; }
+                var cg = rt.GetComponent<CanvasGroup>();
+                if (cg == null) cg = rt.gameObject.AddComponent<CanvasGroup>();
+                groups.Add(cg);
+            }
+            while (t < 1f)
+            {
+                t += Time.deltaTime / Mathf.Max(0.01f, dur);
+                float a = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
+                for (int i = 0; i < groups.Count; i++)
+                {
+                    var cg = groups[i]; if (cg == null) continue;
+                    cg.alpha = a;
+                }
+                yield return null;
+            }
+            for (int i = 0; i < groups.Count; i++)
+            {
+                var cg = groups[i]; if (cg == null) continue;
+                cg.alpha = 0f;
+            }
+        }
 
         private IEnumerator FlipReveal(RectTransform card, CanvasGroup front, RectTransform back, CollectionService.AwardResult res)
         {
