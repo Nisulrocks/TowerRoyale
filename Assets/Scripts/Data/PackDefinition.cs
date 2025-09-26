@@ -1,4 +1,5 @@
 using UnityEngine;
+using TR.Systems;
 
 namespace TR.Data
 {
@@ -47,6 +48,14 @@ namespace TR.Data
         [Tooltip("SFX key played as the pack opens/slides (whoosh during slide phase)")]
         [SerializeField] private string openWhooshKey;
 
+        [Header("Unlocking")]
+        [Tooltip("Minimum arena required to unlock this pack in the shop. Leave empty for no restriction.")]
+        [SerializeField] private ArenaDefinition unlockArena;
+
+        [Header("Shop")]
+        [Tooltip("Order for listing this pack in the shop (lower comes first). Tie-breaker is DisplayName.")]
+        [SerializeField] private int shopOrder = 0;
+
         public string PackId => packId;
         public string DisplayName => displayName;
         public int CardsPerPack => cardsPerPack;
@@ -60,5 +69,20 @@ namespace TR.Data
         public Sprite PackArtSprite => packArtSprite;
         public string SealCrackKey => sealCrackKey;
         public string OpenWhooshKey => openWhooshKey;
+        public ArenaDefinition UnlockArena => unlockArena;
+        public int RequiredTrophies => unlockArena != null ? Mathf.Max(0, unlockArena.TrophyRequirement) : 0;
+        public int ShopOrder => shopOrder;
+
+        // Unlock checks
+        public bool IsUnlockedForTrophies(int trophies)
+        {
+            if (unlockArena == null) return true;
+            return Mathf.Max(0, trophies) >= Mathf.Max(0, unlockArena.TrophyRequirement);
+        }
+
+        public bool IsUnlockedForPlayer()
+        {
+            return IsUnlockedForTrophies(PlayerProfile.GetTrophies());
+        }
     }
 }

@@ -5996,6 +5996,7 @@ MonoBehaviour:
   dailyPackId: normal_pack
   dailyCooldownHours: 24
   dailyDisabledColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  dailyUnlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   starterPackId: starter_pack
   packOpeningSceneName: PackOpening
 --- !u!1 &1223933962

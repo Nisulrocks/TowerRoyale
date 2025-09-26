@@ -37,3 +37,5 @@ MonoBehaviour:
   packArtSprite: {fileID: 0}
   sealCrackKey: 
   openWhooshKey: 
+  unlockArena: {fileID: 0}
+  shopOrder: 0

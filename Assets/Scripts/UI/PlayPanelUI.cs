@@ -53,6 +53,8 @@ namespace TR.UI
         private Coroutine _deckFlashCo;
         private Color _deckWarnBaseColor = Color.white;
         private Vector3 _playBtnBaseScale = Vector3.one;
+        // Castle XP splash fade state
+        private Coroutine _xpGainFadeCo;
 
         private void OnEnable()
         {
@@ -63,6 +65,14 @@ namespace TR.UI
             // Start a lightweight updater to refresh ban countdown every second
             if (_banCountdownCo != null) StopCoroutine(_banCountdownCo);
             _banCountdownCo = StartCoroutine(BanCountdownUpdater());
+            // Ensure XP splash starts hidden on enable
+            if (castleXPGainText)
+            {
+                var cg = castleXPGainText.GetComponent<CanvasGroup>();
+                if (cg == null) cg = castleXPGainText.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = 0f;
+                castleXPGainText.gameObject.SetActive(false);
+            }
         }
 
         // Hook this to the arena image/button to open the Trophy Road panel
@@ -83,6 +93,19 @@ namespace TR.UI
             StopDeckFlash();
             RestoreDeckWarningVisuals();
             if (_banCountdownCo != null) { StopCoroutine(_banCountdownCo); _banCountdownCo = null; }
+            // Stop any active XP splash fade and hide it to avoid getting stuck
+            if (_xpGainFadeCo != null)
+            {
+                StopCoroutine(_xpGainFadeCo);
+                _xpGainFadeCo = null;
+            }
+            if (castleXPGainText)
+            {
+                var cg = castleXPGainText.GetComponent<CanvasGroup>();
+                if (cg == null) cg = castleXPGainText.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = 0f;
+                castleXPGainText.gameObject.SetActive(false);
+            }
         }
 
         private void HandleSoftCurrencyChanged(int newBalance)
@@ -147,6 +170,14 @@ namespace TR.UI
             else
             {
                 UpdateCastleUIInstant(castleCfg, castleLevel, castleXP);
+                // No pending XP: ensure splash is hidden
+                if (castleXPGainText)
+                {
+                    var cg = castleXPGainText.GetComponent<CanvasGroup>();
+                    if (cg == null) cg = castleXPGainText.gameObject.AddComponent<CanvasGroup>();
+                    cg.alpha = 0f;
+                    castleXPGainText.gameObject.SetActive(false);
+                }
             }
 
             // Deck + ban gating on refresh as well (so UI is correct on open)
@@ -325,8 +356,10 @@ namespace TR.UI
                 // quick fade/pulse
                 var cg = castleXPGainText.GetComponent<CanvasGroup>();
                 if (cg == null) cg = castleXPGainText.gameObject.AddComponent<CanvasGroup>();
+                // Cancel any previous fade
+                if (_xpGainFadeCo != null) { StopCoroutine(_xpGainFadeCo); _xpGainFadeCo = null; }
                 cg.alpha = 1f;
-                StartCoroutine(FadeOut(cg, 0.9f));
+                _xpGainFadeCo = StartCoroutine(FadeOutXPGain(cg, 0.9f));
             }
 
             int curLevel = fromLevel;
@@ -474,6 +507,21 @@ namespace TR.UI
             }
             cg.alpha = 0f;
             cg.gameObject.SetActive(false);
+        }
+
+        // Same as FadeOut but also clears the _xpGainFadeCo reference when done
+        private System.Collections.IEnumerator FadeOutXPGain(CanvasGroup cg, float duration)
+        {
+            float t = 0f; float d = Mathf.Max(0.05f, duration);
+            while (t < d)
+            {
+                t += Time.unscaledDeltaTime;
+                cg.alpha = 1f - Mathf.Clamp01(t / d);
+                yield return null;
+            }
+            cg.alpha = 0f;
+            cg.gameObject.SetActive(false);
+            _xpGainFadeCo = null;
         }
 
         private Coroutine _banCountdownCo;

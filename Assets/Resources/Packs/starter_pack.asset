@@ -18,9 +18,11 @@ MonoBehaviour:
   cardsPerPack: 3
   rarityWeights: []
   guaranteedRarity: {fileID: 0}
+  usePercentages: 0
   giveSpecificCardOnly: 1
-  specificCard: {fileID: 11400000, guid: f12a766e75134bf42829b8fc7f0745ea, type: 2}
+  specificCard: {fileID: 11400000, guid: be7b2c75253d7544da1682323b3c0c4b, type: 2}
   packArtPrefab: {fileID: 7600798260355237007, guid: 06e33fb3f08a015468ff0fcfca9ced68, type: 3}
   packArtSprite: {fileID: 0}
   sealCrackKey: 
   openWhooshKey: 
+  unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}

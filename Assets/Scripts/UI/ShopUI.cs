@@ -119,12 +119,24 @@ namespace TR.UI
                     }
                 }
             }
-            // General for-sale packs (exclude the configured starter pack)
+            // General for-sale packs (exclude the configured starter pack), ordered by ShopOrder then name
             string starterId = string.IsNullOrEmpty(starterPackId) ? "starter_pack" : starterPackId;
-            foreach (var pack in GameDB.Packs)
+            var orderedPacks = new System.Collections.Generic.List<PackDefinition>(GameDB.Packs);
+            orderedPacks.Sort((a, b) =>
+            {
+                if (a == null && b == null) return 0;
+                if (a == null) return 1;
+                if (b == null) return -1;
+                int so = a.ShopOrder.CompareTo(b.ShopOrder);
+                if (so != 0) return so;
+                return string.Compare(a.DisplayName, b.DisplayName, System.StringComparison.OrdinalIgnoreCase);
+            });
+            foreach (var pack in orderedPacks)
             {
                 if (pack == null) continue;
                 if (!string.IsNullOrEmpty(starterId) && pack.PackId == starterId) continue; // don't list starter pack for sale
+                // Arena-gated visibility: only show if player has unlocked the required arena (or no restriction set)
+                if (!pack.IsUnlockedForPlayer()) continue;
                 var item = Instantiate(itemPrefab, listRoot);
                 item.Bind(pack, OnOpenPack);
             }
