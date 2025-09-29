@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 89956b24780fc744a953433f9f0e3e38
+guid: 6512fc983c4b8a841aac017bef9cf00c
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1477402307423350227
-    second: mage_tower_0
+      213: -3933899068437050422
+    second: CardOffer_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: mage_tower_0
+      name: CardOffer_0
       rect:
         serializedVersion: 2
-        x: 16
+        x: 0
         y: 0
-        width: 32
-        height: 64
+        width: 150
+        height: 200
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3ddaf4c2299c08410800000000000000
-      internalID: 1477402307423350227
+      spriteID: acbc193d3abf769c0800000000000000
+      internalID: -3933899068437050422
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      mage_tower_0: 1477402307423350227
+      CardOffer_0: -3933899068437050422
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
