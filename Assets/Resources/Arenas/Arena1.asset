@@ -16,40 +16,30 @@ MonoBehaviour:
   displayName: Arena 1
   arenaImage: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   trophyRequirement: 5
-  waveCount: 10
-  waveInterval: 10
+  waveCount: 5
+  waveInterval: 30
   mediumStartPercent: 0.25
   hardStartPercent: 0.6
   easyEnemies:
-  - {fileID: 11400000, guid: c947a42474025a74095f6551f1617495, type: 2}
+  - {fileID: 11400000, guid: a829771c97fcc4542afbe72c78c6ef2b, type: 2}
   mediumEnemies:
-  - {fileID: 11400000, guid: b1db68c322e4f884594d14deea6ba849, type: 2}
+  - {fileID: 11400000, guid: 31c354313a83af3468d34873e73c6336, type: 2}
   hardEnemies:
-  - {fileID: 11400000, guid: 00c7478f63bf46e4fb4741db77afec53, type: 2}
+  - {fileID: 11400000, guid: f774f79ee3783764ab6bbd4d09224b17, type: 2}
   waveEnemyCounts:
-  - min: 3
-    max: 3
-  - min: 4
-    max: 4
-  - min: 5
-    max: 5
-  - min: 6
-    max: 6
-  - min: 7
-    max: 7
   - min: 8
     max: 8
-  - min: 9
-    max: 9
   - min: 10
     max: 10
-  - min: 11
-    max: 11
+  - min: 10
+    max: 10
   - min: 12
     max: 12
-  bossEnemy: {fileID: 11400000, guid: 9894189fb3258ed4eb8b46d214f8e670, type: 2}
-  spawnBossOnSpecificWave: 0
-  bossSpecificWave: 1
+  - min: 10
+    max: 10
+  bossEnemy: {fileID: 11400000, guid: 56fb1825bb45bbd43aafce63e3962352, type: 2}
+  spawnBossOnSpecificWave: 1
+  bossSpecificWave: 5
   bossEveryXWaves: 2
   bossHealthMultPerSpawn: 0
   bossDamageMultPerSpawn: 0

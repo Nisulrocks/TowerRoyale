@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b9747cc283180a74d8d140b511d2ccea, type: 3}
-  m_Name: Boss
+  m_Name: Ogre Chieftain
   m_EditorClassIdentifier: 
-  enemyId: 4
-  displayName: dummy
-  movementSpeed: 1
-  maxHealth: 100
-  damagePerHit: 20
-  prefab: {fileID: 7063429890210703705, guid: 6869c0645636ea745ac798fac07577a9, type: 3}
-  useRegenAbility: 1
+  enemyId: ogre_chieftain
+  displayName: Ogre Chieftain
+  movementSpeed: 1.2
+  maxHealth: 120
+  damagePerHit: 10
+  prefab: {fileID: 7063429890210703705, guid: 47d7b1ee1e2087243ae00cf93060371f, type: 3}
+  useRegenAbility: 0
   regenPerSecondBase: 0.03
-  regenMissingHealthFactor: 0.15
+  regenMissingHealthFactor: 0.02
   regenSuppressAfterDamageSeconds: 2.5
-  regenPerSecondCap: 0.02
-  regenTotalPercentCap: 1
-  regenWhileDoT: 1
-  regenDoTPenaltyMultiplier: 0.2
-  regenVfxKey: Regen
-  usePulseNukeAbility: 1
+  regenPerSecondCap: 0.05
+  regenTotalPercentCap: 0.4
+  regenWhileDoT: 0
+  regenDoTPenaltyMultiplier: 0.25
+  regenVfxKey: 
+  usePulseNukeAbility: 0
   pulseNukeRadius: 4.5
   pulseNukeCooldownMin: 45
   pulseNukeCooldownMax: 75
@@ -39,13 +39,13 @@ MonoBehaviour:
   pulseNukeRippleLineWidth: 0.12
   pulseNukeRippleSegments: 48
   pulseNukeSfxKey: 
-  useStunPulseAbility: 1
+  useStunPulseAbility: 0
   stunPulseRadius: 4.5
-  stunPulseCooldownMin: 45
-  stunPulseCooldownMax: 75
+  stunPulseCooldownMin: 35
+  stunPulseCooldownMax: 60
   stunPulseRandomCheckInterval: 1
-  stunPulseTriggerChance: 0.3
-  stunPulseDuration: 1
+  stunPulseTriggerChance: 0.25
+  stunPulseDuration: 2.5
   stunPulseVfxKey: 
   stunPulseRippleColor: {r: 0.8, g: 0.9, b: 1, a: 0.55}
   stunPulseRippleDuration: 0.45

@@ -285,9 +285,12 @@ namespace TR.Battle
 
         private IEnumerator WaitForAllEnemiesCleared()
         {
-            // Wait until there are no active enemies before proceeding to victory.
-            while (EnemyBase2D.All != null && EnemyBase2D.All.Count > 0)
+            // Wait until there are no active enemies AND no pending spawns for the final wave.
+            while (true)
             {
+                int active = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
+                int pending = waveSpawner != null ? waveSpawner.GetPendingSpawns() : 0;
+                if (active <= 0 && pending <= 0) break;
                 UpdateEnemiesRemainingText();
                 yield return null;
             }
