@@ -19,6 +19,9 @@ namespace TR.Battle
         [SerializeField] private int waypointIndex;
         [SerializeField] private Path2D path;
         [SerializeField] private float reachThreshold = 0.02f;
+        // Boss per-spawn scaling (runtime)
+        [SerializeField] private float _runtimeMaxHealth; // if > 0 overrides definition.MaxHealth
+        [SerializeField] private float _bossDamageMult = 1f;
         [Header("Auto-Config")]
         [SerializeField] private bool autoFindPath = true; // if true, auto-locate Path2D in scene when none is assigned
 
@@ -74,7 +77,7 @@ namespace TR.Battle
 
         public EnemyDefinition Definition => definition;
         public float CurrentHealth => currentHealth;
-        public float MaxHealth => definition != null ? definition.MaxHealth : Mathf.Max(currentHealth, 1f);
+        public float MaxHealth => _runtimeMaxHealth > 0f ? _runtimeMaxHealth : (definition != null ? definition.MaxHealth : Mathf.Max(currentHealth, 1f));
         public System.Action<float, float> OnHealthChanged; // (current, max)
 
         private void Awake()
@@ -359,9 +362,11 @@ namespace TR.Battle
 
         private void ApplyDefinition(EnemyDefinition def)
         {
-            currentHealth = Mathf.Max(1f, def != null ? def.MaxHealth : 10f);
+            _runtimeMaxHealth = def != null ? Mathf.Max(1f, def.MaxHealth) : 10f;
+            currentHealth = _runtimeMaxHealth;
             moveSpeed = Mathf.Max(0f, def != null ? def.MovementSpeed : 1.5f);
             waypointIndex = 0;
+            _bossDamageMult = 1f;
             // Reset regen tracking when definition reapplies
             _lastDamageTime = Time.time;
             _totalRegenThisLife = 0f;
@@ -766,12 +771,32 @@ namespace TR.Battle
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = Mathf.Max(0.05f, attackInterval);
-            float dmg = definition != null ? definition.DamagePerHit : 1f;
+            float baseDmg = definition != null ? definition.DamagePerHit : 1f;
+            float dmg = Mathf.Max(0f, baseDmg * Mathf.Max(0.01f, _bossDamageMult));
             var baseObj = FindFirstObjectByType<BaseCastle>(FindObjectsInactive.Include);
             if (baseObj != null)
             {
                 baseObj.TakeDamage(Mathf.CeilToInt(dmg));
             }
+        }
+
+        // Apply per-spawn boss scaling (only meaningful for bosses)
+        public void ApplyBossScaling(float healthMult, float damageMult, float speedMult)
+        {
+            // Clamp inputs
+            float h = Mathf.Max(0.01f, healthMult);
+            float d = Mathf.Max(0.01f, damageMult);
+            float s = Mathf.Max(0.01f, speedMult);
+            // Scale runtime max HP and reset current health to full
+            float baseMax = definition != null ? Mathf.Max(1f, definition.MaxHealth) : Mathf.Max(1f, _runtimeMaxHealth);
+            _runtimeMaxHealth = Mathf.Max(1f, baseMax * h);
+            currentHealth = _runtimeMaxHealth;
+            // Scale move speed multiplicatively
+            float baseSpeed = definition != null ? Mathf.Max(0f, definition.MovementSpeed) : Mathf.Max(0f, moveSpeed);
+            moveSpeed = Mathf.Max(0f, baseSpeed * s);
+            // Damage multiplier applied at attack time
+            _bossDamageMult = d;
+            OnHealthChanged?.Invoke(currentHealth, MaxHealth);
         }
 
         private void TrySpawnHealthBarUI()

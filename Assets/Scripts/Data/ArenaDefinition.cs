@@ -48,6 +48,13 @@ namespace TR.Data
         [Min(1)] [SerializeField] private int bossSpecificWave = 1;
         [Tooltip("If 'Spawn on Specific wave no.' is disabled, spawn a boss every X waves (e.g., 5 means waves 5,10,15...).")]
         [Min(1)] [SerializeField] private int bossEveryXWaves = 5;
+        [Header("Boss Per-Spawn Scaling (Periodic Mode)")]
+        [Tooltip("Health multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
+        [Min(0f)] [SerializeField] private float bossHealthMultPerSpawn = 1.0f;
+        [Tooltip("Damage multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
+        [Min(0f)] [SerializeField] private float bossDamageMultPerSpawn = 1.0f;
+        [Tooltip("Move speed multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
+        [Min(0f)] [SerializeField] private float bossSpeedMultPerSpawn = 1.0f;
 
         [Header("Kill Rewards (Money Range)")]
         [Min(0)] [SerializeField] private int easyKillMin = 5;
@@ -146,6 +153,9 @@ namespace TR.Data
         public bool SpawnBossOnSpecificWave => spawnBossOnSpecificWave;
         public int BossSpecificWave => Mathf.Clamp(bossSpecificWave, 1, WaveCount);
         public int BossEveryXWaves => Mathf.Max(1, bossEveryXWaves);
+        public float BossHealthMultPerSpawn => Mathf.Max(0f, bossHealthMultPerSpawn);
+        public float BossDamageMultPerSpawn => Mathf.Max(0f, bossDamageMultPerSpawn);
+        public float BossSpeedMultPerSpawn => Mathf.Max(0f, bossSpeedMultPerSpawn);
         // Back-compat convenience: all enemies combined
         public EnemyDefinition[] Enemies
         {
@@ -224,6 +234,35 @@ namespace TR.Data
                 return false;
             }
             return (w % x) == 0;
+        }
+
+        // Computes per-spawn scaling multipliers for periodic mode. Returns 1s in specific-wave mode.
+        public void GetBossScalingForWave(int waveNumber, out float healthMult, out float damageMult, out float speedMult)
+        {
+            healthMult = 1f; damageMult = 1f; speedMult = 1f;
+            if (bossEnemy == null) return;
+            int total = Mathf.Max(1, WaveCount);
+            int w = Mathf.Clamp(waveNumber, 1, total);
+            if (spawnBossOnSpecificWave)
+            {
+                // No progressive scaling for single spawn mode
+                return;
+            }
+            int x = Mathf.Max(1, bossEveryXWaves);
+            if (x <= 0) return;
+            // 1st occurrence is when w == x -> index = 1
+            int occurrence = Mathf.Max(1, w / x);
+            int power = Mathf.Max(0, occurrence - 1);
+            float h = Mathf.Max(0f, bossHealthMultPerSpawn);
+            float d = Mathf.Max(0f, bossDamageMultPerSpawn);
+            float s = Mathf.Max(0f, bossSpeedMultPerSpawn);
+            // If multipliers are 0, treat as 1 (no scaling)
+            if (h <= 1e-4f) h = 1f;
+            if (d <= 1e-4f) d = 1f;
+            if (s <= 1e-4f) s = 1f;
+            healthMult = Mathf.Pow(h, power);
+            damageMult = Mathf.Pow(d, power);
+            speedMult = Mathf.Pow(s, power);
         }
 
 #if UNITY_EDITOR

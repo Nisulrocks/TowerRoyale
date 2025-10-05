@@ -103,7 +103,13 @@ namespace TR.Battle
             if (boss != null)
             {
                 var sp = GetSpawnPoint(Random.Range(0, Mathf.Max(1, spawnPoints.Length)));
-                SpawnEnemy(boss, sp);
+                var bossEnemy = SpawnEnemy(boss, sp);
+                if (bossEnemy != null)
+                {
+                    // Apply per-spawn scaling in periodic mode
+                    _arena.GetBossScalingForWave(waveNumber, out float hMul, out float dMul, out float sMul);
+                    bossEnemy.ApplyBossScaling(hMul, dMul, sMul);
+                }
                 _spawnedThisWave++;
                 // If count is small, ensure at least 0 remaining spawns
                 count = Mathf.Max(0, count - 1);
@@ -114,7 +120,7 @@ namespace TR.Battle
             {
                 var def = GetWeightedEnemyForWave(waveNumber);
                 var sp = GetSpawnPoint(i % spawnPoints.Length);
-                SpawnEnemy(def, sp);
+                _ = SpawnEnemy(def, sp);
                 _spawnedThisWave++;
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
@@ -142,12 +148,12 @@ namespace TR.Battle
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
         }
 
-        private void SpawnEnemy(EnemyDefinition def, Transform point)
+        private EnemyBase2D SpawnEnemy(EnemyDefinition def, Transform point)
         {
             if (def == null)
             {
                 Debug.LogWarning("[WaveSpawner] Null EnemyDefinition; skipping spawn.");
-                return;
+                return null;
             }
             GameObject go = null;
             if (def.Prefab != null)
@@ -170,6 +176,7 @@ namespace TR.Battle
             if (enemy == null) enemy = go.AddComponent<EnemyBase2D>();
             enemy.Initialize(def, path);
             enemy.SetArena(_arena);
+            return enemy;
         }
 
         // === Probabilistic tier mixing per spawn ===

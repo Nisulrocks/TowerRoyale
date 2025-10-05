@@ -51,6 +51,9 @@ MonoBehaviour:
   spawnBossOnSpecificWave: 0
   bossSpecificWave: 1
   bossEveryXWaves: 2
+  bossHealthMultPerSpawn: 0
+  bossDamageMultPerSpawn: 0
+  bossSpeedMultPerSpawn: 0
   easyKillMin: 5
   easyKillMax: 10
   mediumKillMin: 10
