@@ -24,6 +24,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a829771c97fcc4542afbe72c78c6ef2b, type: 2}
   mediumEnemies:
   - {fileID: 11400000, guid: 31c354313a83af3468d34873e73c6336, type: 2}
+  - {fileID: 11400000, guid: 76afa56fd19434f43a8c857eda8abed5, type: 2}
   hardEnemies:
   - {fileID: 11400000, guid: f774f79ee3783764ab6bbd4d09224b17, type: 2}
   waveEnemyCounts:

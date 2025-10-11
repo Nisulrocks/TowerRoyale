@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9747cc283180a74d8d140b511d2ccea, type: 3}
+  m_Name: Ogre Raider
+  m_EditorClassIdentifier: 
+  enemyId: ogre_raider
+  displayName: Ogre Raider
+  movementSpeed: 2
+  maxHealth: 65
+  damagePerHit: 5
+  prefab: {fileID: 0}
+  useRegenAbility: 0
+  regenPerSecondBase: 0.03
+  regenMissingHealthFactor: 0.02
+  regenSuppressAfterDamageSeconds: 2.5
+  regenPerSecondCap: 0.05
+  regenTotalPercentCap: 0.4
+  regenWhileDoT: 0
+  regenDoTPenaltyMultiplier: 0.25
+  regenVfxKey: 
+  usePulseNukeAbility: 0
+  pulseNukeRadius: 4.5
+  pulseNukeCooldownMin: 45
+  pulseNukeCooldownMax: 75
+  pulseNukeRandomCheckInterval: 1
+  pulseNukeTriggerChance: 0.2
+  pulseNukeVfxKey: 
+  pulseNukeRippleColor: {r: 0.9, g: 0.85, b: 1, a: 0.5}
+  pulseNukeRippleDuration: 0.45
+  pulseNukeRippleLineWidth: 0.12
+  pulseNukeRippleSegments: 48
+  pulseNukeSfxKey: 
+  useStunPulseAbility: 0
+  stunPulseRadius: 4.5
+  stunPulseCooldownMin: 35
+  stunPulseCooldownMax: 60
+  stunPulseRandomCheckInterval: 1
+  stunPulseTriggerChance: 0.25
+  stunPulseDuration: 2.5
+  stunPulseVfxKey: 
+  stunPulseRippleColor: {r: 0.8, g: 0.9, b: 1, a: 0.55}
+  stunPulseRippleDuration: 0.45
+  stunPulseRippleLineWidth: 0.12
+  stunPulseRippleSegments: 48
+  stunPulseSfxKey: 
