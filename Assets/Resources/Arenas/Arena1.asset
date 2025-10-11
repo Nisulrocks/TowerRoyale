@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Arena1
   m_EditorClassIdentifier: 
   arenaId: 1
-  displayName: Arena 1
+  displayName: Stonebrook Village
   arenaImage: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   trophyRequirement: 5
   waveCount: 5
@@ -40,7 +40,7 @@ MonoBehaviour:
   bossEnemy: {fileID: 11400000, guid: 56fb1825bb45bbd43aafce63e3962352, type: 2}
   spawnBossOnSpecificWave: 1
   bossSpecificWave: 5
-  bossEveryXWaves: 2
+  bossEveryXWaves: 1
   bossHealthMultPerSpawn: 0
   bossDamageMultPerSpawn: 0
   bossSpeedMultPerSpawn: 0
@@ -52,17 +52,17 @@ MonoBehaviour:
   hardKillMax: 40
   bossKillMin: 50
   bossKillMax: 100
-  victoryMoneyMin: 100
-  victoryMoneyMax: 150
-  victoryXPMin: 10
-  victoryXPMax: 25
-  defeatXPMin: 5
-  defeatXPMax: 10
-  victoryTrophiesMin: 5
-  victoryTrophiesMax: 10
+  victoryMoneyMin: 5
+  victoryMoneyMax: 15
+  victoryXPMin: 5
+  victoryXPMax: 5
+  defeatXPMin: 1
+  defeatXPMax: 2
+  victoryTrophiesMin: 2
+  victoryTrophiesMax: 5
   battleToastPrefab: {fileID: 7546983612998301532, guid: fd04a2c26a632ef4a8da69f2b605e2ba, type: 3}
-  defeatTrophiesMin: 1
-  defeatTrophiesMax: 1
+  defeatTrophiesMin: 5
+  defeatTrophiesMax: 5
   effectLimits: []
   cardLimits:
   - card: {fileID: 11400000, guid: 2ff463be4d1149a49bc0a19a4258525f, type: 2}

@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e7a01cae401eb841bcf012994c6ddc8, type: 3}
-  m_Name: Arena2
+  m_Name: Arena4
   m_EditorClassIdentifier: 
-  arenaId: 2
-  displayName: Shifting Sands
+  arenaId: 4
+  displayName: Volcanic Highlands
   arenaImage: {fileID: 0}
-  trophyRequirement: 50
-  waveCount: 8
-  waveInterval: 30
+  trophyRequirement: 500
+  waveCount: 15
+  waveInterval: 60
   mediumStartPercent: 0.25
   hardStartPercent: 0.6
   easyEnemies: []
@@ -26,24 +26,38 @@ MonoBehaviour:
   waveEnemyCounts:
   - min: 10
     max: 10
-  - min: 10
-    max: 10
-  - min: 12
-    max: 12
   - min: 15
     max: 15
-  - min: 10
-    max: 10
   - min: 15
     max: 15
   - min: 20
     max: 20
-  - min: 15
-    max: 15
+  - min: 20
+    max: 20
+  - min: 20
+    max: 20
+  - min: 25
+    max: 25
+  - min: 25
+    max: 25
+  - min: 30
+    max: 30
+  - min: 30
+    max: 30
+  - min: 35
+    max: 35
+  - min: 40
+    max: 40
+  - min: 40
+    max: 40
+  - min: 45
+    max: 45
+  - min: 40
+    max: 40
   bossEnemy: {fileID: 0}
   spawnBossOnSpecificWave: 0
   bossSpecificWave: 1
-  bossEveryXWaves: 4
+  bossEveryXWaves: 5
   bossHealthMultPerSpawn: 1.2
   bossDamageMultPerSpawn: 1.2
   bossSpeedMultPerSpawn: 1.2
@@ -55,16 +69,16 @@ MonoBehaviour:
   hardKillMax: 40
   bossKillMin: 50
   bossKillMax: 100
-  victoryMoneyMin: 15
-  victoryMoneyMax: 30
-  victoryXPMin: 5
-  victoryXPMax: 8
-  defeatXPMin: 2
-  defeatXPMax: 3
-  victoryTrophiesMin: 10
-  victoryTrophiesMax: 15
+  victoryMoneyMin: 50
+  victoryMoneyMax: 100
+  victoryXPMin: 15
+  victoryXPMax: 35
+  defeatXPMin: 5
+  defeatXPMax: 10
+  victoryTrophiesMin: 45
+  victoryTrophiesMax: 50
   battleToastPrefab: {fileID: 7546983612998301532, guid: fd04a2c26a632ef4a8da69f2b605e2ba, type: 3}
-  defeatTrophiesMin: 15
-  defeatTrophiesMax: 20
+  defeatTrophiesMin: 70
+  defeatTrophiesMax: 75
   effectLimits: []
   cardLimits: []

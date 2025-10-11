@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e7a01cae401eb841bcf012994c6ddc8, type: 3}
-  m_Name: Arena2
+  m_Name: Arena3
   m_EditorClassIdentifier: 
-  arenaId: 2
-  displayName: Shifting Sands
+  arenaId: 3
+  displayName: Frozen Tundra
   arenaImage: {fileID: 0}
-  trophyRequirement: 50
-  waveCount: 8
+  trophyRequirement: 350
+  waveCount: 10
   waveInterval: 30
   mediumStartPercent: 0.25
   hardStartPercent: 0.6
@@ -26,24 +26,28 @@ MonoBehaviour:
   waveEnemyCounts:
   - min: 10
     max: 10
-  - min: 10
-    max: 10
   - min: 12
     max: 12
-  - min: 15
-    max: 15
-  - min: 10
-    max: 10
   - min: 15
     max: 15
   - min: 20
     max: 20
   - min: 15
     max: 15
+  - min: 15
+    max: 15
+  - min: 20
+    max: 20
+  - min: 20
+    max: 20
+  - min: 25
+    max: 25
+  - min: 20
+    max: 20
   bossEnemy: {fileID: 0}
   spawnBossOnSpecificWave: 0
   bossSpecificWave: 1
-  bossEveryXWaves: 4
+  bossEveryXWaves: 5
   bossHealthMultPerSpawn: 1.2
   bossDamageMultPerSpawn: 1.2
   bossSpeedMultPerSpawn: 1.2
@@ -55,16 +59,16 @@ MonoBehaviour:
   hardKillMax: 40
   bossKillMin: 50
   bossKillMax: 100
-  victoryMoneyMin: 15
-  victoryMoneyMax: 30
-  victoryXPMin: 5
-  victoryXPMax: 8
+  victoryMoneyMin: 25
+  victoryMoneyMax: 50
+  victoryXPMin: 10
+  victoryXPMax: 15
   defeatXPMin: 2
-  defeatXPMax: 3
-  victoryTrophiesMin: 10
-  victoryTrophiesMax: 15
+  defeatXPMax: 5
+  victoryTrophiesMin: 25
+  victoryTrophiesMax: 30
   battleToastPrefab: {fileID: 7546983612998301532, guid: fd04a2c26a632ef4a8da69f2b605e2ba, type: 3}
-  defeatTrophiesMin: 15
-  defeatTrophiesMax: 20
+  defeatTrophiesMin: 35
+  defeatTrophiesMax: 40
   effectLimits: []
   cardLimits: []
