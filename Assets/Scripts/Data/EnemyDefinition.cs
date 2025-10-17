@@ -10,12 +10,20 @@ namespace TR.Data
         [SerializeField] private string displayName = "Enemy";
 
         [Header("Stats")]
-        [Min(0f)] [SerializeField] private float movementSpeed = 1.5f; // units per second
         [Min(1f)] [SerializeField] private float maxHealth = 10f;
+        [Min(0f)] [SerializeField] private float movementSpeed = 1.5f;
+        [Min(0.05f)] [SerializeField] private float attackInterval = 1.0f;
         [Min(0f)] [SerializeField] private float damagePerHit = 1f; // damage dealt to castle per attack
 
         [Header("Prefab")]
         [SerializeField] private GameObject prefab; // visual prefab to spawn in battle
+
+        [Header("Animation")]
+        [SerializeField] private RuntimeAnimatorController animatorController;
+        [SerializeField] private string runBoolParam = "IsRunning";
+        [SerializeField] private string attackBoolParam = "IsAttacking";
+        [SerializeField] private string dieTriggerParam = "Die";
+        [SerializeField] private string speedFloatParam = "";
 
         [Header("Abilities - Regeneration (fractions are per MaxHP)")]
         [Tooltip("Enable health regeneration over time with safeguards against being overpowered")] [SerializeField]
@@ -72,9 +80,15 @@ namespace TR.Data
 
         public string EnemyId => enemyId;
         public string DisplayName => displayName;
-        public float MovementSpeed => Mathf.Max(0f, movementSpeed);
-        public float MaxHealth => Mathf.Max(1f, maxHealth);
-        public float DamagePerHit => Mathf.Max(0f, damagePerHit);
+        public float MaxHealth => maxHealth;
+        public float MovementSpeed => movementSpeed;
+        public float AttackInterval => attackInterval;
+        public float DamagePerHit => damagePerHit;
+        public RuntimeAnimatorController AnimatorController => animatorController;
+        public string RunBoolParam => runBoolParam;
+        public string AttackBoolParam => attackBoolParam;
+        public string DieTriggerParam => dieTriggerParam;
+        public string SpeedFloatParam => speedFloatParam;
         public GameObject Prefab => prefab;
 
         // Regen ability accessors

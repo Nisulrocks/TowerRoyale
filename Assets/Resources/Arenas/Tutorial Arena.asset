@@ -37,10 +37,13 @@ MonoBehaviour:
     max: 6
   - min: 7
     max: 7
-  bossEnemy: {fileID: 11400000, guid: 9894189fb3258ed4eb8b46d214f8e670, type: 2}
-  spawnBossOnSpecificWave: 0
+  bossEnemy: {fileID: 11400000, guid: 56fb1825bb45bbd43aafce63e3962352, type: 2}
+  spawnBossOnSpecificWave: 1
   bossSpecificWave: 1
   bossEveryXWaves: 2
+  bossHealthMultPerSpawn: 1
+  bossDamageMultPerSpawn: 1
+  bossSpeedMultPerSpawn: 1
   easyKillMin: 5
   easyKillMax: 10
   mediumKillMin: 10
@@ -57,5 +60,8 @@ MonoBehaviour:
   defeatXPMax: 10
   victoryTrophiesMin: 5
   victoryTrophiesMax: 10
+  battleToastPrefab: {fileID: 0}
   defeatTrophiesMin: 1
   defeatTrophiesMax: 1
+  effectLimits: []
+  cardLimits: []

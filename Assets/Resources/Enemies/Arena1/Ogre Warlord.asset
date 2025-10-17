@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ogre_warlord
   displayName: Ogre Warlord
-  movementSpeed: 0.8
   maxHealth: 200
+  movementSpeed: 0.8
+  attackInterval: 1
   damagePerHit: 20
   prefab: {fileID: 7063429890210703705, guid: 6869c0645636ea745ac798fac07577a9, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: 
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

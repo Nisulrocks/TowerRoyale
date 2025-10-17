@@ -22,6 +22,17 @@ namespace TR.Battle
         // Boss per-spawn scaling (runtime)
         [SerializeField] private float _runtimeMaxHealth; // if > 0 overrides definition.MaxHealth
         [SerializeField] private float _bossDamageMult = 1f;
+        // Animation
+        private Animator _animator;
+        private string _runBoolParam;
+        private string _attackBoolParam;
+        private string _dieTriggerParam;
+        private string _speedFloatParam;
+        // Facing
+        [Header("Facing")]
+        [SerializeField] private bool defaultFacingRight = true; // art faces right by default
+        private Transform _visualRoot; // where we flip scale
+        private Vector3 _visualBaseScale = Vector3.one;
         [Header("Auto-Config")]
         [SerializeField] private bool autoFindPath = true; // if true, auto-locate Path2D in scene when none is assigned
 
@@ -37,6 +48,7 @@ namespace TR.Battle
         [SerializeField] private GameObject bossHealthUIPrefabGO; // if BossHealthUI component is in children
         private BossHealthUI _bossUIInstance;
         private ArenaDefinition _arena;
+        private Transform _castleTr; // cached castle transform for facing
 
         [Header("VFX")]
         [Tooltip("Key from ParticleManager registry to spawn on death. Leave empty to disable.")]
@@ -252,6 +264,37 @@ namespace TR.Battle
             return Mathf.Max(0f, baseSpeed * mult);
         }
 
+        // === Animation helpers ===
+        private void SetAnimRunning(bool value)
+        {
+            if (_animator == null || string.IsNullOrEmpty(_runBoolParam)) return;
+            _animator.SetBool(_runBoolParam, value);
+        }
+        private void SetAnimAttacking(bool value)
+        {
+            if (_animator == null || string.IsNullOrEmpty(_attackBoolParam)) return;
+            _animator.SetBool(_attackBoolParam, value);
+        }
+        private void SetAnimSpeed(float value)
+        {
+            if (_animator == null || string.IsNullOrEmpty(_speedFloatParam)) return;
+            _animator.SetFloat(_speedFloatParam, value);
+        }
+
+        private void UpdateFacing(float moveX)
+        {
+            if (_visualRoot == null) return;
+            if (Mathf.Abs(moveX) < 1e-4f) return; // ignore tiny jitter
+            bool wantRight = moveX >= 0f;
+            bool faceRight = defaultFacingRight ? wantRight : !wantRight;
+            Vector3 s = _visualBaseScale;
+            float sx = Mathf.Abs(s.x) * (faceRight ? 1f : -1f);
+            if (!Mathf.Approximately(_visualRoot.localScale.x, sx))
+            {
+                _visualRoot.localScale = new Vector3(sx, s.y, s.z);
+            }
+        }
+
         // Debug helper to draw a circle in the Scene view
         private void DebugDrawCircle(Vector3 center, float radius, Color color, float duration)
         {
@@ -367,6 +410,41 @@ namespace TR.Battle
             moveSpeed = Mathf.Max(0f, def != null ? def.MovementSpeed : 1.5f);
             waypointIndex = 0;
             _bossDamageMult = 1f;
+            // Bind animator and parameter names
+            if (_animator == null) _animator = GetComponentInChildren<Animator>();
+            if (_animator == null) _animator = GetComponent<Animator>();
+            _runBoolParam = def != null ? def.RunBoolParam : null;
+            _attackBoolParam = def != null ? def.AttackBoolParam : null;
+            _dieTriggerParam = def != null ? def.DieTriggerParam : null;
+            _speedFloatParam = def != null ? def.SpeedFloatParam : null;
+            if (_animator == null && def != null && def.AnimatorController != null)
+            {
+                // Prefer placing Animator on a visual child (SpriteRenderer) if available
+                var sr = GetComponentInChildren<SpriteRenderer>();
+                var host = sr != null ? sr.transform : this.transform;
+                _animator = host.gameObject.GetComponent<Animator>();
+                if (_animator == null)
+                {
+                    _animator = host.gameObject.AddComponent<Animator>();
+                }
+                _visualRoot = host;
+            }
+            if (_animator != null && def != null && def.AnimatorController != null)
+            {
+                _animator.runtimeAnimatorController = def.AnimatorController;
+                _animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            }
+            // Setup visual root and base scale if not set
+            if (_visualRoot == null)
+            {
+                var sr = GetComponentInChildren<SpriteRenderer>();
+                _visualRoot = sr != null ? sr.transform : this.transform;
+            }
+            _visualBaseScale = _visualRoot != null ? _visualRoot.localScale : Vector3.one;
+            // Reset anim state
+            SetAnimRunning(false);
+            SetAnimAttacking(false);
+            SetAnimSpeed(0f);
             // Reset regen tracking when definition reapplies
             _lastDamageTime = Time.time;
             _totalRegenThisLife = 0f;
@@ -430,15 +508,35 @@ namespace TR.Battle
             // Boss abilities tick (e.g., pulse nuke) even if stunned
             TryTickPulseNuke(Time.deltaTime);
             TryTickStunPulse(Time.deltaTime);
+            // Compute horizontal direction to castle for facing
+            if (_castleTr == null)
+            {
+                var castle = FindFirstObjectByType<BaseCastle>(FindObjectsInactive.Include);
+                if (castle != null) _castleTr = castle.transform;
+            }
+            float baseDirX = 0f;
+            if (_castleTr != null)
+            {
+                baseDirX = Mathf.Sign(_castleTr.position.x - transform.position.x);
+                if (Mathf.Abs(_castleTr.position.x - transform.position.x) < 1e-3f) baseDirX = 0f;
+            }
             // If stunned, do not move or attack
             if (_stunTime > 0f)
             {
+                SetAnimRunning(false);
+                SetAnimAttacking(false);
+                SetAnimSpeed(0f);
+                if (baseDirX != 0f) UpdateFacing(baseDirX);
                 return;
             }
             if (path == null || path.Waypoints == null || path.Waypoints.Length == 0)
             {
                 // No path: just idle or move right as fallback
                 transform.position += Vector3.right * GetEffectiveMoveSpeed() * Time.deltaTime;
+                SetAnimRunning(true);
+                SetAnimAttacking(false);
+                SetAnimSpeed(GetEffectiveMoveSpeed());
+                UpdateFacing(baseDirX != 0f ? baseDirX : 1f);
                 return;
             }
 
@@ -446,6 +544,10 @@ namespace TR.Battle
             if (waypointIndex >= wps.Length)
             {
                 // At goal: attack the base over time
+                SetAnimRunning(false);
+                SetAnimAttacking(true);
+                SetAnimSpeed(0f);
+                if (baseDirX != 0f) UpdateFacing(baseDirX);
                 TickAttackBase();
                 return;
             }
@@ -463,11 +565,38 @@ namespace TR.Battle
             if (dist <= reachThreshold)
             {
                 waypointIndex++;
+                SetAnimRunning(false);
+                SetAnimAttacking(false);
+                SetAnimSpeed(0f);
+                if (baseDirX != 0f) UpdateFacing(baseDirX);
             }
             else
             {
                 Vector3 dir = to / (dist > 1e-5f ? dist : 1f);
                 transform.position = pos + dir * GetEffectiveMoveSpeed() * Time.deltaTime;
+                SetAnimRunning(true);
+                SetAnimAttacking(false);
+                SetAnimSpeed(GetEffectiveMoveSpeed());
+                // Face logic: if moving horizontally toward base, face base; if moving away, face away.
+                float desiredX;
+                const float eps = 1e-4f;
+                if (Mathf.Abs(dir.x) <= eps)
+                {
+                    // No horizontal movement: keep facing the base if known
+                    desiredX = (baseDirX != 0f) ? baseDirX : 0f;
+                }
+                else if (baseDirX == 0f)
+                {
+                    // No known castle horizontal direction; fallback to movement dir
+                    desiredX = dir.x;
+                }
+                else
+                {
+                    // Compare movement vs base horizontal direction
+                    bool movingTowardBase = Mathf.Sign(dir.x) == Mathf.Sign(baseDirX);
+                    desiredX = movingTowardBase ? baseDirX : -baseDirX;
+                }
+                if (desiredX != 0f) UpdateFacing(desiredX);
             }
         }
 
@@ -726,6 +855,11 @@ namespace TR.Battle
             if (!string.IsNullOrEmpty(deathSfxKey) && SFXManager.Instance != null)
             {
                 SFXManager.Instance.Play(deathSfxKey);
+            }
+            // Trigger death animation if configured
+            if (_animator != null && !string.IsNullOrEmpty(_dieTriggerParam))
+            {
+                _animator.SetTrigger(_dieTriggerParam);
             }
             Destroy(gameObject);
         }

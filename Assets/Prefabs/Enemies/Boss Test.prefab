@@ -106,6 +106,9 @@ MonoBehaviour:
   waypointIndex: 0
   path: {fileID: 0}
   reachThreshold: 0.02
+  _runtimeMaxHealth: 0
+  _bossDamageMult: 1
+  defaultFacingRight: 0
   autoFindPath: 1
   healthBarUIPrefab: {fileID: 0}
   healthBarCanvas: {fileID: 3643839534106175484, guid: 1e35bd258646ebb4495fa5570f33140d, type: 3}
