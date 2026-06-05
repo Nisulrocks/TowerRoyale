@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: guard_tower
   displayName: Guard Tower
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c47857ea553d08f45b8c0bdb246f8508, type: 3}
   rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arenaId: 2
   displayName: Shifting Sands
-  arenaImage: {fileID: 0}
+  arenaImage: {fileID: 21300000, guid: 4b11175b5e8e5444aa85b975d9ca404f, type: 3}
   trophyRequirement: 50
   waveCount: 8
   waveInterval: 30

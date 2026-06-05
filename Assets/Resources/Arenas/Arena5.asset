@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arenaId: 5
   displayName: Voidreach
-  arenaImage: {fileID: 0}
+  arenaImage: {fileID: 21300000, guid: 4c28da4e17d4d7a4e8820f4314d2983b, type: 3}
   trophyRequirement: 2000
   waveCount: 20
   waveInterval: 60

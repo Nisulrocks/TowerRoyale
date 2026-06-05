@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arenaId: 1
   displayName: Stonebrook Village
-  arenaImage: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  arenaImage: {fileID: 21300000, guid: dded8cd934c2d274181ce25cba8f180a, type: 3}
   trophyRequirement: 5
   waveCount: 5
   waveInterval: 30

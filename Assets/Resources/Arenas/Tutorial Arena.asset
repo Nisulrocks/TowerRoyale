@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arenaId: 0
   displayName: Training Arena
-  arenaImage: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+  arenaImage: {fileID: 21300000, guid: 1d0aded21ecea8d4f96a73d36f716546, type: 3}
   trophyRequirement: 0
   waveCount: 5
   waveInterval: 10

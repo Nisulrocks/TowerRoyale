@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   arenaId: 3
   displayName: Frozen Tundra
-  arenaImage: {fileID: 0}
+  arenaImage: {fileID: 21300000, guid: 354bd777c703099449e4608affb0981b, type: 3}
   trophyRequirement: 350
   waveCount: 10
   waveInterval: 30
