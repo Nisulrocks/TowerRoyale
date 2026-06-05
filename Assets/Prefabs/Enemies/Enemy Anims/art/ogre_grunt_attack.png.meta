@@ -309,7 +309,15 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ogre_grunt_attack_0: 7682748373544666642
+      ogre_grunt_attack_1: 1191191165878455564
+      ogre_grunt_attack_2: -5768431882611046463
+      ogre_grunt_attack_3: -5811604761736035148
+      ogre_grunt_attack_4: 5757275050488136068
+      ogre_grunt_attack_5: -2038592371024186094
+      ogre_grunt_attack_6: -696149559707569068
+      ogre_grunt_attack_7: -8100081136381497348
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
