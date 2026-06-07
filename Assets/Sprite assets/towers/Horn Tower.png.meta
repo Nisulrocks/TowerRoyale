@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9e3fc3365278fe043b8c6de195830f5c
+guid: 71fa7e8fe40805f409f6c1979f30d966
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4579942345752906670
-    second: icon panel big_0
+      213: -1605799627527720590
+    second: Horn Tower_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: icon panel big_0
+      name: Horn Tower_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 240
-        height: 240
+        x: 144
+        y: 119
+        width: 739
+        height: 868
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 50, y: 50, z: 50, w: 50}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: eab0f524c493f8f30800000000000000
-      internalID: 4579942345752906670
+      spriteID: 27171c42fbd07b9e0800000000000000
+      internalID: -1605799627527720590
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 7b087025daa48d7438599e0db23c6476
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      icon panel big_0: 4579942345752906670
+      Horn Tower_0: -1605799627527720590
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

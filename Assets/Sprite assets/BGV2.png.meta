@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 9e3fc3365278fe043b8c6de195830f5c
+guid: 39234440788b74f47bc20cb29d0ae7b5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4579942345752906670
-    second: icon panel big_0
+      213: 139241849840939935
+    second: BGV2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: icon panel big_0
+      name: BGV2_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 240
-        height: 240
+        width: 1365
+        height: 768
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 50, y: 50, z: 50, w: 50}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: eab0f524c493f8f30800000000000000
-      internalID: 4579942345752906670
+      spriteID: f9333a589bfaee100800000000000000
+      internalID: 139241849840939935
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 7b087025daa48d7438599e0db23c6476
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -134,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      icon panel big_0: 4579942345752906670
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

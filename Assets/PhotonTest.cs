@@ -2,6 +2,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 
+// this is a test to show that photon is working in this project
 public class PhotonTest : MonoBehaviourPunCallbacks
 {
     void Start()
