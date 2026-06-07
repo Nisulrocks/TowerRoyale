@@ -47,6 +47,7 @@ namespace TR.UI
 
         [Header("Play Gating")]
         [SerializeField] private Button playButton;              
+        [SerializeField] private Button duoButton;               
         [SerializeField] private TMP_Text deckWarningText;       
 
         
@@ -190,6 +191,24 @@ namespace TR.UI
         
         public async void OnClickPlay()
         {
+            await StartBattle(GameMode.Single);
+        }
+
+        
+        public async void OnClickPlaySingle()
+        {
+            await StartBattle(GameMode.Single);
+        }
+
+        
+        public async void OnClickPlayDuo()
+        {
+            await StartBattle(GameMode.Duo);
+        }
+
+        
+        private async System.Threading.Tasks.Task StartBattle(GameMode mode)
+        {
             
             if (PlayerProfile.Data == null || PlayerProfile.Data.deck == null || PlayerProfile.Data.deck.Count == 0)
             {
@@ -198,6 +217,9 @@ namespace TR.UI
                 ShowAndFlashDeckWarning();
                 return;
             }
+            
+            MatchContext.Mode = mode;
+            Debug.Log($"[PlayPanelUI] Starting battle in {mode} mode.");
             GameDB.EnsureLoaded();
             int trophies = PlayerProfile.GetTrophies();
             var currentArena = ArenaService.GetArenaForTrophies(trophies);

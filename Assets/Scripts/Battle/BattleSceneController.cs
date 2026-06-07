@@ -47,6 +47,11 @@ namespace TR.Battle
 
         private void Start()
         {
+            
+            if (MatchContext.IsDuo)
+            {
+                Debug.Log("[BattleSceneController] Duo mode selected. Networking lands in Phase 1; running single-player-style for now.");
+            }
             SetupArenaFromContext();
             UpdateTopBar();
             SetupDeckAndPlacement();
@@ -262,6 +267,8 @@ namespace TR.Battle
         
         public void OnClickReturnToLobby()
         {
+            
+            MatchContext.Reset();
             _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
         }
 
