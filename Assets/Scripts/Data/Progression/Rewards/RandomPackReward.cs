@@ -12,7 +12,7 @@ namespace TR.Data.Progression
         [SerializeField] private List<PackDefinition> candidatePacks = new();
         [Min(1)] public int count = 1;
         [SerializeField] private Sprite icon;
-        [SerializeField] private bool autoOpen = true; // if true, route to PackOpening scene immediately
+        [SerializeField] private bool autoOpen = true; 
 
         public override string GetDisplayName() => count > 1 ? $"Random Pack x{count}" : "Random Pack";
         public override Sprite GetIcon() => icon;
@@ -28,7 +28,7 @@ namespace TR.Data.Progression
                 {
                     if (autoOpen)
                     {
-                        // Mirror ShopUI flow: set SceneParams and load PackOpening scene
+                        
                         TR.Systems.PackOpeningService.OpenPackScene(pack.PackId, 1);
                     }
                     else

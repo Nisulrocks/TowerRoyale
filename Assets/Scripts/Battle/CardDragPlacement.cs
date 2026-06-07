@@ -5,7 +5,7 @@ using TR.Systems;
 
 namespace TR.Battle
 {
-    // Attach to each deck bar card item to enable drag-to-place with a world ghost
+    
     public class CardDragPlacement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IInitializePotentialDragHandler, IPointerDownHandler
     {
         [SerializeField] private CardDefinition card;
@@ -25,13 +25,13 @@ namespace TR.Battle
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
         {
-            // Use Unity's drag threshold so clicks do not create a ghost
+            
             eventData.useDragThreshold = true;
         }
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            // Do not create ghost on click; wait for a confirmed drag in OnBeginDrag
+            
             _dragActive = false;
         }
 
@@ -58,14 +58,14 @@ namespace TR.Battle
         {
             if (!_dragActive)
             {
-                // Defensive: if some UI path skipped BeginDrag, start drag now
+                
                 if (card == null || placement == null) return;
                 _dragActive = true;
                 if (_ghost == null) { CreateGhost(); UpdateGhostPosition(); }
                 placement.SetSnapPointsVisible(true);
             }
             if (_ghost == null) return;
-            // Uncomment for verbose: Debug.Log("[Drag] Dragging...");
+            
             UpdateGhostPosition();
             placement.RefreshSnapPointColors(GetMouseWorld());
         }
@@ -102,18 +102,18 @@ namespace TR.Battle
 
         private void CreateGhost()
         {
-            // If the card has a tower prefab, instantiate a disabled visual clone; else create a square sprite
+            
             if (card != null && card.TowerPrefab != null)
             {
                 _ghost = Instantiate(card.TowerPrefab);
-                // Disable all behaviours and colliders for ghost
+                
                 foreach (var mb in _ghost.GetComponentsInChildren<MonoBehaviour>(true)) mb.enabled = false;
                 foreach (var col in _ghost.GetComponentsInChildren<Collider>(true)) col.enabled = false;
                 foreach (var col2d in _ghost.GetComponentsInChildren<Collider2D>(true)) col2d.enabled = false;
                 foreach (var sr in _ghost.GetComponentsInChildren<SpriteRenderer>(true))
                 {
                     var c = sr.color; c.a = 0.5f; sr.color = c;
-                    sr.sortingOrder += 1; // bring above base visuals a bit
+                    sr.sortingOrder += 1; 
                 }
                 _ghost.name = $"{card.DisplayName}_Ghost";
                 Debug.Log("[Drag] Ghost created from TowerPrefab");
@@ -128,12 +128,12 @@ namespace TR.Battle
             }
             var p = _ghost.transform.position; p.z = 0f; _ghost.transform.position = p;
 
-            // Build/attach a range ring using the player's current card level
+            
             try
             {
                 var cp = PlayerProfile.GetOrCreateCard(card.CardId);
                 var stats = card.GetStatsForLevel(Mathf.Max(1, cp.level));
-                // Use specialized radius for Pulse or Buff cards
+                
                 int lv = Mathf.Max(1, cp.level);
                 if (card is PulseCardDefinition pulse)
                 {

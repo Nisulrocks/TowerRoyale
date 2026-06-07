@@ -7,7 +7,7 @@ namespace TR.Tutorial
     public class TutorialFlow : ScriptableObject
     {
         [Header("Eligibility")]
-        [Tooltip("If true, this tutorial auto starts when the player has 0 trophies and owns no cards.")]
+
         public bool autoStartForFreshProfiles = true;
 
         [Header("Steps (ordered)")]

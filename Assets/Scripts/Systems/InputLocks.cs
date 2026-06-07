@@ -2,7 +2,7 @@ using System;
 
 namespace TR.Systems
 {
-    // Global input lock flags. Use to temporarily disable systems like camera movement during placement drag.
+    
     public static class InputLocks
     {
         private static bool _placementDragging;

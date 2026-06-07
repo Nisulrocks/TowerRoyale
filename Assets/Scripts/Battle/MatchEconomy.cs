@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Tracks per-match money used to place towers.
+    
     public class MatchEconomy : MonoBehaviour
     {
         [SerializeField] private int startingMoney = 500;
@@ -10,7 +10,7 @@ namespace TR.Battle
 
         public int Current => current;
 
-        public System.Action<int> OnMoneyChanged; // fired with new current money value
+        public System.Action<int> OnMoneyChanged; 
 
         public void BeginMatch()
         {

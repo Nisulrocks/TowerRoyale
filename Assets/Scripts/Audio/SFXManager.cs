@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace TR.Audio
 {
-    // Simple 2D SFX Manager with key-based playback.
-    // Usage: SFXManager.Instance.Play("tower_shoot");
-    // Configure sounds in SFXLibrary.
+    
+    
+    
     public class SFXManager : MonoBehaviour
     {
         [Header("Library")]
@@ -40,7 +40,7 @@ namespace TR.Audio
             }
         }
 
-        // === Looped playback with fade ===
+        
         public int PlayLoop(string key, float fadeInSeconds = 0.2f)
         {
             if (library == null || string.IsNullOrEmpty(key)) return -1;
@@ -85,10 +85,10 @@ namespace TR.Audio
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
-            // Load prefs
+            
             masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(PREF_SFX_VOL, 1f));
             muted = PlayerPrefs.GetInt(PREF_SFX_MUTE, 0) != 0;
-            // Build initial pool
+            
             EnsurePool(initialPoolSize);
         }
 
@@ -100,7 +100,7 @@ namespace TR.Audio
                 var src = gameObject.AddComponent<AudioSource>();
                 src.playOnAwake = false;
                 src.loop = false;
-                src.spatialBlend = 0f; // 2D
+                src.spatialBlend = 0f; 
                 src.volume = 0f;
                 _pool.Add(src);
             }
@@ -117,7 +117,7 @@ namespace TR.Audio
                 EnsurePool(_pool.Count + 1);
                 return _pool[_pool.Count - 1];
             }
-            // Steal the first (simple strategy)
+            
             return _pool[0];
         }
 
@@ -126,13 +126,13 @@ namespace TR.Audio
             if (library == null || string.IsNullOrEmpty(key)) return;
             var e = library.Get(key);
             if (e == null) return;
-            // Cooldown check
+            
             float now = Time.unscaledTime;
             if (e.cooldown > 0f && _lastPlay.TryGetValue(key, out var last) && (now - last) < e.cooldown)
             {
                 return;
             }
-            // Concurrent limit
+            
             if (e.maxConcurrent > 0)
             {
                 _concurrent.TryGetValue(key, out var cur);
@@ -141,7 +141,7 @@ namespace TR.Audio
             var clip = library.GetRandomClip(e);
             if (clip == null) return;
             var src = GetFreeSource();
-            // Mark concurrent
+            
             if (e.maxConcurrent > 0)
             {
                 _concurrent[key] = (_concurrent.TryGetValue(key, out var c) ? c : 0) + 1;
@@ -154,7 +154,7 @@ namespace TR.Audio
             src.loop = false;
             src.Play();
             _lastPlay[key] = now;
-            // Schedule decrement of concurrent when finished
+            
             if (e.maxConcurrent > 0)
             {
                 StartCoroutine(ReleaseAfter(src, key));
@@ -163,7 +163,7 @@ namespace TR.Audio
 
         private System.Collections.IEnumerator ReleaseAfter(AudioSource src, string key)
         {
-            // Wait for clip end
+            
             while (src != null && src.isPlaying)
             {
                 yield return null;
@@ -175,23 +175,23 @@ namespace TR.Audio
             }
         }
 
-        // Settings API
+        
         public void SetMasterVolume(float vol)
         {
             masterVolume = Mathf.Clamp01(vol);
             PlayerPrefs.SetFloat(PREF_SFX_VOL, masterVolume);
             PlayerPrefs.Save();
-            // Update currently idle/playing volumes (affects new plays; for playing ones, adjust volume)
+            
             float factor = muted ? 0f : masterVolume;
             for (int i = 0; i < _pool.Count; i++)
             {
                 var src = _pool[i];
                 if (src == null) continue;
-                // Keep each source's base per-key volume; scale by factor proportionally
-                // We don't know the entry volume here, so just scale current volume to preserve relative loudness
-                if (factor <= 0f) src.volume = 0f; else src.volume = Mathf.Clamp01(src.volume); // volume is already scaled
+                
+                
+                if (factor <= 0f) src.volume = 0f; else src.volume = Mathf.Clamp01(src.volume); 
             }
-            // Update loops to reflect new master
+            
             foreach (var kv in _loops)
             {
                 var inst = kv.Value;
@@ -208,13 +208,13 @@ namespace TR.Audio
             muted = m;
             PlayerPrefs.SetInt(PREF_SFX_MUTE, muted ? 1 : 0);
             PlayerPrefs.Save();
-            SetMasterVolume(masterVolume); // reuse to update volumes
+            SetMasterVolume(masterVolume); 
         }
 
         public float GetMasterVolume() => masterVolume;
         public bool GetMuted() => muted;
 
-        // For editor assignment
+        
         public void SetLibrary(SFXLibrary lib) => library = lib;
 
         private System.Collections.IEnumerator FadeVolume(LoopInst inst, float target, float duration)

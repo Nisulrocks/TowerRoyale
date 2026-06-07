@@ -5,7 +5,7 @@ namespace TR.Systems
 {
     public static class PackOpeningService
     {
-        // Centralized way to go to the pack opening scene
+        
         public const string DefaultOpeningSceneName = "PackOpening";
 
         public static void OpenPackScene(string packId, int openCount = 1, string sceneName = DefaultOpeningSceneName)

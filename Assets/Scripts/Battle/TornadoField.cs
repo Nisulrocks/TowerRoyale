@@ -5,13 +5,13 @@ using TR.Audio;
 
 namespace TR.Battle
 {
-    // A temporary field that pulls enemies toward a center within a radius for a duration.
+    
     public class TornadoField : MonoBehaviour
     {
         [SerializeField] private float radius = 1.5f;
-        [SerializeField] private float strength = 2.0f; // units per second pull toward center
-        [SerializeField] private float duration = 1.0f; // seconds
-        [SerializeField] private AnimationCurve falloff = AnimationCurve.Linear(0, 1, 1, 0); // 1 at center, 0 at edge
+        [SerializeField] private float strength = 2.0f; 
+        [SerializeField] private float duration = 1.0f; 
+        [SerializeField] private AnimationCurve falloff = AnimationCurve.Linear(0, 1, 1, 0); 
         [Header("Swirl/Separation")]
         [Tooltip("Within this inner radius, enemies stop moving inward and orbit instead (prevents stacking at exact center)")]
         [SerializeField] private float innerOrbitRadius = 0.35f;
@@ -24,9 +24,9 @@ namespace TR.Battle
 
         private float _time;
         private Vector3 _center;
-        // Track a deterministic swirl direction per enemy (clockwise or counter-clockwise)
+        
         private readonly System.Collections.Generic.Dictionary<EnemyBase2D, float> _swirlDir = new System.Collections.Generic.Dictionary<EnemyBase2D, float>();
-        // Filters
+        
         private int _maxPullTargets = 9999;
         private bool _allowEasy = true, _allowMedium = true, _allowHard = true, _allowBoss = true;
         [Header("VFX (Optional)")]
@@ -43,8 +43,8 @@ namespace TR.Battle
         [Header("Debug")]
         [SerializeField] private bool showGizmo = true;
         [Header("Behavior")]
-        [SerializeField] private bool allowCenterStack = false; // if true, allow full inward pull at center
-        [SerializeField] private float falloffPower = 1.0f;     // shapes pull strength vs distance
+        [SerializeField] private bool allowCenterStack = false; 
+        [SerializeField] private float falloffPower = 1.0f;     
 
         private static TornadoField CreateInactive(Vector3 center, Transform parent)
         {
@@ -126,13 +126,13 @@ namespace TR.Battle
                 return;
             }
 
-            // Keep VFX playing
+            
             if (_vfx != null && !_vfx.isPlaying)
             {
                 _vfx.Play(true);
             }
 
-            // Snapshot enemies to avoid collection modification during iteration
+            
             var list = EnemyBase2D.All != null ? EnemyBase2D.All.ToArray() : System.Array.Empty<EnemyBase2D>();
             int pulledThisFrame = 0;
             for (int i = 0; i < list.Length; i++)
@@ -143,7 +143,7 @@ namespace TR.Battle
                 float d = Vector2.Distance((Vector2)_center, (Vector2)pos);
                 if (d > radius || d <= 0.0001f) continue;
 
-                // Filter by allowed tiers if available
+                
                 var tier = e.GetTier();
                 bool allowed = (tier == TR.Data.ArenaDefinition.EnemyTier.Easy && _allowEasy)
                             || (tier == TR.Data.ArenaDefinition.EnemyTier.Medium && _allowMedium)
@@ -155,31 +155,31 @@ namespace TR.Battle
                 Vector3 dir = (_center - pos);
                 float norm = Mathf.Clamp01(d / Mathf.Max(0.0001f, radius));
                 float mul = falloff != null ? Mathf.Clamp01(falloff.Evaluate(1f - norm)) : (1f - norm);
-                // Shape the pull with power to allow stronger near-center suction when < 1
+                
                 mul = Mathf.Pow(mul, Mathf.Clamp(falloffPower, 0.1f, 5f));
 
-                // Base inward pull (we'll reduce/zero this inside the inner orbit radius)
+                
                 Vector3 inward = dir.normalized * (strength * mul * dt);
 
-                // Tangential swirl (perpendicular to inward)
+                
                 if (!_swirlDir.TryGetValue(e, out float sgn))
                 {
-                    // Assign a stable swirl direction based on instanceID (pseudo-random)
+                    
                     sgn = (e.GetInstanceID() & 1) == 0 ? 1f : -1f;
                     _swirlDir[e] = sgn;
                 }
                 Vector3 tangent = new Vector3(-dir.y, dir.x, 0f).normalized * (tangentialStrength * mul * dt * sgn);
 
-                // Inside inner orbit radius: prevent further inward movement; use pure tangential for swirl
+                
                 if (!allowCenterStack)
                 {
                     if (d < innerOrbitRadius)
                     {
-                        inward = Vector3.zero; // orbit only when close to core
+                        inward = Vector3.zero; 
                     }
                 }
 
-                // Soft separation among nearby enemies to avoid overlap
+                
                 if (separationRadius > 0.0001f && separationStrength > 0f)
                 {
                     Vector3 sep = Vector3.zero;
@@ -197,19 +197,19 @@ namespace TR.Battle
                     if (sep.sqrMagnitude > 0f)
                     {
                         float sepStrength = separationStrength;
-                        if (allowCenterStack) sepStrength *= 0.35f; // reduce separation when stacking allowed
+                        if (allowCenterStack) sepStrength *= 0.35f; 
                         sep = sep.normalized * (sepStrength * dt);
-                        // Apply separation more aggressively when very close to core
+                        
                         if (d < innerOrbitRadius) sep *= 1.25f;
-                        tangent += sep; // blend separation with swirl
+                        tangent += sep; 
                     }
                 }
 
-                // Total step: inward + tangential/separation, but do not overshoot past center
+                
                 Vector3 step = inward + tangent;
                 if (step.sqrMagnitude > dir.sqrMagnitude)
                 {
-                    // Clamp to not cross the center in a single frame
+                    
                     step = dir;
                 }
                 e.transform.position = pos + step;
@@ -286,7 +286,7 @@ namespace TR.Battle
         public void SetSfxKey(string key)
         {
             sfxKey = key ?? string.Empty;
-            // If already active, restart with the new key
+            
             TryStopSfx();
             TryStartSfx();
         }

@@ -6,7 +6,7 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // Composite UI element: shows a card and exposes an Upgrade button.
+    
     public class CollectionItemUI : MonoBehaviour
     {
         [Header("Refs")]
@@ -14,11 +14,11 @@ namespace TR.UI
         [SerializeField] private TMP_Text pointsText;
         [SerializeField] private Button upgradeButton;
         [SerializeField] private TMP_Text upgradeButtonText;
-        [SerializeField] private TMP_Text upgradeCostText; // new: shows cost separately
+        [SerializeField] private TMP_Text upgradeCostText; 
         [Header("Arena Lock Overlay")]
         [Tooltip("Root GameObject for the arena lock overlay (e.g., a panel with text/icon)")]
         [SerializeField] private GameObject arenaLockOverlayRoot;
-        [Tooltip("Text element inside the arena lock overlay to show unlock info")]
+
         [SerializeField] private TMP_Text arenaLockOverlayText;
 
         private CardDefinition _card;
@@ -34,12 +34,12 @@ namespace TR.UI
             cardItem?.Bind(card, level);
             if (!discovered)
             {
-                // Dim visuals and disable upgrade UI for undiscovered cards
+                
                 cardItem?.SetDimmed(true);
-                // Always keep pointsText for undiscovered as a simple label
+                
                 if (pointsText) pointsText.text = "Undiscovered";
 
-                // Show or hide the dedicated arena-lock overlay
+                
                 bool gated = _card != null && _card.UnlockArena != null && !_card.IsUnlockedForPlayer();
                 if (arenaLockOverlayRoot)
                 {
@@ -62,10 +62,10 @@ namespace TR.UI
                 return;
             }
 
-            // Hide arena lock overlay for discovered cards
+            
             if (arenaLockOverlayRoot) arenaLockOverlayRoot.SetActive(false);
 
-            // Points status
+            
             var rarity = card.Rarity;
             int nextLevel = Mathf.Min(level + 1, rarity != null ? rarity.MaxLevel : level);
             int needed = rarity != null && nextLevel > level ? rarity.GetPointsRequiredForLevel(nextLevel) : 0;
@@ -105,7 +105,7 @@ namespace TR.UI
             if (CollectionService.TryPurchaseUpgrade(_card, cp))
             {
                 PlayerProfile.Save();
-                Bind(_card); // refresh visuals
+                Bind(_card); 
             }
         }
 
@@ -123,7 +123,7 @@ namespace TR.UI
 
         private void HandleCurrencyChanged(int newBalance)
         {
-            // Recompute interactability quickly without full bind
+            
             if (_card == null || upgradeButton == null || upgradeButtonText == null) return;
             var cp = PlayerProfile.GetOrCreateCard(_card.CardId);
             bool discovered = cp.ownedCount > 0;

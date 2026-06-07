@@ -5,23 +5,23 @@ using TR.Audio;
 
 namespace TR.Battle
 {
-    // Displays current match money and auto-updates when it changes
+    
     public class BattleEconomyUI : MonoBehaviour
     {
         [SerializeField] private MatchEconomy economy;
         [SerializeField] private TMP_Text moneyText;
-        [SerializeField] private string format = "$ {0}"; // customize e.g. "Gold: {0}"
+        [SerializeField] private string format = "$ {0}"; 
         [Header("Floating Delta Text")]
-        [Tooltip("Prefab of a TMP_Text used to show +/- deltas. Should be under a Canvas.")]
+
         [SerializeField] private TMP_Text deltaTextPrefab;
-        [Tooltip("Local anchored offset from the money text position where the delta appears.")]
+
         [SerializeField] private Vector2 deltaOffset = new Vector2(0f, 0f);
         [Tooltip("How far (in UI units) the text floats up before disappearing.")]
         [SerializeField] private float floatUpDistance = 30f;
-        [Tooltip("Seconds for the float+fade animation.")]
+
         [SerializeField] private float floatDuration = 0.6f;
         private int _lastValue;
-        // Active cumulative delta text state (separate for + and - so they don't combine)
+        
         private TMP_Text _activePosText;
         private int _activePosAmount;
         private float _activePosTime;
@@ -36,11 +36,11 @@ namespace TR.Battle
         [SerializeField] private float pulseScale = 1.12f;
         [SerializeField] private float pulseUpTime = 0.08f;
         [SerializeField] private float pulseDownTime = 0.14f;
-        [Tooltip("SFX key to play when the player cannot afford a placement")] [SerializeField]
+[SerializeField]
         private string sfxInsufficientKey = "";
-        [Tooltip("UI units to shake left/right/up/down when funds are insufficient")] [SerializeField]
+[SerializeField]
         private float shakeAmplitude = 8f;
-        [Tooltip("Seconds for the shake animation")] [SerializeField]
+[SerializeField]
         private float shakeDuration = 0.25f;
         private Color _defaultColor;
         private Vector3 _defaultScale;
@@ -59,7 +59,7 @@ namespace TR.Battle
             }
             else
             {
-                // Try to locate one in scene as a convenience (include inactive)
+                
                 economy = FindFirstObjectByType<MatchEconomy>(FindObjectsInactive.Include);
                 if (economy != null)
                 {
@@ -69,7 +69,7 @@ namespace TR.Battle
                     OnMoneyChanged(economy.Current);
                 }
             }
-            // Cache defaults once moneyText is bound
+            
             if (moneyText != null)
             {
                 _defaultScale = moneyText.transform.localScale;
@@ -98,7 +98,7 @@ namespace TR.Battle
 
         private void Update()
         {
-            // Animate positive text
+            
             if (_activePosText != null)
             {
                 _activePosTime += Time.unscaledDeltaTime;
@@ -114,7 +114,7 @@ namespace TR.Battle
                     _activePosTime = 0f;
                 }
             }
-            // Animate negative text
+            
             if (_activeNegText != null)
             {
                 _activeNegTime += Time.unscaledDeltaTime;
@@ -138,7 +138,7 @@ namespace TR.Battle
             {
                 moneyText.text = string.Format(format, value);
             }
-            // Immediate cumulative floating texts, separated by sign
+            
             int delta = value - _lastValue;
             if (delta != 0 && deltaTextPrefab != null && moneyText != null)
             {
@@ -161,7 +161,7 @@ namespace TR.Battle
                         _activePosTime = 0f;
                     }
                 }
-                else // delta < 0
+                else 
                 {
                     if (_activeNegText == null)
                     {
@@ -173,7 +173,7 @@ namespace TR.Battle
                     else
                     {
                         _activeNegAmount += delta;
-                        _activeNegText.text = _activeNegAmount.ToString(); // already negative
+                        _activeNegText.text = _activeNegAmount.ToString(); 
                         _activeNegText.color = new Color(1f, 0.4f, 0.2f, 1f);
                         _activeNegStart = GetMoneyAnchoredPosition();
                         _activeNegText.rectTransform.anchoredPosition = _activeNegStart;
@@ -184,25 +184,25 @@ namespace TR.Battle
             _lastValue = value;
         }
 
-        // Optional manual refresh
+        
         public void RefreshNow()
         {
             if (economy != null) OnMoneyChanged(economy.Current);
         }
 
-        // === Visual feedback when player cannot afford a placement ===
+        
         public void PulseInsufficient()
         {
             if (moneyText == null) return;
-            // Initialize defaults if not already
+            
             if (_defaultScale == Vector3.zero) _defaultScale = moneyText.transform.localScale;
             if (_defaultColor == default) _defaultColor = moneyText.color;
             if (_pulseCo != null) StopCoroutine(_pulseCo);
             _pulseCo = StartCoroutine(PulseRoutine());
-            // Also start shake
+            
             if (_shakeCo != null) StopCoroutine(_shakeCo);
             _shakeCo = StartCoroutine(ShakeRoutine());
-            // SFX cue
+            
             if (!string.IsNullOrEmpty(sfxInsufficientKey) && SFXManager.Instance != null)
             {
                 SFXManager.Instance.Play(sfxInsufficientKey);
@@ -212,7 +212,7 @@ namespace TR.Battle
         private IEnumerator PulseRoutine()
         {
             var tr = moneyText.transform;
-            // Up
+            
             float t = 0f;
             while (t < 1f)
             {
@@ -222,7 +222,7 @@ namespace TR.Battle
                 moneyText.color = Color.Lerp(_defaultColor, pulseColor, e);
                 yield return null;
             }
-            // Down
+            
             t = 0f;
             while (t < 1f)
             {
@@ -241,15 +241,15 @@ namespace TR.Battle
         {
             if (moneyText == null) yield break;
             var rect = moneyText.rectTransform;
-            Vector2 basePos = _defaultAnchoredPos = rect.anchoredPosition; // ensure cached
+            Vector2 basePos = _defaultAnchoredPos = rect.anchoredPosition; 
             float t = 0f;
             while (t < shakeDuration)
             {
                 t += Time.unscaledDeltaTime;
                 float k = Mathf.Clamp01(t / Mathf.Max(0.001f, shakeDuration));
-                // Decay amplitude over time (ease-out)
+                
                 float amp = shakeAmplitude * (1f - k);
-                // Random jitter each frame inside a circle
+                
                 var offset = Random.insideUnitCircle * amp;
                 rect.anchoredPosition = basePos + offset;
                 yield return null;
@@ -262,10 +262,10 @@ namespace TR.Battle
         {
             var moneyRect = moneyText.rectTransform;
             var parent = moneyRect.parent as RectTransform;
-            if (parent == null) parent = moneyRect; // fallback
+            if (parent == null) parent = moneyRect; 
             var inst = Instantiate(deltaTextPrefab, parent);
             var instRect = inst.rectTransform;
-            // Start at money position + offset
+            
             instRect.anchorMin = moneyRect.anchorMin;
             instRect.anchorMax = moneyRect.anchorMax;
             instRect.pivot = moneyRect.pivot;
@@ -273,7 +273,7 @@ namespace TR.Battle
             instRect.anchoredPosition = start;
             inst.text = (delta > 0 ? "+" : "") + delta.ToString();
             inst.raycastTarget = false;
-            // Color by sign
+            
             inst.color = delta > 0 ? new Color(0.2f, 1f, 0.2f, 1f) : new Color(1f, 0.4f, 0.2f, 1f);
             return inst;
         }

@@ -15,7 +15,7 @@ namespace TR.Data
         [SerializeField] private bool buffSplash = false;
 
         [Header("Affects Only These Rarities (optional)")]
-        [Tooltip("If empty, buffs affect ALL rarities. If set, only towers with a rarity in this list are affected.")]
+
         [SerializeField] private RarityDefinition[] allowedRarities;
 
         [Header("Buff Amounts (as fraction, e.g., 0.2 = +20%)")]
@@ -40,7 +40,7 @@ namespace TR.Data
         [SerializeField] private bool buffStun = false;
         [Tooltip("Percent bonus applied multiplicatively to stun chance, e.g., 0.25 = +25% more chance (capped at 100%)")] 
         [SerializeField] private float stunChancePercentBase = 0.0f;  [SerializeField] private float stunChancePercentPerLevel = 0.0f;
-        [Tooltip("Percent bonus applied multiplicatively to stun duration, e.g., 0.25 = +25% duration")] 
+
         [SerializeField] private float stunDurPercentBase = 0.0f;     [SerializeField] private float stunDurPercentPerLevel = 0.0f;
 
         [Header("Economy Buffs")]
@@ -103,7 +103,7 @@ namespace TR.Data
             return Mathf.Max(0f, decayPerSecBase + decayPerSecPerLevel * (lv - 1));
         }
 
-        // On-hit effect buff getters (return fraction to add, e.g., 0.2 => +20%)
+        
         public float GetBurnDpsBuffPercent(int level)
         {
             int lv = Mathf.Clamp(level, 1, Rarity != null ? Rarity.MaxLevel : level);
@@ -152,11 +152,11 @@ namespace TR.Data
             return Mathf.Max(0f, economyIncomePercentBase + economyIncomePercentPerLevel * (lv - 1));
         }
 
-        // Returns true if the given card should be affected by this buff based on rarity filters
+        
         public bool ShouldAffect(CardDefinition target)
         {
             if (target == null) return false;
-            if (allowedRarities == null || allowedRarities.Length == 0) return true; // no filter => all
+            if (allowedRarities == null || allowedRarities.Length == 0) return true; 
             var r = target.Rarity;
             if (r == null) return false;
             for (int i = 0; i < allowedRarities.Length; i++)

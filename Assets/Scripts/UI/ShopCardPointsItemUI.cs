@@ -6,7 +6,7 @@ using TR.Data;
 
 namespace TR.UI
 {
-    // Minimal item UI script for Card Points offers. You can swap the visuals in a prefab and assign these refs.
+    
     public class ShopCardPointsItemUI : MonoBehaviour
     {
         [Header("Refs")]
@@ -17,7 +17,7 @@ namespace TR.UI
         [SerializeField] private TMP_Text costText;
         [SerializeField] private Button buyButton;
         [SerializeField] private GameObject soldBadge;
-        [Tooltip("Optional: if assigned, this CanvasGroup will be dimmed and made non-interactable when sold.")]
+
         [SerializeField] private CanvasGroup rootGroup;
 
         private System.Action _onClick;
@@ -45,7 +45,7 @@ namespace TR.UI
             if (rarityStripe && card != null && card.Rarity != null) rarityStripe.color = card.Rarity.Color;
             if (pointsText) pointsText.text = $"+{points} pts";
             if (costText) costText.text = $"Cost: {cost}";
-            if (costText) _baseCostColor = costText.color; // cache current as base
+            if (costText) _baseCostColor = costText.color; 
 
             if (soldBadge) soldBadge.SetActive(sold);
             ApplySoldVisuals(sold);
@@ -54,20 +54,20 @@ namespace TR.UI
                 buyButton.onClick.RemoveAllListeners();
                 buyButton.interactable = !sold;
                 if (!sold && _onClick != null) buyButton.onClick.AddListener(() => _onClick());
-                _baseButtonScale = buyButton.transform.localScale; // cache base scale
+                _baseButtonScale = buyButton.transform.localScale; 
             }
         }
 
         private void ApplySoldVisuals(bool sold)
         {
-            // Dim and lock interaction when sold
+            
             if (rootGroup != null)
             {
                 rootGroup.alpha = sold ? 0.55f : 1f;
-                rootGroup.interactable = !sold; // disable any buttons under the group
+                rootGroup.interactable = !sold; 
                 rootGroup.blocksRaycasts = !sold;
             }
-            // Fallback: gray out key elements if no CanvasGroup
+            
             var dim = sold ? 0.5f : 1f;
             if (icon != null)
             {
@@ -87,7 +87,7 @@ namespace TR.UI
             }
         }
 
-        // Brief visual feedback when the player cannot afford the offer
+        
         public void FlashInsufficientFunds()
         {
             if (!isActiveAndEnabled) return;
@@ -105,7 +105,7 @@ namespace TR.UI
             {
                 t += Time.unscaledDeltaTime;
                 float u = Mathf.Clamp01(t / dur);
-                float ping = Mathf.PingPong(u * 2f, 1f); // 0..1..0
+                float ping = Mathf.PingPong(u * 2f, 1f); 
                 if (costText) costText.color = Color.Lerp(origCost, pulseColor, ping);
                 if (buyButton) buyButton.transform.localScale = _baseButtonScale * (1f + 0.06f * ping);
                 yield return null;

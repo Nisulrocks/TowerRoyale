@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Simple timed spawner for testing. Attach to scene, assign Enemy prefab and BattlePath.
+    
     public class EnemySpawner : MonoBehaviour
     {
         [SerializeField] private Enemy enemyPrefab;

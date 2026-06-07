@@ -7,24 +7,24 @@ namespace TR.Data
     {
         [Header("Levels")] 
         [Min(1)] [SerializeField] private int maxLevel = 10;
-        [Tooltip("XP needed to go from level L to L+1. Index 1 => XP for going 1->2, etc.")]
-        [SerializeField] private int[] xpPerLevel; // size >= maxLevel, index by level
-        [Tooltip("Max health at each level. Index 1 => health for level 1.")]
-        [SerializeField] private int[] healthPerLevel; // size >= maxLevel, index by level
+
+        [SerializeField] private int[] xpPerLevel; 
+
+        [SerializeField] private int[] healthPerLevel; 
 
         public int MaxLevel => Mathf.Max(1, maxLevel);
 
         public int GetXPForLevel(int level)
         {
             level = Mathf.Clamp(level, 1, MaxLevel);
-            if (xpPerLevel == null || xpPerLevel.Length <= level) return 100; // default
+            if (xpPerLevel == null || xpPerLevel.Length <= level) return 100; 
             return Mathf.Max(0, xpPerLevel[level]);
         }
 
         public int GetHealthForLevel(int level)
         {
             level = Mathf.Clamp(level, 1, MaxLevel);
-            if (healthPerLevel == null || healthPerLevel.Length <= level) return 100; // default
+            if (healthPerLevel == null || healthPerLevel.Length <= level) return 100; 
             return Mathf.Max(1, healthPerLevel[level]);
         }
 
@@ -43,7 +43,7 @@ namespace TR.Data
                 healthPerLevel = new int[MaxLevel + 1];
                 if (old != null) System.Array.Copy(old, healthPerLevel, Mathf.Min(old.Length, healthPerLevel.Length));
             }
-            // Ensure index 1 has reasonable defaults if unset
+            
             if (healthPerLevel[1] <= 0) healthPerLevel[1] = 100;
             if (xpPerLevel[1] <= 0) xpPerLevel[1] = 100;
         }

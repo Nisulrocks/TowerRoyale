@@ -7,28 +7,28 @@ using TR.Audio;
 
 namespace TR.UI
 {
-    // Drop this in the Lobby scene. Assign a popup prefab (panel) with Text fields.
-    // When the player is soft-banned (client-side moderation), this shows a blocking message with time remaining.
+    
+    
     public class LobbyBanNotifier : MonoBehaviour
     {
         [Header("Prefab & Parent")]
-        [Tooltip("UI prefab for the ban panel. Should contain one or more TMP_Text fields for content.")]
+
         [SerializeField] private GameObject banPopupPrefab;
         [Tooltip("Optional parent RectTransform (Canvas). If null, auto-find a Canvas in scene.")]
         [SerializeField] private RectTransform parent;
 
         [Header("Backdrop (Optional)")]
-        [Tooltip("If provided, a fullscreen Image is created behind the popup. Assign a blur material here for a blurred backdrop, otherwise a dim scrim is used.")]
+
         [SerializeField] private Material backdropMaterial;
-        [Tooltip("RGBA color for the backdrop when no blur material is provided.")]
+
         [SerializeField] private Color backdropColor = new Color(0f, 0f, 0f, 0.35f);
-        [Tooltip("Max alpha to animate the backdrop to on show. Ignored if the material handles its own visuals.")]
+
         [SerializeField] private float backdropMaxAlpha = 0.35f;
 
         [Header("Texts")]
         [SerializeField] private string titleText = "Temporary Restriction";
         [SerializeField] private string bodyFormat = "We detected corrupted game data and temporarily restricted gameplay.\n\nTime remaining: {0}";
-        [Tooltip("If provided, appended as a smaller note at the bottom.")]
+
         [SerializeField] private string footerText = "You can still browse menus. Please try again later.";
 
         [Header("Animation")]
@@ -48,7 +48,7 @@ namespace TR.UI
         private bool _isDismissing;
         private Image _backdrop;
         private CanvasGroup _backdropCg;
-        private TMP_Text[] _texts; // cache to live-update remaining time
+        private TMP_Text[] _texts; 
         private Coroutine _countdownCo;
 
         private void Start()
@@ -58,7 +58,7 @@ namespace TR.UI
 
         private IEnumerator TryShowAfterDelay()
         {
-            // Delay for scene fade
+            
             float t = Mathf.Max(0f, initialDelay);
             while (t > 0f)
             {
@@ -74,17 +74,17 @@ namespace TR.UI
             _instance = Instantiate(banPopupPrefab, parentRt);
             _instance.SetActive(true);
 
-            // Optional SFX
+            
             if (!string.IsNullOrEmpty(sfxKey) && SFXManager.Instance != null)
             {
                 SFXManager.Instance.Play(sfxKey);
             }
 
-            // Fill texts (try to find multiple TMP_Texts if available)
+            
             _texts = _instance.GetComponentsInChildren<TMP_Text>(true);
             if (_texts != null && _texts.Length > 0)
             {
-                // Assume first 1-3 texts are title/body/footer in order (robust against prefab differences)
+                
                 if (_texts.Length >= 1) _texts[0].text = titleText;
                 if (_texts.Length >= 2)
                 {
@@ -94,17 +94,17 @@ namespace TR.UI
                 if (_texts.Length >= 3) _texts[2].text = footerText;
             }
 
-            // Try to animate (CanvasGroup + anchored slide)
+            
             _cg = _instance.GetComponent<CanvasGroup>();
             if (_cg == null) _cg = _instance.AddComponent<CanvasGroup>();
             _rt = _instance.GetComponent<RectTransform>();
             StartCoroutine(AnimateIn(_cg, _rt));
-            // Begin monitoring; when ban expires, fade out using fadeOutTime
+            
             StartCoroutine(MonitorBanUntilCleared());
-            // Live countdown updates
+            
             if (_countdownCo != null) StopCoroutine(_countdownCo);
             _countdownCo = StartCoroutine(CountdownUpdater());
-            // Also auto-dismiss after a short hold time to avoid covering the lobby forever
+            
             if (visibleHoldTime > 0f)
                 StartCoroutine(AutoDismissAfterHold());
         }
@@ -128,7 +128,7 @@ namespace TR.UI
             Vector2 startPos = basePos + slideOffset;
             rt.anchoredPosition = startPos;
             cg.alpha = 0f;
-            // Backdrop fade in
+            
             if (_backdropCg != null)
             {
                 _backdropCg.alpha = 0f;
@@ -198,7 +198,7 @@ namespace TR.UI
 
         private IEnumerator MonitorBanUntilCleared()
         {
-            // Wait while still banned
+            
             while (PlayerProfile.IsBanned(out _))
             {
                 yield return null;
@@ -264,7 +264,7 @@ namespace TR.UI
         {
             if (parentRt == null) return;
             if (_backdrop != null) return;
-            // Create a full-screen Image under the same parent, ensure it renders behind popup by inserting as first child
+            
             var go = new GameObject("BanBackdrop", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
             var rt = go.GetComponent<RectTransform>();
             rt.SetParent(parentRt, false);
@@ -272,16 +272,16 @@ namespace TR.UI
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
-            // Move to bottom of hierarchy so it sits behind the popup instance
+            
             go.transform.SetAsFirstSibling();
 
             _backdrop = go.GetComponent<Image>();
             _backdropCg = go.GetComponent<CanvasGroup>();
-            _backdrop.raycastTarget = true; // block clicks to lobby while visible
+            _backdrop.raycastTarget = true; 
             if (backdropMaterial != null)
             {
                 _backdrop.material = backdropMaterial;
-                // If the blur material expects a base color alpha, keep the color alpha matching backdropMaxAlpha
+                
                 _backdrop.color = new Color(1f, 1f, 1f, backdropMaxAlpha);
             }
             else

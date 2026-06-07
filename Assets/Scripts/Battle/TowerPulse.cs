@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace TR.Battle
 {
-    // Tower that emits periodic shockwave pulses, damaging all enemies within radius
+    
     public class TowerPulse : TowerBase
     {
         private PulseCardDefinition _pulseDef;
@@ -13,12 +13,12 @@ namespace TR.Battle
         [Header("Debug")] [SerializeField] private bool debugPulseLogs = false;
         private int _missingDefFrames;
 
-        // Pulse tower opts out of the shared buff glow visuals; avoid any glow tinting on this tower type
+        
         protected override bool SupportsBuffGlow() => false;
 
         private void Awake()
         {
-            // Ensure base combat is disabled; this tower handles its own attack loop
+            
             SetCombatEnabled(false);
         }
 
@@ -30,13 +30,13 @@ namespace TR.Battle
             {
                 Debug.LogError("TowerPulse requires a PulseCardDefinition assigned to the tower's CardDefinition.", this);
             }
-            // Start pulse loop
+            
             StartCoroutine(PulseLoop());
         }
 
         private System.Collections.IEnumerator PulseLoop()
         {
-            // Wait one frame to ensure initialization
+            
             yield return null;
             while (true)
             {
@@ -49,7 +49,7 @@ namespace TR.Battle
                     _missingDefFrames = 0;
                     _cachedLevel = Level;
                     DoPulse();
-                    // Fire-rate buffs reduce the interval
+                    
                     float frMul = GetFireRateMultiplier();
                     float wait = Mathf.Max(0.05f, _pulseDef.GetPulseInterval(_cachedLevel) / Mathf.Max(0.01f, frMul));
                     yield return new WaitForSeconds(wait);
@@ -70,10 +70,10 @@ namespace TR.Battle
 
         private void DoPulse()
         {
-            // Apply BuffTower multipliers
+            
             float radius = _pulseDef.GetPulseRadius(_cachedLevel) * Mathf.Max(0f, GetRangeMultiplier());
             float baseDamage = _pulseDef.GetPulseDamage(_cachedLevel) * Mathf.Max(0f, GetDpsMultiplier());
-            // Crit: roll once per pulse
+            
             bool isCrit = false;
             float damage = baseDamage;
             if (_pulseDef != null)
@@ -88,7 +88,7 @@ namespace TR.Battle
             }
             if (radius <= 0.01f || damage <= 0.01f) return;
 
-            // VFX: prefer configured particle, else spawn a procedural ghost ripple
+            
             string vfxKey = _pulseDef.GetShockwaveVfxKey();
             if (!string.IsNullOrEmpty(vfxKey))
             {
@@ -96,24 +96,24 @@ namespace TR.Battle
             }
             else
             {
-                // Use card-configured fallback ripple settings
+                
                 var col = _pulseDef.GetRippleColor();
                 float dur = _pulseDef.GetRippleDuration();
                 float lw = _pulseDef.GetRippleLineWidth();
                 int seg = _pulseDef.GetRippleSegments();
                 TR.VFX.PulseRipple.Spawn(transform.position, radius, col, dur, lw, seg);
             }
-            // SFX
+            
             string sfxKey = _pulseDef.GetSfxPulseKey();
             if (!string.IsNullOrEmpty(sfxKey)) SFXManager.Instance?.Play(sfxKey);
-            // Crit burst + SFX (once per pulse) at the tower origin
+            
             if (isCrit)
             {
                 TR.UI.DamageNumbers.ShowCrit(transform, _pulseDef.GetCritBurstText());
                 var ck = _pulseDef.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
             }
 
-            // Damage all enemies within radius
+            
             s_snapshot.Clear();
             foreach (var e in EnemyBase2D.All) s_snapshot.Add(e);
             int hits = 0;
@@ -128,7 +128,7 @@ namespace TR.Battle
                     hits++;
                     if (_pulseDef.PulseAppliesOnHitEffects())
                     {
-                        // Reuse TowerBase's on-hit logic (includes SFX for applied effects)
+                        
                         ApplyOnHitEffects(e);
                     }
                 }
@@ -138,7 +138,7 @@ namespace TR.Battle
                 Debug.Log($"[TowerPulse] Pulse hit {hits} enemies | radius={radius:0.##} dmg={damage:0.##} interval={_pulseDef.GetPulseInterval(_cachedLevel):0.##}", this);
             }
 
-            // Optional debug ring
+            
             DebugDrawCircleLocal(transform.position, radius, new Color(0.6f, 0.9f, 1f, 0.8f), 0.15f);
         }
 

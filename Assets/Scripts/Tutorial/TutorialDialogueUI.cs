@@ -4,7 +4,7 @@ using TMPro;
 
 namespace TR.Tutorial
 {
-    // Minimal dialogue panel with a typewriter effect.
+    
     public class TutorialDialogueUI : MonoBehaviour
     {
         [SerializeField] private RectTransform panel;
@@ -19,7 +19,7 @@ namespace TR.Tutorial
         {
             var rt = GetComponent<RectTransform>();
             if (rt == null) rt = gameObject.AddComponent<RectTransform>();
-            // Only apply default layout if the prefab hasn't positioned/sized it yet
+            
             if (rt.sizeDelta == Vector2.zero)
             {
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
@@ -28,7 +28,7 @@ namespace TR.Tutorial
                 rt.sizeDelta = size;
             }
 
-            // If a prefab has a TextMeshProUGUI assigned, respect it; otherwise try to find one; if none, create minimal one
+            
             if (text == null)
             {
                 text = GetComponentInChildren<TextMeshProUGUI>(true);

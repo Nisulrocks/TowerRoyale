@@ -3,7 +3,7 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // Ensures data is loaded and maintains daily free packs. Starter free pack remains shown in Shop when player has no cards.
+    
     public class LobbyBootstrap : MonoBehaviour
     {
         [Header("Daily Free Pack")]
@@ -18,7 +18,7 @@ namespace TR.UI
 
             if (!enableDailyFreePack) return;
 
-            // Grant daily pack if cooldown passed
+            
             long last = PlayerProfile.GetLastDailyPackUnix();
             long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             long cool = Mathf.Max(1, dailyCooldownHours) * 3600L;

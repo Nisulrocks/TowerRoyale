@@ -56,7 +56,7 @@ namespace TR.Systems
                 if (milestones[i] != null && trophies < milestones[i].trophyRequired)
                     return i;
             }
-            return -1; // past the end
+            return -1; 
         }
 
         public static float GetProgress01()
@@ -83,7 +83,7 @@ namespace TR.Systems
             if (PlayerProfile.IsTrophyMilestoneClaimed(milestoneIndex))
                 return new ClaimResult { ok = false, milestoneIndex = milestoneIndex, message = "Already claimed" };
 
-            // Grant
+            
             try
             {
                 ms.reward?.Grant(PlayerProfile.Data);

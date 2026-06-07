@@ -10,9 +10,9 @@ namespace TR.Data.Progression
         [SerializeField] private string roadId = "main";
 
         [Header("Settings")]
-        [Tooltip("Maximum trophies. Player trophies are clamped to this value.")]
+
         [Min(0)] [SerializeField] private int maxTrophies = 4000;
-        [Tooltip("If true, player can claim milestones retroactively.")]
+
         [SerializeField] private bool retroactiveClaim = true;
 
         [Header("Milestones (ascending by trophyRequired)")]

@@ -5,11 +5,11 @@ using TR.Data;
 
 namespace TR.Systems
 {
-    // Data-driven index that discovers content from Resources on first use.
-    // Place assets under:
-    //  - Resources/Rarities/
-    //  - Resources/Cards/
-    //  - Resources/Packs/
+    
+    
+    
+    
+    
     public static class GameDB
     {
         private static bool _loaded;
@@ -55,7 +55,7 @@ namespace TR.Systems
             _gameplayConfig = null;
             _trophyRoad = null;
 
-            // Load all from Resources
+            
             _rarities.AddRange(Resources.LoadAll<RarityDefinition>("Rarities"));
             _cards.AddRange(Resources.LoadAll<CardDefinition>("Cards"));
             _packs.AddRange(Resources.LoadAll<PackDefinition>("Packs"));
@@ -72,7 +72,7 @@ namespace TR.Systems
                 _gameplayConfig = gameplayConfigs[0];
             }
 
-            // Trophy Road (single evergreen road)
+            
             var roads = Resources.LoadAll<TR.Data.Progression.TrophyRoadDefinition>("Progression");
             if (roads != null && roads.Length > 0)
             {
@@ -186,7 +186,7 @@ namespace TR.Systems
             var list = GetCardsByRarity(rarity);
             if (list == null || list.Count == 0)
             {
-                // Fallback to any card if none for this rarity
+                
                 if (_cards.Count == 0) return null;
                 rng ??= new System.Random();
                 return _cards[rng.Next(0, _cards.Count)];

@@ -10,10 +10,10 @@ namespace TR.Data
         [SerializeField] private float rampUpPerSecBase = 0.5f;  [SerializeField] private float rampUpPerSecPerLevel = 0.0f;
         [SerializeField] private float rampMaxMultiplierBase = 3.0f; [SerializeField] private float rampMaxMultiplierPerLevel = 0.0f;
         [SerializeField] private float multiTargetPenaltyBase = 0.5f; [SerializeField] private float multiTargetPenaltyPerLevel = 0.0f;
-        [SerializeField] private float rampDownPerSecBase = 0.0f; [SerializeField] private float rampDownPerSecPerLevel = 0.0f; // optional decay back to 1
+        [SerializeField] private float rampDownPerSecBase = 0.0f; [SerializeField] private float rampDownPerSecPerLevel = 0.0f; 
 
         [Header("Beam Visuals")]
-        [SerializeField] private Color beamStartColor = new Color(1f, 0.6f, 0.2f, 1f); // lava default
+        [SerializeField] private Color beamStartColor = new Color(1f, 0.6f, 0.2f, 1f); 
         [SerializeField] private Color beamEndColor = new Color(1f, 0.2f, 0f, 1f);
         [SerializeField] private float beamBaseWidth = 0.04f;
         [SerializeField] private float beamMaxWidth = 0.10f;

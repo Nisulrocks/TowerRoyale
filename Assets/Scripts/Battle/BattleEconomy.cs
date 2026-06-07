@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Minimal currency tracker. Attach to a scene GameObject.
+    
     public class BattleEconomy : MonoBehaviour
     {
         [SerializeField] private int startCurrency = 100;

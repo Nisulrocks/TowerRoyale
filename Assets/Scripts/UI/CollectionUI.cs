@@ -7,14 +7,14 @@ using TR.Data;
 
 namespace TR.UI
 {
-    // Displays owned cards with levels and lets you upgrade when possible.
+    
     public class CollectionUI : MonoBehaviour
     {
         [Header("Refs")]
         [SerializeField] private Transform listRoot;
         [SerializeField] private CollectionItemUI itemPrefab;
         [SerializeField] private TMP_Text headerText;
-        [SerializeField] private TMP_Text softCurrencyText; // shows current coins
+        [SerializeField] private TMP_Text softCurrencyText; 
         [Header("Sorting")]
         [Tooltip("Optional dropdown to control rarity order. If not assigned, defaults to ascending (Common -> Legendary).")]
         [SerializeField] private TMP_Dropdown raritySortDropdown;
@@ -32,13 +32,13 @@ namespace TR.UI
         [SerializeField] private float searchThrottleSeconds = 0.10f;
 
         private readonly List<CollectionItemUI> _items = new();
-        // Track running per-item animations to cancel on rapid refreshes
+        
         private readonly System.Collections.Generic.Dictionary<CollectionItemUI, Coroutine> _moveCoByItem = new();
         private readonly System.Collections.Generic.Dictionary<CollectionItemUI, Coroutine> _appearCoByItem = new();
 
         private void Awake()
         {
-            // Preload data database so the first time opening the panel doesn't hitch
+            
             GameDB.EnsureLoaded();
         }
 
@@ -76,10 +76,10 @@ namespace TR.UI
 
             GameDB.EnsureLoaded();
             bool searching = !string.IsNullOrWhiteSpace(_searchQuery);
-            // Cancel any running item animations to avoid overlap/duplicates when layout changes rapidly
+            
             StopAllItemAnimations();
-            // Compute rarity priority using order in GameDB.Rarities (lower index = more common)
-            // Build override lookup if provided
+            
+            
             System.Collections.Generic.Dictionary<RarityDefinition, int> rarityPriorityOverride = null;
             if (rarityOrderOverride != null && rarityOrderOverride.Count > 0)
             {
@@ -101,13 +101,13 @@ namespace TR.UI
                 return int.MaxValue - 1;
             }
 
-            // Sort policy:
-            // 1) Owned cards first (discovered)
-            // 2) Then cards unlocked for current trophies but not owned yet
-            // 3) Then cards locked by higher arenas
-            // Within each group: sort by rarity (GameDB.Rarities order), then by display name
+            
+            
+            
+            
+            
             var sorted = new List<CardDefinition>(GameDB.Cards);
-            // Apply name filter if provided
+            
             if (searching)
             {
                 string q = _searchQuery.Trim();
@@ -120,11 +120,11 @@ namespace TR.UI
                 var cpb = PlayerProfile.GetOrCreateCard(b.CardId);
                 bool aOwned = cpa.ownedCount > 0;
                 bool bOwned = cpb.ownedCount > 0;
-                if (aOwned != bOwned) return bOwned.CompareTo(aOwned); // true first
+                if (aOwned != bOwned) return bOwned.CompareTo(aOwned); 
 
                 bool aUnlockNow = a.IsUnlockedForPlayer();
                 bool bUnlockNow = b.IsUnlockedForPlayer();
-                // section: 0 owned, 1 unlocked-not-owned, 2 locked
+                
                 int aSection = aOwned ? 0 : (aUnlockNow ? 1 : 2);
                 int bSection = bOwned ? 0 : (bUnlockNow ? 1 : 2);
                 if (aSection != bSection) return aSection.CompareTo(bSection);
@@ -139,7 +139,7 @@ namespace TR.UI
                 return string.Compare(a.DisplayName, b.DisplayName, System.StringComparison.OrdinalIgnoreCase);
             });
 
-            // Build/reuse UI instances and animate reordering
+            
             bool firstBuild = _items.Count == 0;
             var existingById = new Dictionary<string, CollectionItemUI>();
             foreach (var it in _items)
@@ -154,7 +154,7 @@ namespace TR.UI
             foreach (var card in sorted)
             {
                 if (card == null || string.IsNullOrEmpty(card.CardId)) continue;
-                if (!seenIds.Add(card.CardId)) continue; // guard against duplicates in data or race
+                if (!seenIds.Add(card.CardId)) continue; 
                 if (!existingById.TryGetValue(card.CardId, out var ui) || ui == null)
                 {
                     ui = Instantiate(itemPrefab, listRoot);
@@ -164,14 +164,14 @@ namespace TR.UI
                 }
                 else
                 {
-                    // Ensure binding reflects latest player state
+                    
                     ui.Bind(card);
                 }
                 ui.gameObject.SetActive(true);
                 ordered.Add(ui);
             }
 
-            // If searching, hide all non-matches and skip animations. Keep pool for reuse.
+            
             if (searching)
             {
                 var keep = new HashSet<CollectionItemUI>(ordered);
@@ -192,7 +192,7 @@ namespace TR.UI
 
             if (firstBuild)
             {
-                // On the very first build, skip animations for instant display
+                
                 foreach (var ui in ordered)
                 {
                     ui.transform.SetSiblingIndex(ordered.IndexOf(ui));
@@ -203,7 +203,7 @@ namespace TR.UI
                 return;
             }
 
-            // Capture old world positions
+            
             var oldPos = new Dictionary<RectTransform, Vector3>(ordered.Count);
             foreach (var ui in ordered)
             {
@@ -211,18 +211,18 @@ namespace TR.UI
                 if (rt != null) oldPos[rt] = rt.position;
             }
 
-            // Reorder hierarchy to new order
+            
             for (int i = 0; i < ordered.Count; i++)
             {
                 ordered[i].transform.SetSiblingIndex(i);
             }
 
-            // Force layout to compute target positions
+            
             Canvas.ForceUpdateCanvases();
             var rootRt = listRoot as RectTransform;
             if (rootRt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rootRt);
 
-            // Animate items from old -> new positions
+            
             foreach (var ui in ordered)
             {
                 var rt = ui.transform as RectTransform; if (rt == null) continue;
@@ -236,7 +236,7 @@ namespace TR.UI
                 le.ignoreLayout = true;
                 if (isNew)
                 {
-                    // Spawn from target with small scale (no alpha tween to avoid clashing with existing CanvasGroups)
+                    
                     rt.position = targetPos;
                     rt.localScale = Vector3.one * 0.88f;
                     StopItemAnimation(ui);
@@ -245,7 +245,7 @@ namespace TR.UI
                 }
                 else
                 {
-                    // Move from previous world position to new layout position
+                    
                     rt.position = startPos;
                     StopItemAnimation(ui);
                     var co = StartCoroutine(AnimateMoveToTracked(ui, rt, targetPos, le));
@@ -256,7 +256,7 @@ namespace TR.UI
 
         private void StopAllItemAnimations()
         {
-            // Stop and clear tracked coroutines, and ensure layout is not ignored
+            
             foreach (var kv in _moveCoByItem)
             {
                 if (kv.Value != null) StopCoroutine(kv.Value);
@@ -318,7 +318,7 @@ namespace TR.UI
             Canvas.ForceUpdateCanvases();
         }
 
-        // Initialize rarity sort dropdown options and sync with current setting
+        
         private void SetupSortingUI()
         {
             if (raritySortDropdown == null) return;
@@ -337,7 +337,7 @@ namespace TR.UI
             }
         }
 
-        // Handle dropdown change and refresh collection
+        
         private void HandleRaritySortChanged(int index)
         {
             bool desc = (index == 1);
@@ -348,7 +348,7 @@ namespace TR.UI
             }
         }
 
-        // Handle search input change
+        
         private string _searchQuery = string.Empty;
         private Coroutine _searchDebounceCo;
         private float _lastSearchRefreshTime = -999f;
@@ -356,8 +356,8 @@ namespace TR.UI
         private void HandleSearchChanged(string text)
         {
             _searchQuery = text ?? string.Empty;
-            // Hybrid throttle + debounce: update immediately if enough time has passed since last refresh,
-            // otherwise schedule a short delayed refresh.
+            
+            
             float now = Time.unscaledTime;
             float sinceLast = now - _lastSearchRefreshTime;
             float throttle = Mathf.Max(0f, searchThrottleSeconds);
@@ -369,7 +369,7 @@ namespace TR.UI
             }
             else
             {
-                // Schedule a refresh after the remaining throttle window or the debounce window, whichever is larger
+                
                 float remainingThrottle = Mathf.Max(0f, throttle - sinceLast);
                 _pendingSearchDelay = Mathf.Max(searchDebounceSeconds, remainingThrottle);
                 if (_searchDebounceCo != null) StopCoroutine(_searchDebounceCo);

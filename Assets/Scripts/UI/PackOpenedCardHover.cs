@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace TR.UI
 {
-    // Attach to each revealed card instance to notify the controller about hover events.
+    
     public class PackOpenedCardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         private PackOpeningSceneController _controller;

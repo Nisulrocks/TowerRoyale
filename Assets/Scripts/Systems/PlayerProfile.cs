@@ -8,53 +8,53 @@ namespace TR.Systems
     public class CardProgress
     {
         public string cardId;
-        public int level = 1;     // level >= 1 when owned
-        public int points = 0;    // card points toward next level
-        public int ownedCount = 1; // number of copies seen (for stats/info)
+        public int level = 1;     
+        public int points = 0;    
+        public int ownedCount = 1; 
     }
 
     [Serializable]
     public class PlayerProfileDTO
     {
         public int softCurrency = 0;
-        public int trophies = 0; // Arena progression trophies
-        // Trophy floor: minimum trophies based on the highest arena reached
+        public int trophies = 0; 
+        
         public int trophiesFloor = 0;
         public List<CardProgress> cards = new();
-        public List<string> deck = new(); // list of cardIds
+        public List<string> deck = new(); 
 
-        // Pending one-shot lobby notifications
-        public string pendingArenaUnlockName = null; // set when a new arena is reached; consumed on lobby load
+        
+        public string pendingArenaUnlockName = null; 
 
-        // Integrity & moderation
-        public int saveVersion = 1;               // bump when schema/policy changes
-        public string integrityHash = "";        // HMAC-SHA256 of canonical JSON without this field
-        public int tamperCount = 0;               // number of detected integrity failures
-        public long lastTamperUnix = 0;           // when we last detected tampering
-        public long banUntilUnix = 0;             // UTC seconds until which the user is soft-banned
+        
+        public int saveVersion = 1;               
+        public string integrityHash = "";        
+        public int tamperCount = 0;               
+        public long lastTamperUnix = 0;           
+        public long banUntilUnix = 0;             
 
-        // Castle progression
-        public int castleLevel = 1; // starts at 1
-        public int castleXP = 0;    // XP toward next level
+        
+        public int castleLevel = 1; 
+        public int castleXP = 0;    
 
-        // Simple pack inventory (packId -> count) using parallel lists for JsonUtility friendliness
+        
         public List<string> packIds = new();
         public List<int> packCounts = new();
 
-        // Meta flags / timers
-        public bool starterClaimed = false;   // whether the persistent starter free pack has been claimed
-        public long lastDailyPackUnix = 0;    // UTC seconds when last daily pack was granted
+        
+        public bool starterClaimed = false;   
+        public long lastDailyPackUnix = 0;    
 
-        // Tutorial persistence
+        
         public bool tutorialActive = false;
         public int tutorialStep = 0;
 
-        // Trophy Road claimed milestones (indices). Evergreen single road.
+        
         public List<int> trophyRoadClaimed = new();
 
-        // Shop: daily card points offers persistence
+        
         public List<TR.Systems.ShopService.CardPointsOffer> cardPointOffers = new();
-        public int cardPointOffersDayKey = 0; // yyyymmdd key of current offers
+        public int cardPointOffersDayKey = 0; 
 
         public int GetPackCount(string packId)
         {
@@ -80,25 +80,25 @@ namespace TR.Systems
             return true;
         }
 
-        // Pending visual rewards to present in Lobby
-        public int pendingCastleXpDelta = 0; // how much XP was recently added (for UI animation)
+        
+        public int pendingCastleXpDelta = 0; 
     }
 
     public static class PlayerProfile
     {
         private static PlayerProfileDTO _data;
         public static PlayerProfileDTO Data => _data ?? (_data = LoadOrCreate());
-        private const string Pepper = "tr_pepper_v1_!@#Ch33rs"; // lightweight obfuscation only
+        private const string Pepper = "tr_pepper_v1_!@#Ch33rs"; 
 
-        // ===== Ban Test Mode (quickly tweak ban durations during development) =====
-        // When enabled, ban durations use seconds instead of hours for fast testing.
-        // Example: strike 1 => 10s, strike 2 => 20s, strike 3+ => 30s (configurable via the helpers below)
+        
+        
+        
         public static bool BanTestModeEnabled = false;
         public static int BanTestStrike1Seconds = 10;
         public static int BanTestStrike2Seconds = 20;
         public static int BanTestStrike3Seconds = 30;
 
-        // Helpers to quickly toggle test mode
+        
         public static void EnableBanTestMode(int strike1Seconds = 10, int strike2Seconds = 20, int strike3Seconds = 30)
         {
             BanTestModeEnabled = true;
@@ -111,8 +111,8 @@ namespace TR.Systems
             BanTestModeEnabled = false;
         }
 
-        // Events
-        public static event Action<int> OnSoftCurrencyChanged; // new balance
+        
+        public static event Action<int> OnSoftCurrencyChanged; 
 
         public static PlayerProfileDTO LoadOrCreate()
         {
@@ -130,20 +130,20 @@ namespace TR.Systems
                         }
                         else
                         {
-                            // Attempt restore from backup
+                            
                             string bak = SaveSystem.LoadBackup();
                             if (!string.IsNullOrEmpty(bak))
                             {
                                 var backupDto = JsonUtility.FromJson<PlayerProfileDTO>(bak);
                                 if (backupDto != null && VerifyIntegrity(backupDto))
                                 {
-                                    // Apply ban escalation and keep backup data for strikes < 3, otherwise reset
+                                    
                                     var moderated = HandleTamperAndModerate(backupDto);
                                     Save();
                                     return moderated;
                                 }
                             }
-                            // No valid backup: escalate and reset profile entirely
+                            
                             var fresh = new PlayerProfileDTO();
                             var moderatedFresh = HandleTamperAndModerate(fresh);
                             _data = moderatedFresh;
@@ -164,12 +164,12 @@ namespace TR.Systems
         {
             try
             {
-                // Compute integrity before writing
+                
                 Data.saveVersion = Mathf.Max(1, Data.saveVersion);
                 Data.integrityHash = ComputeIntegrityHash(Data);
                 string json = JsonUtility.ToJson(Data, true);
                 SaveSystem.Save(json);
-                // Also write a backup of the last known-good profile
+                
                 SaveSystem.SaveBackup(json);
             }
             catch (Exception ex)
@@ -190,13 +190,13 @@ namespace TR.Systems
         {
             try
             {
-                // Temporarily capture and clear the hash so it isn't included in the HMAC input
+                
                 string originalHash = dto.integrityHash;
                 dto.integrityHash = string.Empty;
                 string canonical = JsonUtility.ToJson(dto, false);
                 dto.integrityHash = originalHash;
 
-                // Key = pepper + device id (device id may be empty on some platforms, that's fine)
+                
                 string keyStr = Pepper + SystemInfo.deviceUniqueIdentifier;
                 var key = System.Text.Encoding.UTF8.GetBytes(keyStr);
                 var data = System.Text.Encoding.UTF8.GetBytes(canonical);
@@ -216,7 +216,7 @@ namespace TR.Systems
 
         private static PlayerProfileDTO HandleTamperAndModerate(PlayerProfileDTO baseDto)
         {
-            // Escalate tamper and ban window
+            
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             int strikes = Mathf.Max(0, baseDto.tamperCount) + 1;
             baseDto.tamperCount = strikes;
@@ -233,11 +233,11 @@ namespace TR.Systems
             }
             baseDto.banUntilUnix = now + seconds;
 
-            // On 3rd+ strike, reset data fully. Otherwise keep provided baseDto state (usually backup)
+            
             if (strikes >= 3)
             {
                 var fresh = new PlayerProfileDTO();
-                fresh.tamperCount = strikes; // carry forward strike count
+                fresh.tamperCount = strikes; 
                 fresh.lastTamperUnix = now;
                 fresh.banUntilUnix = baseDto.banUntilUnix;
                 _data = fresh;
@@ -258,7 +258,7 @@ namespace TR.Systems
             return left > 0;
         }
 
-        // Daily pack helpers (correct location)
+        
         public static long GetLastDailyPackUnix() => Data.lastDailyPackUnix;
         public static void SetLastDailyPackNow()
         {
@@ -266,7 +266,7 @@ namespace TR.Systems
             Save();
         }
 
-        // Tutorial helpers
+        
         public static bool GetTutorialActive() => Data.tutorialActive;
         public static void SetTutorialActive(bool active)
         {
@@ -280,7 +280,7 @@ namespace TR.Systems
             Save();
         }
 
-        // Danger: resets ALL local player progress (currency, cards, decks, XP, etc.)
+        
         public static void WipeAllData()
         {
             _data = new PlayerProfileDTO();
@@ -288,17 +288,17 @@ namespace TR.Systems
             OnSoftCurrencyChanged?.Invoke(_data.softCurrency);
         }
 
-        // Convenience helpers for trophies and currency
+        
         public static int GetTrophies() => Data.trophies;
         public static int GetTrophyFloor() => Mathf.Max(0, Data.trophiesFloor);
-        // Raise the floor to at least 'value' (never decreases)
+        
         public static void SetTrophyFloorAtLeast(int value)
         {
             int v = Mathf.Max(0, value);
             if (v > Data.trophiesFloor)
             {
                 Data.trophiesFloor = v;
-                // If current trophies somehow below new floor, lift them up to the floor
+                
                 if (Data.trophies < Data.trophiesFloor)
                     Data.trophies = Data.trophiesFloor;
                 Save();
@@ -308,7 +308,7 @@ namespace TR.Systems
         {
             int add = Mathf.Max(0, amount);
             int current = Mathf.Max(0, Data.trophies);
-            // Clamp to Trophy Road max if available
+            
             var road = TR.Systems.GameDB.GetTrophyRoad();
             if (road != null)
             {
@@ -322,7 +322,7 @@ namespace TR.Systems
             Save();
         }
 
-        // Consume and clear the pending castle XP delta for UI presentation
+        
         public static bool TryConsumePendingCastleXp(out int delta)
         {
             delta = Mathf.Max(0, Data.pendingCastleXpDelta);
@@ -350,7 +350,7 @@ namespace TR.Systems
             OnSoftCurrencyChanged?.Invoke(Data.softCurrency);
         }
 
-        // ===== Pending Notification helpers =====
+        
         public static void SetPendingArenaUnlock(string arenaDisplayName)
         {
             if (string.IsNullOrEmpty(arenaDisplayName)) return;
@@ -358,7 +358,7 @@ namespace TR.Systems
             Save();
         }
 
-        // Returns true if a pending arena unlock was present; outputs and clears it
+        
         public static bool TryConsumePendingArenaUnlock(out string arenaDisplayName)
         {
             arenaDisplayName = Data.pendingArenaUnlockName;
@@ -368,7 +368,7 @@ namespace TR.Systems
             return true;
         }
 
-        // ===== Trophy Road claimed helpers (evergreen single road) =====
+        
         public static bool IsTrophyMilestoneClaimed(int index)
         {
             return Data.trophyRoadClaimed != null && Data.trophyRoadClaimed.Contains(index);
@@ -390,7 +390,7 @@ namespace TR.Systems
             return true;
         }
 
-        // ===== Castle helpers =====
+        
         public static int GetCastleLevel() => Mathf.Max(1, Data.castleLevel);
         public static int GetCastleXP() => Mathf.Max(0, Data.castleXP);
 
@@ -400,12 +400,12 @@ namespace TR.Systems
             if (amount <= 0) return;
             var cfg = TR.Systems.GameDB.GetCastleProgression();
             Data.castleXP += amount;
-            // Accumulate pending delta for lobby FX
+            
             Data.pendingCastleXpDelta = Mathf.Max(0, Data.pendingCastleXpDelta + amount);
             if (cfg != null)
             {
                 int maxLevel = Mathf.Max(1, cfg.MaxLevel);
-                // Keep leveling while we have enough XP and below max level
+                
                 while (Data.castleLevel < maxLevel)
                 {
                     int needed = cfg.GetXPForLevel(Data.castleLevel);
@@ -417,7 +417,7 @@ namespace TR.Systems
                     }
                     else break;
                 }
-                // If at max level, cap XP to the last threshold
+                
                 if (Data.castleLevel >= maxLevel)
                 {
                     Data.castleXP = Mathf.Min(Data.castleXP, cfg.GetXPForLevel(maxLevel));
@@ -445,7 +445,7 @@ namespace TR.Systems
             return cp;
         }
 
-        // Grant N copies of a card to the player's collection
+        
         public static void AddCardCopies(string cardId, int count)
         {
             if (string.IsNullOrEmpty(cardId)) return;

@@ -7,14 +7,14 @@ using System.Collections;
 
 namespace TR.UI
 {
-    // A simple panel that slides in to show card details on hover.
+    
     public class HoverCardDetailsUI : MonoBehaviour
     {
         [Header("Panel")]
-        [SerializeField] private GameObject root; // root GameObject for the panel window
-        [SerializeField] private RectTransform panel; // anchored to right or left side of canvas
-        [SerializeField] private float showX = -40f;  // anchoredPosition.x when visible (e.g., slightly inside)
-        [SerializeField] private float hiddenX = -420f; // anchoredPosition.x when hidden (e.g., off-screen)
+        [SerializeField] private GameObject root; 
+        [SerializeField] private RectTransform panel; 
+        [SerializeField] private float showX = -40f;  
+        [SerializeField] private float hiddenX = -420f; 
         [SerializeField] private float animDuration = 0.18f;
 
         [Header("Header")] 
@@ -29,12 +29,12 @@ namespace TR.UI
         [SerializeField] private TMP_Text rangeText;
         [SerializeField] private TMP_Text splashText;
         [SerializeField] private TMP_Text costText;
-        [SerializeField] private TMP_Text effectText; // shows Burn or Poison if present, otherwise '-'
+        [SerializeField] private TMP_Text effectText; 
 
         public static HoverCardDetailsUI Instance { get; private set; }
-        // Collection context flag: when true, and if upgrade is available for a card,
-        // hover details will show current -> next level values. This should be toggled
-        // by the Collection UI panel only.
+        
+        
+        
         private static bool s_inCollectionContext = false;
         public static void SetCollectionContext(bool on) => s_inCollectionContext = on;
 
@@ -42,7 +42,7 @@ namespace TR.UI
         private bool _visible;
         private float EaseOut(float t) => 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
         private TR.Battle.TowerBase _boundTower;
-        // Small helpers to drive VerticalLayoutGroup-friendly toggling
+        
         private void SetLine(TMP_Text field, string content)
         {
             if (field == null) return;
@@ -78,22 +78,22 @@ namespace TR.UI
                 Debug.LogWarning("[HoverCardDetailsUI] No instance found. Add HoverCardDetailsUI to the scene and assign references.");
                 return;
             }
-            // Unbind any previous tower; this path is card-only (e.g., collection hover)
+            
             inst.UnbindTower();
-            // If the card is undiscovered, always show obfuscated stats (???) regardless of type
+            
             var cp = TR.Systems.PlayerProfile.GetOrCreateCard(card.CardId);
             bool undiscovered = cp != null && cp.ownedCount <= 0;
             if (undiscovered)
             {
-                inst.SetData(card, level); // SetData handles the ??? lines for undiscovered
+                inst.SetData(card, level); 
                 inst.SetVisible(true);
                 return;
             }
-            // Buff cards: show aura stats and full buff breakdown (same as placed tower view)
+            
             if (card is BuffCardDefinition buff)
             {
                 int lvb = Mathf.Max(1, level);
-                // Determine if we should show upgrade comparisons in Collection context
+                
                 bool showNext = false;
                 int nextLv = lvb;
                 if (s_inCollectionContext && cp != null)
@@ -109,7 +109,7 @@ namespace TR.UI
                         if (showNext) nextLv = nlv;
                     }
                 }
-                // Header
+                
                 if (inst.icon) inst.icon.sprite = card.Icon;
                 if (inst.rarityStripe && card.Rarity) inst.rarityStripe.color = card.Rarity.Color;
                 if (inst.nameText) inst.nameText.text = card.DisplayName;
@@ -173,7 +173,7 @@ namespace TR.UI
                     if (showNext) sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetStunChanceBuffPercent(nextLv) * 100f:0.#}%  Dur +{buff.GetStunDurBuffPercent(lvb) * 100f:0.#}% -> +{buff.GetStunDurBuffPercent(nextLv) * 100f:0.#}%");
                     else sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lvb) * 100f:0.#}% Dur +{buff.GetStunDurBuffPercent(lvb) * 100f:0.#}%");
                 }
-                // Economy income buff (new)
+                
                 if (buff.BuffEconomyIncome)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
@@ -181,7 +181,7 @@ namespace TR.UI
                     else sb.Append($"Econ Income +{buff.GetEconomyIncomePercent(lvb) * 100f:0.#}%");
                 }
                 inst.SetLine(inst.fireRateText, sb.Length > 0 ? sb.ToString() : null);
-                // Rarity filter display
+                
                 string affects = null;
                 var allowed = buff.AllowedRarities;
                 if (allowed == null || allowed.Count == 0)
@@ -212,7 +212,7 @@ namespace TR.UI
             inst.SetVisible(true);
         }
 
-        // Bind to a specific placed tower so stats reflect live multipliers
+        
         public static void Show(TR.Battle.TowerBase tower)
         {
             var inst = Instance ?? FindFirstObjectByType<HoverCardDetailsUI>(FindObjectsInactive.Include);
@@ -254,11 +254,11 @@ namespace TR.UI
             if (nameText) nameText.text = card.DisplayName;
             if (levelText) levelText.text = $"Lv {lv}";
 
-            // Economy towers keep their special display
+            
             if (card is EconomyCardDefinition econ)
             {
                 float baseIncome = econ.GetIncomePerSecond(lv);
-                // If we have a runtime EconomyTower, show effective income and buff percent
+                
                 float income = baseIncome;
                 float buffPct = 0f;
                 var econRt = _boundTower.GetComponent<TR.Battle.EconomyTower>();
@@ -282,13 +282,13 @@ namespace TR.UI
                 return;
             }
 
-            // Buff towers (placed): show aura stats and buff breakdown like card preview
+            
             if (card is BuffCardDefinition buff)
             {
-                // Header already set above
+                
                 float auraRange = buff.GetBuffRange(lv);
                 SetLine(dpsText, $"Aura Range: {auraRange:0.#}");
-                // Build a concise buff summary line
+                
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 if (buff.BuffDps) sb.Append($"DPS +{buff.GetDpsPercent(lv) * 100f:0.#}%");
                 if (buff.BuffFireRate)
@@ -311,7 +311,7 @@ namespace TR.UI
                     if (sb.Length > 0) sb.Append("  |  ");
                     sb.Append($"Econ Income +{buff.GetEconomyIncomePercent(lv) * 100f:0.#}%");
                 }
-                // On-hit effect buffs
+                
                 if (buff.BuffBurn)
                 {
                     if (sb.Length > 0) sb.Append("  |  ");
@@ -333,7 +333,7 @@ namespace TR.UI
                     sb.Append($"Stun % +{buff.GetStunChanceBuffPercent(lv) * 100f:0.#}% Dur +{buff.GetStunDurBuffPercent(lv) * 100f:0.#}%");
                 }
                 SetLine(fireRateText, sb.Length > 0 ? sb.ToString() : null);
-                // Rarity filter display
+                
                 string affects = null;
                 var allowed = buff.AllowedRarities;
                 if (allowed == null || allowed.Count == 0)
@@ -360,10 +360,10 @@ namespace TR.UI
                 return;
             }
 
-            // Pulse towers show pulse stats
+            
             if (card is PulseCardDefinition pulseDefBound)
             {
-                // Effective values with buffs
+                
                 float dmg = pulseDefBound.GetPulseDamage(lv) * (_boundTower != null ? _boundTower.GetDpsMultiplier() : 1f);
                 float interval = pulseDefBound.GetPulseInterval(lv) / Mathf.Max(0.01f, (_boundTower != null ? _boundTower.GetFireRateMultiplier() : 1f));
                 float radius = _boundTower.GetEffectiveRange();
@@ -372,11 +372,11 @@ namespace TR.UI
                 SetLine(rangeText, $"Pulse Radius: {radius:0.#}");
                 SetLine(splashText, null);
                 { var cstats = card.GetStatsForLevel(lv); SetLine(costText, $"Cost: {cstats.cost}"); }
-                // Effects summary remains as below (burn/poison/slow/stun/crit/etc.)
+                
                 goto EffectsSummary;
             }
 
-            // Inferno towers show continuous-beam stats with multipliers
+            
             if (card is InfernoCardDefinition inferno)
             {
                 var statsInf = inferno.GetStatsForLevel(lv);
@@ -395,7 +395,7 @@ namespace TR.UI
             }
             else
             {
-                // Regular towers use effective stats
+                
                 SetLine(dpsText, $"DPS: {_boundTower.GetEffectiveDps():0.#}");
                 SetLine(fireRateText, $"Fire Rate: {_boundTower.GetEffectiveFireRate():0.##}/s");
                 SetLine(rangeText, $"Range: {_boundTower.GetEffectiveRange():0.#}");
@@ -407,7 +407,7 @@ namespace TR.UI
             }
 
         EffectsSummary:
-            // Effects summary from card (show EFFECTIVE values with buffs)
+            
             if (effectText)
             {
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -431,7 +431,7 @@ namespace TR.UI
                         sb.Append($"Slow {sp * 100f:0.#}% {sd:0.#}s");
                     }
                 }
-                // Frostbite (not buffed): only shown if Slow is enabled, and gated by threshold slow percent
+                
                 if (card.HasSlowOnHit() && card.HasFrostbiteOnHit())
                 {
                     float fbDps = card.GetFrostbiteDps(lv);
@@ -442,7 +442,7 @@ namespace TR.UI
                         sb.Append($"Frostbite {fbDps:0.#}/s {fbDur:0.#}s");
                     }
                 }
-                // Stun
+                
                 if (card.HasStunOnHit())
                 {
                     float sc = card.GetStunChance(lv) * (_boundTower != null ? _boundTower.GetStunChanceMultiplier() : 1f);
@@ -453,7 +453,7 @@ namespace TR.UI
                         sb.Append($"Stun {sc * 100f:0.#}% {sd:0.#}s");
                     }
                 }
-                // Crit (from card, not affected by buffs)
+                
                 float cc = card.GetCritChance(lv);
                 float cm = card.GetCritMultiplier(lv);
                 if (cc > 0f && cm > 1f)
@@ -461,7 +461,7 @@ namespace TR.UI
                     if (sb.Length > 0) sb.Append("  |  ");
                     sb.Append($"Crit {cc * 100f:0.#}% x{cm:0.##}");
                 }
-                // Tornado (card-driven; not affected by buffs)
+                
                 if (card.HasTornadoOnHit())
                 {
                     float tr = card.GetTornadoRadius(lv);
@@ -483,7 +483,7 @@ namespace TR.UI
                         sb.Append(']');
                     }
                 }
-                // Chain (level-aware)
+                
                 if (card.HasChainOnHit())
                 {
                     int jumps = card.GetChainMaxJumps(lv);
@@ -516,7 +516,7 @@ namespace TR.UI
             if (nameText) nameText.text = card.DisplayName;
             if (levelText) levelText.text = $"Lv {lv}";
 
-            // Undiscovered handling: if player has not obtained this card yet, hide stats behind ???
+            
             var cp = TR.Systems.PlayerProfile.GetOrCreateCard(card.CardId);
             bool undiscovered = cp != null && cp.ownedCount <= 0;
             if (undiscovered)
@@ -530,7 +530,7 @@ namespace TR.UI
                 RebuildLayout();
                 return;
             }
-            // Determine if upgrade comparison should be shown (Collection context + upgrade available)
+            
             bool showNext = false; int nextLv = lv;
             if (s_inCollectionContext && cp != null)
             {
@@ -545,7 +545,7 @@ namespace TR.UI
                     if (showNext) nextLv = nlv;
                 }
             }
-            // Pulse cards (preview): show pulse stats
+            
             if (card is PulseCardDefinition pulseDef)
             {
                 float dmg = pulseDef.GetPulseDamage(lv);
@@ -568,11 +568,11 @@ namespace TR.UI
                 }
                 SetLine(splashText, null);
                 { var cstats = card.GetStatsForLevel(lv); if (showNext) { var nstats = card.GetStatsForLevel(nextLv); SetLine(costText, $"Cost: {cstats.cost} -> {nstats.cost}"); } else SetLine(costText, $"Cost: {cstats.cost}"); }
-                // Keep effect summary below (card-level values)
+                
                 goto EffectSummaryPreview;
             }
 
-            // Economy cards show different stats; reuse existing text fields to avoid prefab changes
+            
             if (card is EconomyCardDefinition econ)
             {
                 float income = econ.GetIncomePerSecond(lv);
@@ -600,7 +600,7 @@ namespace TR.UI
                 return;
             }
 
-            // Inferno cards: override to show continuous-beam stats
+            
             if (card is InfernoCardDefinition inferno)
             {
                 var statsInf = inferno.GetStatsForLevel(lv);
@@ -630,7 +630,7 @@ namespace TR.UI
                     SetLine(costText, $"Cost: {statsInf.cost}");
                 }
 
-                // Keep on-hit effect summary if any (Burn/Poison/Slow)
+                
                 if (effectText)
                 {
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -654,7 +654,7 @@ namespace TR.UI
                             sb.Append($"Slow {sp * 100f:0.#}% {sd:0.#}s");
                         }
                     }
-                    // Stun
+                    
                     if (card.HasStunOnHit())
                     {
                         float sc = card.GetStunChance(lv);
@@ -665,7 +665,7 @@ namespace TR.UI
                             sb.Append($"Stun {sc * 100f:0.#}% {sd:0.#}s");
                         }
                     }
-                    // Crit
+                    
                     float cc = card.GetCritChance(lv);
                     float cm = card.GetCritMultiplier(lv);
                     if (cc > 0f && cm > 1f)
@@ -698,7 +698,7 @@ namespace TR.UI
             }
 
         EffectSummaryPreview:
-            // On-hit effect summary (Burn/Poison/Slow, multiple if present)
+            
             float burnDps = card.GetBurnDps(lv);
             float burnDur = card.GetBurnDuration(lv);
             float poisonDps = card.GetPoisonDps(lv);
@@ -722,7 +722,7 @@ namespace TR.UI
                         sb.Append($"Slow {sp * 100f:0.#}% {sd:0.#}s");
                     }
                 }
-                // Frostbite (not buffed): only shown if Slow is enabled
+                
                 if (card.HasSlowOnHit() && card.HasFrostbiteOnHit())
                 {
                     float fbDps = card.GetFrostbiteDps(lv);
@@ -733,7 +733,7 @@ namespace TR.UI
                         sb.Append($"Frostbite {fbDps:0.#}/s {fbDur:0.#}s");
                     }
                 }
-                // Stun
+                
                 if (card.HasStunOnHit())
                 {
                     float sc = card.GetStunChance(lv);
@@ -744,7 +744,7 @@ namespace TR.UI
                         sb.Append($"Stun {sc * 100f:0.#}% {sd:0.#}s");
                     }
                 }
-                // Crit
+                
                 float cc = card.GetCritChance(lv);
                 float cm = card.GetCritMultiplier(lv);
                 if (cc > 0f && cm > 1f)
@@ -752,7 +752,7 @@ namespace TR.UI
                     if (sb.Length > 0) sb.Append("  |  ");
                     sb.Append($"Crit {cc * 100f:0.#}% x{cm:0.##}");
                 }
-                // Tornado (if enabled)
+                
                 if (card.HasTornadoOnHit())
                 {
                     float tr = card.GetTornadoRadius(lv);
@@ -774,7 +774,7 @@ namespace TR.UI
                         sb.Append(']');
                     }
                 }
-                // Chain stats (level-aware)
+                
                 if (card.HasChainOnHit())
                 {
                     int jumps = card.GetChainMaxJumps(lv);

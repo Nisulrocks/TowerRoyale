@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Helper to spawn a TornadoField when the attached projectile is destroyed (i.e., on impact)
+    
     public class TornadoOnImpact : MonoBehaviour
     {
         private float _radius, _strength, _duration;
@@ -43,7 +43,7 @@ namespace TR.Battle
 
         private void OnDestroy()
         {
-            // Use the last position of the projectile as center
+            
             if (_radius > 0f && _strength > 0f && _duration > 0f)
             {
                 TornadoField.Spawn(transform.position, _radius, _strength, _duration,

@@ -4,19 +4,19 @@ using TR.Data;
 
 namespace TR.Systems
 {
-    // Handles awarding cards, duplicate conversions to points, and upgrading logic using rarity curves
+    
     public static class CollectionService
     {
         public struct AwardResult
         {
             public CardDefinition card;
             public bool isNew;
-            public int pointsAwarded; // 0 if new
+            public int pointsAwarded; 
             public int levelBefore;
             public int levelAfter;
         }
 
-        // Award a list of cards (e.g., from a pack). Returns a summary string for quick debug/log.
+        
         public static string AwardCards(IEnumerable<CardDefinition> cards)
         {
             if (cards == null) return "No cards";
@@ -31,14 +31,14 @@ namespace TR.Systems
 
                 if (isNew)
                 {
-                    // First copy unlocks the card at level 1
+                    
                     progress.level = 1;
                     progress.points = 0;
                     sb.AppendLine($"Unlocked {card.DisplayName} ({card.Rarity?.DisplayName})");
                 }
                 else
                 {
-                    // Duplicate -> convert to random points within rarity-defined range
+                    
                     int currentLevel = Mathf.Max(1, progress.level);
                     int awarded = card.Rarity != null ? card.Rarity.RollDuplicatePoints(currentLevel) : 1;
                     awarded = Mathf.Max(1, awarded);
@@ -51,7 +51,7 @@ namespace TR.Systems
             return sb.ToString();
         }
 
-        // Same as AwardCards, but returns per-card details for UI.
+        
         public static List<AwardResult> AwardCardsDetailed(IEnumerable<CardDefinition> cards)
         {
             var results = new List<AwardResult>();
@@ -94,7 +94,7 @@ namespace TR.Systems
             return results;
         }
 
-        // Attempts to upgrade repeatedly if enough points are available
+        
         public static bool TryAutoUpgrade(CardDefinition card, CardProgress progress)
         {
             if (card == null || progress == null) return false;
@@ -110,7 +110,7 @@ namespace TR.Systems
                 {
                     progress.points -= required;
                     progress.level = nextLevel;
-                    // Award castle XP for this level upgrade
+                    
                     int castleXp = rarity.GetCastleXpForUpgradeLevel(nextLevel);
                     if (castleXp > 0) PlayerProfile.AddCastleXP(castleXp);
                     upgraded = true;
@@ -120,7 +120,7 @@ namespace TR.Systems
             return upgraded;
         }
 
-        // Paid single-level upgrade: requires enough points for next level and enough soft currency per rarity cost curve
+        
         public static bool TryPurchaseUpgradeById(string cardId)
         {
             var card = GameDB.GetCardById(cardId);
@@ -141,17 +141,17 @@ namespace TR.Systems
             int cost = rarity.GetUpgradeCostForLevel(nextLevel);
             if (progress.points < ptsRequired) return false;
             if (!PlayerProfile.TrySpendSoftCurrency(cost)) return false;
-            // Apply one level upgrade; surplus points carry to next
+            
             progress.points -= ptsRequired;
             progress.level = nextLevel;
-            // Award castle XP for this level upgrade
+            
             int castleXp = rarity.GetCastleXpForUpgradeLevel(nextLevel);
             if (castleXp > 0) PlayerProfile.AddCastleXP(castleXp);
             PlayerProfile.Save();
             return true;
         }
 
-        // Helper: returns if an upgrade is available now and the points/cost for next level
+        
         public static bool GetUpgradeInfo(CardDefinition card, out int nextLevel, out int pointsRequired, out int cost)
         {
             nextLevel = 0; pointsRequired = 0; cost = 0;
@@ -165,7 +165,7 @@ namespace TR.Systems
             return cp.points >= pointsRequired;
         }
 
-        // Public convenience upgrade by id (e.g., from UI button) if enough points
+        
         public static bool TryUpgradeById(string cardId)
         {
             var card = GameDB.GetCardById(cardId);

@@ -5,7 +5,7 @@ using TR.UI;
 
 namespace TR.Battle
 {
-    // Minimal homing projectile that flies to a target and applies damage/effects on impact.
+    
     public class ProjectileSimple : MonoBehaviour
     {
         private EnemyBase2D _target;
@@ -63,10 +63,10 @@ namespace TR.Battle
             {
                 return;
             }
-            // Splash or single-target
+            
             if (_splashRadius > 0.01f)
             {
-                // Evaluate stun on the primary target first (if still valid) for move-on logic
+                
                 bool stunPrimary = false;
                 if (_target != null && _target.gameObject.activeInHierarchy && _target.CurrentHealth > 0f)
                 {
@@ -88,7 +88,7 @@ namespace TR.Battle
                     }
                 }
                 var splashKey = _def.GetSfxSplashKey(); if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
-                // Move-on-after-effect ONLY if the primary target was stunned
+                
                 _owner.TryScheduleMoveOnAfterEffect(_target, stunPrimary);
             }
             else
@@ -103,14 +103,14 @@ namespace TR.Battle
                     }
                     bool stunned = _owner.ApplyOnHitEffects(_target);
                     var hitKey = _def.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
-                    // Chain ricochet from projectile impact as well
+                    
                     _owner.TryDoChainRicochet(_target, _owner.transform.position, _damage);
-                    // Move-on-after-effect ONLY if stun was applied
+                    
                     _owner.TryScheduleMoveOnAfterEffect(_target, stunned);
                 }
             }
 
-            // Tornado spawn if configured
+            
             if (_def.HasTornadoOnHit())
             {
                 float tRad = _def.GetTornadoRadius(_level);
@@ -134,7 +134,7 @@ namespace TR.Battle
                 }
             }
 
-            // (handled above per-case)
+            
         }
     }
 }

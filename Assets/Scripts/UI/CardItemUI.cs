@@ -8,7 +8,7 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Simple card tile for UI lists. Hook these references in a prefab.
+    
     public class CardItemUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Header("Refs")]
@@ -16,7 +16,7 @@ namespace TR.UI
         [SerializeField] private Image rarityStripe;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text levelText;
-        [SerializeField] private TMP_Text costText; // only visible in battle scenes
+        [SerializeField] private TMP_Text costText; 
 
         private string _cardId;
         private CardDefinition _def;
@@ -25,14 +25,14 @@ namespace TR.UI
         public void Bind(CardDefinition card, int level = 0)
         {
             _def = card;
-            _level = level; // allow 0 for undiscovered
+            _level = level; 
             _cardId = card != null ? card.CardId : null;
             if (icon) icon.sprite = card?.Icon;
             if (rarityStripe && card?.Rarity != null) rarityStripe.color = card.Rarity.Color;
             if (nameText) nameText.text = card != null ? card.DisplayName : "(null)";
             if (levelText) levelText.text = level > 0 ? $"Lv {level}" : string.Empty;
 
-            // Show cost only during battle scenes
+            
             bool inBattle = FindFirstObjectByType<BattleSceneController>(FindObjectsInactive.Include) != null;
             if (costText)
             {
@@ -55,7 +55,7 @@ namespace TR.UI
         {
             if (_def == null)
             {
-                // Try resolve from DB if only id present
+                
                 if (!string.IsNullOrEmpty(_cardId)) _def = GameDB.GetCardById(_cardId);
             }
             if (_def != null)
@@ -69,7 +69,7 @@ namespace TR.UI
             HoverCardDetailsUI.Hide();
         }
 
-        // Grey-out visuals for undiscovered cards while keeping layout
+        
         public void SetDimmed(bool dim)
         {
             float a = dim ? 0.45f : 1f;

@@ -3,11 +3,11 @@ using TR.Systems;
 
 namespace TR.Battle
 {
-    // Attach this to the same GameObject as your camera movement script.
-    // It will enable/disable the movement script whenever a placement drag starts/ends.
+    
+    
     public class CameraMovementGuard : MonoBehaviour
     {
-        [SerializeField] private Behaviour cameraMovementScript; // any component to toggle (e.g., CinemachineInputProvider or custom script)
+        [SerializeField] private Behaviour cameraMovementScript; 
 
         private void Awake()
         {

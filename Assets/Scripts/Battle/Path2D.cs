@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Defines a simple waypoint path for 2D enemies to follow in order.
+    
     public class Path2D : MonoBehaviour
     {
         [SerializeField] private Transform[] waypoints;

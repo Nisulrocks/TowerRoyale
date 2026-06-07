@@ -4,13 +4,13 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Drop this into the Lobby or Battle scene. Assign Canvas (Screen Space Overlay/Camera) and Number Prefab.
+    
     public class DamageNumbers : MonoBehaviour
     {
         [Header("Setup")]
-        [SerializeField] private Canvas canvas; // target canvas for numbers
-        [SerializeField] private FloatingDamageNumber numberPrefab; // prefab with TextMeshProUGUI child
-        [SerializeField] private FloatingBurstText critBurstPrefab; // simple burst text for crits
+        [SerializeField] private Canvas canvas; 
+        [SerializeField] private FloatingDamageNumber numberPrefab; 
+        [SerializeField] private FloatingBurstText critBurstPrefab; 
         [SerializeField] private FloatingDamageStyle defaultStyle;
         [SerializeField] private bool enabledByDefault = true;
 
@@ -19,7 +19,7 @@ namespace TR.UI
         private static DamageNumbers _instance;
         private static bool _enabled = true;
 
-        // One active number per target
+        
         private readonly Dictionary<Transform, FloatingDamageNumber> _active = new();
 
         private void Awake()
@@ -30,7 +30,7 @@ namespace TR.UI
                 return;
             }
             _instance = this;
-            // Load enabled state
+            
             _enabled = PlayerPrefs.GetInt(PREF_SHOW_DAMAGE_NUMBERS, enabledByDefault ? 1 : 0) != 0;
             if (canvas == null)
             {
@@ -38,7 +38,7 @@ namespace TR.UI
             }
         }
 
-        // Expose style and clamp preference
+        
         public static FloatingDamageStyle Style => _instance != null ? _instance.defaultStyle : null;
         public static bool ClampDisplayed => Style == null ? true : Style.clampDisplayedDamageToRemainingHealth;
 
@@ -75,7 +75,7 @@ namespace TR.UI
                 return;
             }
 
-            // Create new instance
+            
             if (numberPrefab == null || canvas == null)
             {
                 Debug.LogWarning("[DamageNumbers] Missing prefab or canvas.");
@@ -84,17 +84,17 @@ namespace TR.UI
             var inst = Instantiate(numberPrefab, canvas.transform);
             var style = defaultStyle;
             inst.Init(target, Mathf.CeilToInt(amount), style, canvas);
-            // immediately replace text with correct float display
+            
             inst.AddValueFloat(0f);
             _active[key] = inst;
 
-            // Clean up reference when destroyed
+            
             StartCoroutine(CleanupWhenDestroyed(inst, key));
         }
 
         private System.Collections.IEnumerator CleanupWhenDestroyed(FloatingDamageNumber inst, Transform key)
         {
-            // Wait until destroyed
+            
             while (inst != null)
             {
                 yield return null;
@@ -102,7 +102,7 @@ namespace TR.UI
             _active.Remove(key);
         }
 
-        // Settings API
+        
         public static void SetEnabled(bool enabled)
         {
             _enabled = enabled;
@@ -111,7 +111,7 @@ namespace TR.UI
         }
         public static bool GetEnabled() => _enabled;
 
-        // One-shot crit burst that does not merge
+        
         public static void ShowCrit(Transform target, string text = "CRIT!")
         {
             if (_instance == null)

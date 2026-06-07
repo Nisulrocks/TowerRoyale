@@ -8,20 +8,20 @@ using TR.Audio;
 
 namespace TR.Infrastructure
 {
-    // Attach this to an empty GameObject in the Boot/Loading scene.
-    // It will fade in from black, load the Lobby scene asynchronously with progress,
-    // and then fade into the Lobby.
+    
+    
+    
     public class LoadingScreen : MonoBehaviour
     {
         [Header("Target Scene")] public string lobbySceneName = "Lobby";
         [Header("UI (optional)")]
-        public Slider progressBar; // optional
-        public TMP_Text progressText; // optional
-        [Tooltip("A full-screen black Image used as the initial background. Anchor it to stretch fullscreen.")]
-        public Image blackOverlay; // required for the requested sequence
+        public Slider progressBar; 
+        public TMP_Text progressText; 
+
+        public Image blackOverlay; 
         [Header("Splash Text (optional)")]
-        public TMP_Text companyNameText; // fades in then out
-        public TMP_Text gameNameText; // fades in then out
+        public TMP_Text companyNameText; 
+        public TMP_Text gameNameText; 
         [Header("SFX (optional)")]
         [Tooltip("SFX key to play (via SFXManager) right when the game name appears")]
         public string gameNameSfxKey = "";
@@ -30,25 +30,25 @@ namespace TR.Infrastructure
         public float fadeInDuration = 0.35f;
         public float companyFadeIn = 0.4f, companyHold = 0.8f, companyFadeOut = 0.4f;
         public float gameFadeIn = 0.4f, gameHold = 0.9f, gameFadeOut = 0.4f;
-        public float minTotalSplashTime = 2.0f; // ensure splash is visible even if loading is instant
+        public float minTotalSplashTime = 2.0f; 
 
         private async void Start()
         {
-            // Ensure fader exists (we won't use it for the initial black; only for final scene transition)
+            
             var fader = SceneFader.Instance;
-            fader.SetAlpha(0f); // keep fader transparent; we'll use blackOverlay for the intro
+            fader.SetAlpha(0f); 
 
-            // Ensure base text colors are opaque; we use CanvasGroup to control visibility
+            
             SetTextAlpha(companyNameText, 1f);
             SetTextAlpha(gameNameText, 1f);
-            // Prepare black overlay to solid black (no hierarchy reordering)
+            
             if (blackOverlay != null)
             {
                 var c = blackOverlay.color; c.a = 1f; blackOverlay.color = c;
                 if (!blackOverlay.gameObject.activeSelf) blackOverlay.gameObject.SetActive(true);
             }
 
-            // Ensure progress UI is active (do not modify hierarchy/sorting)
+            
             if (progressBar != null)
             {
                 EnsureActiveHierarchy(progressBar.gameObject);
@@ -58,13 +58,13 @@ namespace TR.Infrastructure
                 EnsureActiveHierarchy(progressText.gameObject);
             }
 
-            // Kick off async load but do not activate yet
+            
             var op = SceneManager.LoadSceneAsync(lobbySceneName, LoadSceneMode.Single);
             op.allowSceneActivation = false;
 
             float splashStart = Time.unscaledTime;
 
-            // 1) Company name on black
+            
             if (companyNameText != null)
             {
                 EnsureActiveHierarchy(companyNameText.gameObject);
@@ -74,20 +74,20 @@ namespace TR.Infrastructure
                 await FadeTMPWithGroup(companyNameText, cg, 1f, 0f, companyFadeOut);
             }
 
-            // 2) Fade black background out to reveal scene
+            
             if (blackOverlay != null)
             {
                 await FadeImageAlpha(blackOverlay, 1f, 0f, fadeInDuration);
-                // Optionally disable after fade
+                
                 blackOverlay.gameObject.SetActive(false);
             }
 
-            // 3) Game name fade-in while loading continues
+            
             if (gameNameText != null)
             {
                 EnsureActiveHierarchy(gameNameText.gameObject);
                 var cg2 = GetOrAddCanvasGroup(gameNameText.gameObject);
-                // Optional SFX when the game name appears
+                
                 if (!string.IsNullOrEmpty(gameNameSfxKey))
                 {
                     try { SFXManager.Instance.Play(gameNameSfxKey); } catch { /* ignore if manager not ready */ }
@@ -97,7 +97,7 @@ namespace TR.Infrastructure
                 await FadeTMPWithGroup(gameNameText, cg2, 1f, 0f, gameFadeOut);
             }
 
-            // Ensure minimum splash duration
+            
             float elapsed = Time.unscaledTime - splashStart;
             if (elapsed < minTotalSplashTime)
             {
@@ -105,7 +105,7 @@ namespace TR.Infrastructure
                 float t = 0f; while (t < wait) { t += Time.unscaledDeltaTime; await Task.Yield(); }
             }
 
-            // Wait until the scene is ready to activate (op.progress reaches ~0.9)
+            
             while (op.progress < 0.9f)
             {
                 OnProgress(Mathf.Clamp01(op.progress / 0.9f));
@@ -113,7 +113,7 @@ namespace TR.Infrastructure
             }
             OnProgress(1f);
 
-            // Fade to black, then activate, then schedule fade-in in the next scene's first frame
+            
             await fader.FadeOut(fadeOutDuration);
             fader.ScheduleFadeInAfterSceneLoad(fadeInDuration);
             op.allowSceneActivation = true;
@@ -128,14 +128,14 @@ namespace TR.Infrastructure
 
         private async Task RunSplashSequence()
         {
-            // Company name
+            
             if (companyNameText != null)
             {
                 await FadeText(companyNameText, 0f, 1f, companyFadeIn);
                 await Hold(companyHold);
                 await FadeText(companyNameText, 1f, 0f, companyFadeOut);
             }
-            // Game name
+            
             if (gameNameText != null)
             {
                 await FadeText(gameNameText, 0f, 1f, gameFadeIn);
@@ -211,7 +211,7 @@ namespace TR.Infrastructure
             }
         }
 
-        // Note: we do not modify hierarchy or sorting of UI elements; the scene's setup defines layering.
+        
 
         private async Task FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
         {
@@ -241,7 +241,7 @@ namespace TR.Infrastructure
                 t += Time.unscaledDeltaTime;
                 float u = Mathf.Clamp01(t / d);
                 float a = Mathf.Lerp(from, to, u);
-                // drive both
+                
                 if (cg != null) cg.alpha = a;
                 var c = baseColor; c.a = a; txt.color = c;
                 await Task.Yield();

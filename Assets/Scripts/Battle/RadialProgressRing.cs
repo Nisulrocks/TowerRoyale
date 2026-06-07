@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Draws a circular progress arc (0..1) using a LineRenderer.
-    // Useful for lifetimes, cooldowns, or HP rings.
+    
+    
     [RequireComponent(typeof(LineRenderer))]
     public class RadialProgressRing : MonoBehaviour
     {
@@ -11,14 +11,14 @@ namespace TR.Battle
         [SerializeField] private float radius = 0.5f;
         [SerializeField] private float thickness = 0.06f;
         [SerializeField] private int segments = 64;
-        [SerializeField] private Color startColor = new Color(0.2f, 0.9f, 0.2f, 1f); // green
-        [SerializeField] private Color endColor = new Color(0.9f, 0.2f, 0.2f, 1f);   // red
+        [SerializeField] private Color startColor = new Color(0.2f, 0.9f, 0.2f, 1f); 
+        [SerializeField] private Color endColor = new Color(0.9f, 0.2f, 0.2f, 1f);   
         [SerializeField] private bool clockwise = true;
         [SerializeField] private int sortingOrder = 2100;
         [SerializeField] private string sortingLayerName = "Default";
 
         [Header("Progress")]
-        [Range(0f, 1f)] [SerializeField] private float progress = 1f; // 1 = full ring
+        [Range(0f, 1f)] [SerializeField] private float progress = 1f; 
 
         private LineRenderer _lr;
         private bool _dirty = true;
@@ -78,7 +78,7 @@ namespace TR.Battle
             _lr.positionCount = used;
             _lr.startWidth = thickness;
             _lr.endWidth = thickness;
-            Color col = Color.Lerp(endColor, startColor, progress); // red at 0 -> green at 1
+            Color col = Color.Lerp(endColor, startColor, progress); 
             _lr.startColor = col;
             _lr.endColor = col;
             for (int i = 0; i < used; i++)

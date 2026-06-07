@@ -53,7 +53,7 @@ namespace TR.UI
             _collectionItems.Clear();
 
             GameDB.EnsureLoaded();
-            // Build rarity priority map if an explicit order is provided
+            
             System.Collections.Generic.Dictionary<RarityDefinition, int> rarityPriorityOverrideMap = null;
             if (rarityOrderOverride != null && rarityOrderOverride.Count > 0)
             {
@@ -73,15 +73,15 @@ namespace TR.UI
                 return int.MaxValue - 1;
             }
 
-            // Collect owned cards only
+            
             var owned = new List<CardDefinition>();
             foreach (var card in GameDB.Cards)
             {
                 var cp = PlayerProfile.GetOrCreateCard(card.CardId);
-                if (cp.ownedCount <= 0) continue; // show only owned
+                if (cp.ownedCount <= 0) continue; 
                 owned.Add(card);
             }
-            // Sort owned by rarity (asc/desc), then by display name
+            
             owned.Sort((a, b) =>
             {
                 int ar = GetRarityPriority(a.Rarity);
@@ -95,19 +95,19 @@ namespace TR.UI
                 var cp = PlayerProfile.GetOrCreateCard(card.CardId);
                 var ui = Instantiate(collectionItemPrefab, collectionListRoot);
                 ui.Bind(card, cp.level);
-                // Add click handler to add/remove from deck (be robust if Button missing)
+                
                 var button = ui.GetComponent<Button>();
                 if (button == null) button = ui.GetComponentInChildren<Button>();
                 if (button == null)
                 {
-                    // Ensure there's a Graphic for the Button target
+                    
                     var img = ui.GetComponent<Image>();
                     if (img == null) img = ui.gameObject.AddComponent<Image>();
                     button = ui.gameObject.AddComponent<Button>();
                 }
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => OnToggleCard(card.CardId));
-                // No hover wiring here; CardItemUI handles hover details itself
+                
                 _collectionItems.Add(ui);
             }
         }
@@ -124,11 +124,11 @@ namespace TR.UI
                 var card = GameDB.GetCardById(cardId);
                 var slot = Instantiate(deckSlotPrefab, deckSlotsRoot);
                 slot.Bind(card, OnRemoveFromDeck);
-                // No hover wiring here; if deck slot contains a CardItemUI, it will handle hover
+                
                 _deckSlots.Add(slot);
                 i++;
             }
-            // Fill remaining slots visually
+            
             for (; i < DeckService.MaxDeckSize; i++)
             {
                 var slot = Instantiate(deckSlotPrefab, deckSlotsRoot);
@@ -160,7 +160,7 @@ namespace TR.UI
             RefreshDeck();
         }
 
-        // ===== Sorting UI Helpers =====
+        
         private void SetupSortingUI()
         {
             if (raritySortDropdown == null) return;

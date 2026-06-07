@@ -5,13 +5,13 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // Attach to a card tile or deck slot to show HoverCardDetailsUI on hover
+    
     public class CardHoverOpener : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private CardDefinition card;
         [SerializeField] private int level = 1;
 
-        // Optional: small delay before hiding to prevent flicker when moving across items
+        
         [SerializeField] private float hideDelay = 0.12f;
         private float _hideAt;
         private bool _over;

@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace TR.VFX
 {
-    // Central toggle for particle quality, used by ParticleManager and any VFX scripts.
-    // 0 Off, 1 Low, 2 Medium, 3 High
+    
+    
     public static class ParticleQuality
     {
         public static int Current { get; private set; } = 3;
@@ -23,10 +23,10 @@ namespace TR.VFX
         {
             switch (Current)
             {
-                case 0: return 0f;   // Off
-                case 1: return 0.4f; // Low
-                case 2: return 0.7f; // Medium
-                default: return 1f;  // High
+                case 0: return 0f;   
+                case 1: return 0.4f; 
+                case 2: return 0.7f; 
+                default: return 1f;  
             }
         }
     }

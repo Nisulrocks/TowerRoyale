@@ -9,18 +9,18 @@ using TR.Data;
 
 namespace TR.Battle
 {
-    // Drop this in each ArenaXBattleScene. Hook UI references.
+    
     public class BattleSceneController : MonoBehaviour
     {
         [Header("UI")]
         [SerializeField] private TMP_Text arenaNameText;
         [SerializeField] private TMP_Text waveText;
         [SerializeField] private TMP_Text timerText;
-        [SerializeField] private TMP_Text enemiesRemainingText; // new
+        [SerializeField] private TMP_Text enemiesRemainingText; 
         [SerializeField] private GameObject resultsPanel;
         [SerializeField] private TMP_Text resultsText;
         [Header("Controls")]
-        [SerializeField] private UnityEngine.UI.Button startSkipButton; // Start first wave, then Skip between waves
+        [SerializeField] private UnityEngine.UI.Button startSkipButton; 
         [SerializeField] private TMP_Text startSkipButtonText;
 
         [Header("Refs")]
@@ -29,7 +29,7 @@ namespace TR.Battle
         [SerializeField] private TowerPlacementController placement;
         [SerializeField] private MatchEconomy economy;
         [Header("Arena Override (Optional)")]
-        [SerializeField] private ArenaDefinition overrideArena; // if assigned, this scene will run with this arena regardless of trophies
+        [SerializeField] private ArenaDefinition overrideArena; 
 
         private ArenaDefinition _arena;
         private int _wavesCleared;
@@ -39,8 +39,8 @@ namespace TR.Battle
         private Coroutine _enemiesPulseCo;
         private Vector3 _enemiesDefaultScale = Vector3.one;
         private Color _enemiesDefaultColor = Color.white;
-        private bool _started = false;       // has the player pressed Start?
-        private bool _skipRequested = false; // has the player requested to skip current wait?
+        private bool _started = false;       
+        private bool _skipRequested = false; 
         [Header("Skip Settings")]
         [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
@@ -51,7 +51,7 @@ namespace TR.Battle
             UpdateTopBar();
             SetupDeckAndPlacement();
             HookCastle();
-            // Wait for player to press Start First Wave
+            
             if (startSkipButton != null)
             {
                 startSkipButton.onClick.RemoveAllListeners();
@@ -96,9 +96,9 @@ namespace TR.Battle
             {
                 economy.BeginMatch();
             }
-            // Initialize per-arena effect caps
+            
             TR.Systems.EffectLimitService.Initialize(_arena);
-            // Apply arena-provided battle toast prefab if any (falls back to built-in otherwise)
+            
             if (_arena != null && _arena.BattleToastPrefab != null)
             {
                 TR.UI.BattleToast.SetPrefab(_arena.BattleToastPrefab);
@@ -125,21 +125,21 @@ namespace TR.Battle
 
             for (int i = 0; i < total; i++)
             {
-                _wavesCleared = i; // zero-based for display helper
+                _wavesCleared = i; 
                 UpdateTopBar();
 
-                // Spawn this wave
+                
                 if (waveSpawner != null)
                     waveSpawner.SpawnWave(i + 1);
 
-                // For all waves except the last, wait for the interval countdown.
-                // On the final wave, wait for all enemies to be cleared before ending the match.
+                
+                
                 bool isFinalWave = (i == total - 1);
                 if (timerText) timerText.gameObject.SetActive(!isFinalWave);
                 if (enemiesRemainingText) enemiesRemainingText.gameObject.SetActive(true);
                 if (!isFinalWave)
                 {
-                    // Wait for the wave duration/interval, but let the player skip.
+                    
                     _skipRequested = false;
                     if (startSkipButton != null)
                     {
@@ -150,14 +150,14 @@ namespace TR.Battle
                 }
                 else
                 {
-                    // Hide timer for final wave; only show enemies remaining
+                    
                     if (timerText) timerText.text = string.Empty;
                     if (startSkipButton != null) startSkipButton.gameObject.SetActive(false);
                     yield return StartCoroutine(WaitForAllEnemiesCleared());
                 }
             }
 
-            // Match complete (victory) unless already ended due to defeat
+            
             if (!_ended)
             {
                 _running = false;
@@ -170,16 +170,16 @@ namespace TR.Battle
             float t = Mathf.Max(0f, seconds);
             while (t > 0f)
             {
-                // Update Skip button interactivity based on field pressure
+                
                 if (startSkipButton != null)
                 {
                     startSkipButton.interactable = CanSkipNow();
                 }
                 if (_skipRequested)
                 {
-                    // Only accept the skip if allowed right now
+                    
                     if (CanSkipNow()) break;
-                    // Otherwise ignore this request and keep waiting
+                    
                     _skipRequested = false;
                 }
                 if (timerText) timerText.text = $"Next wave in {Mathf.CeilToInt(t)}s";
@@ -189,14 +189,14 @@ namespace TR.Battle
             }
             if (timerText) timerText.text = "Spawning...";
             _skipRequested = false;
-            // After countdown, keep the Skip button visible for the next interval setup; it will be relabeled per-wave
+            
             UpdateEnemiesRemainingText();
         }
 
         private void ShowResultsVictory()
         {
             var rewards = ArenaService.AwardMatchCompletion(_arena, _arena != null ? _arena.WaveCount : _wavesCleared);
-            if (resultsPanel) resultsPanel.SetActive(false); // we'll activate in the fade helper
+            if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
             {
                 string trophyLine = rewards.trophiesCapped && rewards.trophiesEarned <= 0
@@ -217,7 +217,7 @@ namespace TR.Battle
         private void ShowResultsDefeat()
         {
             var rewards = ArenaService.AwardMatchDefeat(_arena, _wavesCleared);
-            if (resultsPanel) resultsPanel.SetActive(false); // we'll activate in the fade helper
+            if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
             {
                 string trophyLine;
@@ -227,7 +227,7 @@ namespace TR.Battle
                 }
                 else
                 {
-                    // No trophies actually lost; if at floor, show -0 to make intent clear
+                    
                     trophyLine = rewards.trophiesCapped
                         ? $"Trophies: -0 (Total {rewards.totalTrophiesAfter})"
                         : $"Trophies: 0 (Total {rewards.totalTrophiesAfter})";
@@ -259,33 +259,33 @@ namespace TR.Battle
             ShowResultsDefeat();
         }
 
-        // Hook to a Continue button on the results panel
+        
         public void OnClickReturnToLobby()
         {
             _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
         }
 
-        // Called by the Start/Skip button
+        
         private void OnClickStartOrSkip()
         {
             if (_ended) return;
             if (!_started)
             {
-                // Start the match now
+                
                 _started = true;
                 if (startSkipButtonText != null) startSkipButtonText.text = "Skip Wait";
                 StartCoroutine(RunMatch());
             }
             else
             {
-                // Request to skip current wait (actual acceptance is gated by CanSkipNow in Countdown loop)
+                
                 _skipRequested = true;
             }
         }
 
         private IEnumerator WaitForAllEnemiesCleared()
         {
-            // Wait until there are no active enemies AND no pending spawns for the final wave.
+            
             while (true)
             {
                 int active = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
@@ -302,7 +302,7 @@ namespace TR.Battle
             if (!enemiesRemainingText) return;
             int remaining = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
             enemiesRemainingText.text = $"Enemies remaining: {remaining}";
-            // Keep Skip button interactivity in sync even outside the countdown loop
+            
             if (startSkipButton != null)
             {
                 startSkipButton.interactable = CanSkipNow();
@@ -311,7 +311,7 @@ namespace TR.Battle
 
         private bool CanSkipNow()
         {
-            // Rule: If there is at least one active boss, do not allow skipping to avoid overlapping bosses
+            
             if (EnemyBase2D.All != null)
             {
                 foreach (var e in EnemyBase2D.All)
@@ -353,9 +353,9 @@ namespace TR.Battle
 
         private IEnumerator DefeatCleanup()
         {
-            // Immediately stop wave spawns
+            
             if (waveSpawner != null) waveSpawner.StopAllCoroutines();
-            // Snapshot enemies and kill them (with their regular death VFX)
+            
             var enemyList = new System.Collections.Generic.List<EnemyBase2D>();
             if (EnemyBase2D.All != null)
             {
@@ -367,7 +367,7 @@ namespace TR.Battle
                 if (e == null) continue;
                 e.TakeDamage(Mathf.Max(1f, e.CurrentHealth));
             }
-            // Snapshot towers and destroy them with optional defeat VFX
+            
             var towerList = new System.Collections.Generic.List<TowerBase>();
             if (TowerBase.All != null)
             {
@@ -394,10 +394,10 @@ namespace TR.Battle
 
         private IEnumerator PulseEnemiesRemaining()
         {
-            // Simple scale + color flash
+            
             Transform tr = enemiesRemainingText.transform;
             Color fromColor = _enemiesDefaultColor;
-            Color toColor = new Color(1f, 0.95f, 0.4f, fromColor.a); // soft gold
+            Color toColor = new Color(1f, 0.95f, 0.4f, fromColor.a); 
             Vector3 fromScale = _enemiesDefaultScale;
             Vector3 toScale = _enemiesDefaultScale * 1.12f;
 
@@ -431,7 +431,7 @@ namespace TR.Battle
         {
             if (resultsPanel == null)
                 yield break;
-            // Ensure a CanvasGroup exists for alpha control
+            
             var cg = resultsPanel.GetComponent<CanvasGroup>();
             if (cg == null) cg = resultsPanel.AddComponent<CanvasGroup>();
             cg.alpha = 0f;

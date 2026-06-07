@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace TR.UI
 {
-    // Tiny utility to switch between panels in the Lobby.
+    
     public class PanelSwitcher : MonoBehaviour
     {
         [System.Serializable]
@@ -11,7 +11,7 @@ namespace TR.UI
         {
             public string name;
             public GameObject root;
-            public Button tabButton; // optional
+            public Button tabButton; 
         }
 
         [SerializeField] private Panel[] panels;
@@ -19,7 +19,7 @@ namespace TR.UI
 
         private void Awake()
         {
-            // Wire tab buttons
+            
             for (int i = 0; i < panels.Length; i++)
             {
                 int idx = i;

@@ -21,7 +21,7 @@ namespace TR.Data
         }
 
         [Header("Shop: Card Points Offers")]
-        [Tooltip("List of daily offer slots; one card points offer will be generated per slot")] 
+
         public CardPointsOfferSlot[] cardPointsOfferSlots = System.Array.Empty<CardPointsOfferSlot>();
         [Tooltip("UTC hour (0-23) at which daily offers refresh")] [Range(0,23)] public int offersRefreshHourUTC = 0;
     }

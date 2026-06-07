@@ -4,15 +4,15 @@ using TR.Data;
 
 namespace TR.Systems
 {
-    // Per-match tracker enforcing per-effect caps defined on the current ArenaDefinition
+    
     public static class EffectLimitService
     {
         private static Dictionary<EffectType, int> _caps;
         private static Dictionary<EffectType, int> _counts;
         private static ArenaDefinition _arena;
-        // Per-card caps
-        private static Dictionary<string, int> _cardCaps;    // key: CardId
-        private static Dictionary<string, int> _cardCounts;  // placements per card
+        
+        private static Dictionary<string, int> _cardCaps;    
+        private static Dictionary<string, int> _cardCounts;  
 
         public static void Initialize(ArenaDefinition arena)
         {
@@ -65,19 +65,19 @@ namespace TR.Systems
             var set = new HashSet<EffectType>();
             if (def == null) return set;
             level = Mathf.Max(1, level);
-            // Slow
+            
             if (def.HasSlowOnHit() && def.GetSlowPercent(level) > 0f && def.GetSlowDuration(level) > 0f)
                 set.Add(EffectType.Slow);
-            // Stun
+            
             if (def.HasStunOnHit() && def.GetStunChance(level) > 0f && def.GetStunDuration(level) > 0f)
                 set.Add(EffectType.Stun);
-            // Burn
+            
             if (def.GetBurnDps(level) > 0f && def.GetBurnDuration(level) > 0f)
                 set.Add(EffectType.Burn);
-            // Poison
+            
             if (def.GetPoisonDps(level) > 0f && def.GetPoisonDuration(level) > 0f)
                 set.Add(EffectType.Poison);
-            // Frostbite (requires Frostbite toggle and positive values)
+            
             if (def.HasFrostbiteOnHit() && def.GetFrostbiteDps(level) > 0f && def.GetFrostbiteDuration(level) > 0f)
                 set.Add(EffectType.Frostbite);
             return set;
@@ -90,7 +90,7 @@ namespace TR.Systems
             var types = GetEffectTypesForCard(def, level);
             foreach (var t in types)
             {
-                if (!_caps.TryGetValue(t, out var max) || max <= 0) continue; // no cap for this type
+                if (!_caps.TryGetValue(t, out var max) || max <= 0) continue; 
                 int cnt = _counts.TryGetValue(t, out var c) ? c : 0;
                 if (cnt + 1 > max)
                 {
@@ -107,7 +107,7 @@ namespace TR.Systems
             if (!CardCapsEnabled || def == null) return true;
             string id = def.CardId;
             if (string.IsNullOrEmpty(id)) return true;
-            if (!_cardCaps.TryGetValue(id, out var max) || max <= 0) return true; // no cap for this card
+            if (!_cardCaps.TryGetValue(id, out var max) || max <= 0) return true; 
             int cnt = _cardCounts.TryGetValue(id, out var c) ? c : 0;
             cap = max; current = cnt;
             return (cnt + 1) <= max;

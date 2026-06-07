@@ -7,8 +7,8 @@ using UnityEngine.UI;
 
 namespace TR.Infrastructure
 {
-    // Global fade controller that persists across scenes and provides smooth scene transitions.
-    // No setup required in scenes; it creates a fullscreen Canvas + Image at runtime.
+    
+    
     public class SceneFader : MonoBehaviour
     {
         private static SceneFader _instance;
@@ -34,7 +34,7 @@ namespace TR.Infrastructure
         private float messageFadeInDuration = 0.3f;
         [SerializeField] private float messageFadeOutDuration = 0.3f;
         [Header("Post-Scene Fade Settings")] [SerializeField]
-        private float postSceneFadeInDelay = 0.02f; // seconds, small safety delay before fading in after scene load
+        private float postSceneFadeInDelay = 0.02f; 
 
         private Canvas _canvas;
         private Image _image;
@@ -70,7 +70,7 @@ namespace TR.Infrastructure
 
         private void EnsureCanvas()
         {
-            // Canvas and helpers
+            
             if (_canvas == null)
             {
                 _canvas = GetComponent<Canvas>();
@@ -82,7 +82,7 @@ namespace TR.Infrastructure
                 if (GetComponent<GraphicRaycaster>() == null) gameObject.AddComponent<GraphicRaycaster>();
             }
 
-            // Fade overlay (Image + CanvasGroup)
+            
             if (_image == null || _group == null)
             {
                 Transform fadeTr = transform.Find("Fade");
@@ -97,18 +97,18 @@ namespace TR.Infrastructure
                 _image = go.GetComponent<Image>();
                 if (_image == null) _image = go.AddComponent<Image>();
                 _image.color = fadeColor;
-                _image.raycastTarget = false; // default: do NOT block, only during fades
+                _image.raycastTarget = false; 
                 var rect = _image.rectTransform;
                 rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
 
                 _group = go.GetComponent<CanvasGroup>();
                 if (_group == null) _group = go.AddComponent<CanvasGroup>();
-                _group.alpha = Mathf.Clamp01(_group.alpha); // leave as-is if previously set
-                _group.blocksRaycasts = false; // default no blocking
+                _group.alpha = Mathf.Clamp01(_group.alpha); 
+                _group.blocksRaycasts = false; 
                 _group.interactable = false;
             }
 
-            // Centered TMP text for transition messages (e.g., Arena name)
+            
             if (_centerText == null)
             {
                 try
@@ -131,17 +131,17 @@ namespace TR.Infrastructure
                     _centerText.alignment = TextAlignmentOptions.Center;
                     _centerText.textWrappingMode = TextWrappingModes.NoWrap;
                     _centerText.fontSize = 64;
-                    _centerText.raycastTarget = false; // do not block clicks
-                    var c = _centerText.color; c.a = 0f; _centerText.color = c; // invisible by default
+                    _centerText.raycastTarget = false; 
+                    var c = _centerText.color; c.a = 0f; _centerText.color = c; 
                 }
                 catch
                 {
-                    _centerText = null; // TMP might be unavailable
+                    _centerText = null; 
                 }
             }
         }
 
-        // Instant set alpha (0..1)
+        
         public void SetAlpha(float a)
         {
             EnsureCanvas();
@@ -163,7 +163,7 @@ namespace TR.Infrastructure
             EnsureCanvas();
             if (_isFading) yieldBreakLike();
             _isFading = true;
-            // Begin blocking input during fade
+            
             _group.blocksRaycasts = true;
             _image.raycastTarget = true;
             float d = duration > 0f ? duration : defaultFadeDuration;
@@ -178,23 +178,23 @@ namespace TR.Infrastructure
             }
             _group.alpha = target;
             _isFading = false;
-            // End blocking when fully transparent
+            
             bool transparent = _group.alpha <= 0.0001f;
-            _group.blocksRaycasts = !transparent; // only block if we remain visible
+            _group.blocksRaycasts = !transparent; 
             _image.raycastTarget = !transparent;
         }
 
-        // Wrapper to satisfy async without warnings in editor
+        
         private async void yieldBreakLike() { await Task.Yield(); }
 
-        // Public helper: fade out, load scene async, fade in
+        
         public async Task LoadSceneWithFade(string sceneName, float fadeOut = -1f, float fadeIn = -1f)
         {
             EnsureCanvas();
-            // If a next message is queued, show it during the fade out and ensure it displays long enough
+            
             if (!string.IsNullOrEmpty(_nextMessage) && _centerText != null)
             {
-                // Prepare text invisible, then run fade-in/hold/fade-out alongside the screen fade
+                
                 PrepareCenterMessage(_nextMessage, 0f);
                 float hold = Mathf.Max(0f, _nextMessageDuration);
                 _nextMessage = null; _nextMessageDuration = 0f;
@@ -206,9 +206,9 @@ namespace TR.Infrastructure
             {
                 await FadeOut(fadeOut);
             }
-            // Load scene asynchronously
+            
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-            // Schedule a post-load fade-in to occur via sceneLoaded/activeSceneChanged callback
+            
             ScheduleFadeInAfterSceneLoad(fadeIn > 0f ? fadeIn : defaultFadeDuration);
             op.allowSceneActivation = true;
             while (!op.isDone)
@@ -217,7 +217,7 @@ namespace TR.Infrastructure
             }
         }
 
-        // Overload that accepts build index
+        
         public async Task LoadSceneWithFade(int buildIndex, float fadeOut = -1f, float fadeIn = -1f)
         {
             EnsureCanvas();
@@ -231,7 +231,7 @@ namespace TR.Infrastructure
             }
         }
 
-        // Optional: expose progress while loading target scene
+        
         public async Task LoadSceneWithFadeAndProgress(string sceneName, System.Action<float> onProgress, float fadeOut = -1f, float fadeIn = -1f)
         {
             EnsureCanvas();
@@ -254,14 +254,14 @@ namespace TR.Infrastructure
                 onProgress?.Invoke(Mathf.Clamp01(op.progress / 0.9f));
                 await Task.Yield();
             }
-            // Ready, show 100%
+            
             onProgress?.Invoke(1f);
             op.allowSceneActivation = true;
             while (!op.isDone) { await Task.Yield(); }
             await FadeIn(fadeIn);
         }
 
-        // Convenience: if already in target scene, do nothing; else fade transition
+        
         public async Task LoadSceneWithFadeIfNeeded(string sceneName, float fadeOut = -1f, float fadeIn = -1f)
         {
             if (SceneManager.GetActiveScene().name == sceneName)
@@ -271,11 +271,11 @@ namespace TR.Infrastructure
             await LoadSceneWithFade(sceneName, fadeOut, fadeIn);
         }
 
-        // Queue a message to be shown centered during the next fade-out
+        
         public void SetNextTransitionMessage(string message, float seconds = 1.0f)
         {
             EnsureCanvas();
-            if (_centerText == null) return; // no TMP available
+            if (_centerText == null) return; 
             _nextMessage = message;
             _nextMessageDuration = Mathf.Max(0f, seconds);
         }
@@ -303,11 +303,11 @@ namespace TR.Infrastructure
         private async Task RunMessageSequence(float holdSeconds)
         {
             if (_centerText == null) { await Task.Yield(); return; }
-            // Fade in
+            
             await FadeText(_centerText, 0f, 1f, messageFadeInDuration);
-            // Hold
+            
             await HoldUnscaled(holdSeconds);
-            // Fade out
+            
             await FadeText(_centerText, 1f, 0f, messageFadeOutDuration);
         }
 
@@ -333,13 +333,13 @@ namespace TR.Infrastructure
             float t = 0f; while (t < d) { t += Time.unscaledDeltaTime; await Task.Yield(); }
         }
 
-        // Schedule a fade-in to run right after the next scene is loaded and rendered at least one frame
+        
         public void ScheduleFadeInAfterSceneLoad(float duration)
         {
             EnsureCanvas();
             _pendingFadeIn = true;
             _pendingFadeInDuration = duration > 0f ? duration : defaultFadeDuration;
-            // Ensure we are fully opaque so the new scene starts under black
+            
             _group.alpha = 1f;
         }
 
@@ -347,9 +347,9 @@ namespace TR.Infrastructure
         {
             if (!_pendingFadeIn) return;
             EnsureCanvas();
-            // Force black immediately on the new scene's first frame
+            
             _group.alpha = 1f;
-            // Wait a frame to ensure the scene has rendered under black
+            
             await Task.Yield();
             if (postSceneFadeInDelay > 0f) await HoldUnscaled(postSceneFadeInDelay);
             var dur = _pendingFadeInDuration;

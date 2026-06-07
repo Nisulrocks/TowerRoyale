@@ -15,12 +15,12 @@ namespace TR.VFX
         {
             public string key;
             public ParticleSystem prefab;
-            [Tooltip("Preload instances to minimize hitches on first spawn")] public int preloadCount = 0;
-            [Tooltip("Optional cap; 0 = unlimited")] public int maxPoolSize = 0;
+public int preloadCount = 0;
+public int maxPoolSize = 0;
         }
 
         [Header("Registry")] 
-        [Tooltip("Register your particle prefabs here with unique keys.")]
+
         public List<ParticleEntry> particles = new List<ParticleEntry>();
 
         private static ParticleManager _instance;
@@ -43,7 +43,7 @@ namespace TR.VFX
 
         private readonly Dictionary<string, ParticleEntry> _registry = new();
         private readonly Dictionary<string, Queue<ParticleSystem>> _pools = new();
-        private readonly HashSet<int> _autoBound = new(); // instanceIDs of ParticleSystems we have ensured a binder for
+        private readonly HashSet<int> _autoBound = new(); 
         private Coroutine _scanCo;
 
         private void Awake()
@@ -63,9 +63,9 @@ namespace TR.VFX
         {
             ParticleQuality.OnChanged += OnQualityChanged;
             SceneManager.sceneLoaded += OnSceneLoaded;
-            // Initial scan for current scene
+            
             TryScanAndBindAll();
-            // Periodic scan for newly spawned PS in scenes
+            
             if (_scanCo == null) _scanCo = StartCoroutine(PeriodicScan());
         }
 
@@ -78,14 +78,14 @@ namespace TR.VFX
 
         private void OnQualityChanged(int q)
         {
-            // When turned Off, immediately stop/return any active particles managed by us
+            
             if (q <= 0)
             {
                 StopAllActive();
             }
-            // Re-scan to ensure new systems get a binder and receive the state
+            
             TryScanAndBindAll();
-            // If turned ON, proactively resume scene-bound particle systems (not under our manager)
+            
             if (q > 0)
             {
                 ResumeAllSceneParticles();
@@ -94,7 +94,7 @@ namespace TR.VFX
 
         private void StopAllActive()
         {
-            // Iterate all children under the manager (these are our active pooled particles by default)
+            
             int childCount = transform.childCount;
             for (int i = childCount - 1; i >= 0; i--)
             {
@@ -138,22 +138,22 @@ namespace TR.VFX
                 var ps = systems[i]; if (ps == null) continue;
                 int id = ps.GetInstanceID();
                 if (_autoBound.Contains(id)) continue;
-                // Skip pooled particles managed under this manager (they already obey quality via StopAllActive)
+                
                 if (ps.transform.IsChildOf(this.transform)) { _autoBound.Add(id); continue; }
-                // If there's already a binder in parents, skip
+                
                 if (ps.GetComponentInParent<ParticleQualityBinder>(true) != null) { _autoBound.Add(id); continue; }
-                // Add binder to the PS owner object; include children so nested systems also follow
+                
                 var owner = ps.gameObject;
                 var binder = owner.GetComponent<ParticleQualityBinder>();
                 if (binder == null) binder = owner.AddComponent<ParticleQualityBinder>();
-                // Ensure it includes children and auto-plays
+                
                 var includeChildrenField = owner.GetComponent<ParticleQualityBinder>();
                 if (includeChildrenField != null)
                 {
-                    // nothing else required; defaults are includeChildren=true, autoPlayWhenEnabled=true per our implementation
+                    
                 }
                 _autoBound.Add(id);
-                // If quality is currently ON, ensure the system is active and emitting
+                
                 if (ParticleQuality.Current > 0)
                 {
                     if (!owner.activeInHierarchy) { /* do not activate parents implicitly */ }
@@ -161,14 +161,14 @@ namespace TR.VFX
                     {
                         var em = ps.emission; em.enabled = true;
                         if (!ps.gameObject.activeSelf) ps.gameObject.SetActive(true);
-                        // If there's a binder on this owner, ask it to refresh state; otherwise play directly
+                        
                         var ownerBinder = owner.GetComponent<ParticleQualityBinder>();
                         if (ownerBinder != null) ownerBinder.Refresh(); else ps.Play(true);
                     }
                 }
             }
 
-            // Ensure all towers have a ParticleQualityActivator so idle VFX from card keys can spawn when VFX is toggled on
+            
             var towers = FindObjectsByType<TR.Battle.TowerBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < towers.Length; i++)
             {
@@ -186,9 +186,9 @@ namespace TR.VFX
             for (int i = 0; i < systems.Length; i++)
             {
                 var ps = systems[i]; if (ps == null) continue;
-                // Skip pooled particles under manager
+                
                 if (ps.transform.IsChildOf(this.transform)) continue;
-                // Try to use binder if present on owner
+                
                 var binder = ps.GetComponentInParent<ParticleQualityBinder>(true);
                 if (binder != null)
                 {
@@ -196,7 +196,7 @@ namespace TR.VFX
                 }
                 else
                 {
-                    // Fallback: directly enable and play
+                    
                     var em = ps.emission; em.enabled = true;
                     if (ps.gameObject.activeInHierarchy)
                     {
@@ -235,10 +235,10 @@ namespace TR.VFX
         {
             var ps = Instantiate(entry.prefab, transform);
             ps.gameObject.SetActive(false);
-            // Ensure Stop Action doesn't auto destroy; we pool
+            
             var main = ps.main;
             main.stopAction = ParticleSystemStopAction.None;
-            // Attach pooled helper
+            
             var pooled = ps.gameObject.GetComponent<PooledParticle>();
             if (pooled == null) pooled = ps.gameObject.AddComponent<PooledParticle>();
             pooled.Bind(this, entry.key, ps);
@@ -255,7 +255,7 @@ namespace TR.VFX
                 if (ps != null) return ps;
             }
             var entry = _registry[key];
-            // Respect max pool size only when returning; we can still instantiate here
+            
             return CreateInstance(entry);
         }
 
@@ -273,7 +273,7 @@ namespace TR.VFX
             _pools[key].Enqueue(ps);
         }
 
-        // -------- Static API --------
+        
         public static ParticleSystem Spawn(string key, Vector3 position)
             => Spawn(key, position, Quaternion.identity, null, true);
 
@@ -303,7 +303,7 @@ namespace TR.VFX
         {
             if (!ParticleQuality.AllowVfx()) return;
             var ps = Spawn(key, position, Quaternion.identity, null, true);
-            // PooledParticle will auto-return when finished
+            
             if (ps == null)
             {
                 Debug.LogWarning($"[ParticleManager] Failed to spawn key '{key}'.");

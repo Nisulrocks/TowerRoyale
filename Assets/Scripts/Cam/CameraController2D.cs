@@ -3,7 +3,7 @@ using UnityEngine;
 public class CameraController2D : MonoBehaviour
 {
     [Header("References")]
-    public Camera cam; // assign Main Camera in Inspector
+    public Camera cam; 
 
     [Header("Zoom Settings")]
     public float zoomSpeed = 5f;
@@ -11,13 +11,13 @@ public class CameraController2D : MonoBehaviour
     public float maxZoom = 12f;
 
     [Header("Pan Settings")]
-    [Tooltip("Multiply the world-space drag delta. Try 1.0 as a starting value.")]
+
     public float panSpeed = 1f;
     [Tooltip("If true, the camera moves with the mouse drag. If false, it moves opposite (map-style drag).")]
     public bool dragFollowsMouse = true;
 
     [Header("Confiner (required for clamping)")]
-    public BoxCollider2D confiner; // assign a GameObject with BoxCollider2D that defines the playable area
+    public BoxCollider2D confiner; 
 
     Vector3 lastMouseWorldPos;
 
@@ -79,15 +79,15 @@ public class CameraController2D : MonoBehaviour
 
     private Vector3 GetWorldMousePosition()
     {
-        // Raycast the mouse position onto the Z=0 plane for stable 2D panning
+        
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-        Plane plane = new Plane(Vector3.forward, Vector3.zero); // world plane at Z = 0
+        Plane plane = new Plane(Vector3.forward, Vector3.zero); 
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 hit = ray.GetPoint(enter);
             return new Vector3(hit.x, hit.y, 0f);
         }
-        // Fallback to orthographic conversion (should rarely happen)
+        
         Vector3 mouseScreen = Input.mousePosition;
         mouseScreen.z = -cam.transform.position.z;
         Vector3 world = cam.ScreenToWorldPoint(mouseScreen);
@@ -96,7 +96,7 @@ public class CameraController2D : MonoBehaviour
 
     private void ClampToBounds()
     {
-        if (confiner == null) return; // No clamping without a confiner
+        if (confiner == null) return; 
 
         float halfHeight = cam.orthographicSize;
         float halfWidth = halfHeight * cam.aspect;

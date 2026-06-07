@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Lives on a placed tower to remember which snap point it occupies.
-    // Automatically frees the snap point in the placement controller when the tower is destroyed.
+    
+    
     public class TowerSnapBinding : MonoBehaviour
     {
         private Transform _snap;

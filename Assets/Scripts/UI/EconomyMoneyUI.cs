@@ -5,7 +5,7 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Displays current match money and provides a red pulse when the player can't afford a placement.
+    
     public class EconomyMoneyUI : MonoBehaviour
     {
         [Header("Refs")]
@@ -72,7 +72,7 @@ namespace TR.UI
         private IEnumerator PulseRoutine()
         {
             var tr = moneyText.transform;
-            // Up
+            
             float t = 0f;
             while (t < 1f)
             {
@@ -82,7 +82,7 @@ namespace TR.UI
                 moneyText.color = Color.Lerp(_defaultColor, pulseColor, e);
                 yield return null;
             }
-            // Down
+            
             t = 0f;
             while (t < 1f)
             {

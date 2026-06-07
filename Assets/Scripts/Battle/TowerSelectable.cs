@@ -4,7 +4,7 @@ using TR.UI;
 
 namespace TR.Battle
 {
-    // Click to toggle selection on a tower: shows range ring and emits an event for UI panels.
+    
     public class TowerSelectable : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private TowerBase tower;
@@ -12,7 +12,7 @@ namespace TR.Battle
         private bool _selected;
         public bool Selected => _selected;
 
-        public static System.Action<TowerBase, bool> OnTowerSelectionChanged; // (tower, selected)
+        public static System.Action<TowerBase, bool> OnTowerSelectionChanged; 
 
         private void Awake()
         {
@@ -32,7 +32,7 @@ namespace TR.Battle
             {
                 _selected = false;
                 OnTowerSelectionChanged?.Invoke(tower, false);
-                // Hide only if this was the selected tower
+                
                 HoverCardDetailsUI.Hide();
             }
         }
@@ -46,7 +46,7 @@ namespace TR.Battle
             }
             OnTowerSelectionChanged?.Invoke(tower, _selected);
 
-            // Reuse the existing HoverCardDetailsUI to display tower info; bind to tower for live updates
+            
             if (_selected && tower != null && tower.Definition != null)
             {
                 HoverCardDetailsUI.Show(tower);

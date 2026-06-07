@@ -5,9 +5,9 @@ using TR.Audio;
 
 namespace TR.UI
 {
-    // Controls the Settings Panel in the Lobby.
-    // - Binds a music volume slider to BGMManager master volume
-    // - Persists volume in PlayerPrefs
+    
+    
+    
     public class SettingsPanelController : MonoBehaviour
     {
         [Header("Widgets")]
@@ -18,21 +18,21 @@ namespace TR.UI
         [SerializeField] private Toggle sfxMuteToggle;
         [Space]
         [SerializeField] private Toggle damageNumbersToggle;
-        [SerializeField] private TMP_Dropdown vfxQualityDropdown; // 0 Off, 1 Low, 2 Medium, 3 High
-        [SerializeField] private TMP_Dropdown fpsCapDropdown;    // 0:30, 1:60, 2:120, 3:Unlimited
-        [SerializeField] private Toggle vfxEnableToggle;         // Master on/off for all particle effects
+        [SerializeField] private TMP_Dropdown vfxQualityDropdown; 
+        [SerializeField] private TMP_Dropdown fpsCapDropdown;    
+        [SerializeField] private Toggle vfxEnableToggle;         
         [Header("Keybinds")]
-        [SerializeField] private TMP_Dropdown pauseHotkeyDropdown; // 0:Esc,1:P,2:Tab,3:Space
+        [SerializeField] private TMP_Dropdown pauseHotkeyDropdown; 
 
         private const string PREF_MUSIC_VOL = "tr_music_volume";
         private const string PREF_MUSIC_MUTE = "tr_music_mute";
         private const string PREF_SFX_VOL = "tr_sfx_volume";
         private const string PREF_SFX_MUTE = "tr_sfx_mute";
         private const string PREF_SHOW_DAMAGE_NUMBERS = "tr_show_damage_numbers";
-        private const string PREF_VFX_QUALITY = "tr_vfx_quality"; // 0 Off, 1 Low, 2 Medium, 3 High
-        private const string PREF_VFX_ENABLE = "tr_vfx_enable";   // 1 On (default), 0 Off
-        private const string PREF_FPS_CAP = "tr_fps_cap"; // 0:30,1:60,2:120,3:Unlimited
-        private const string PREF_PAUSE_HOTKEY = "tr_pause_hotkey"; // 0:Esc,1:P,2:Tab,3:Space
+        private const string PREF_VFX_QUALITY = "tr_vfx_quality"; 
+        private const string PREF_VFX_ENABLE = "tr_vfx_enable";   
+        private const string PREF_FPS_CAP = "tr_fps_cap"; 
+        private const string PREF_PAUSE_HOTKEY = "tr_pause_hotkey"; 
         private bool _suppressEvents;
 
         private void Awake()
@@ -62,14 +62,14 @@ namespace TR.UI
                 sfxMuteToggle.isOn = sfxMute != 0;
             }
             ApplySfxVolume(sfxVol, sfxMute != 0);
-            // Damage numbers
+            
             if (damageNumbersToggle != null)
             {
                 bool show = PlayerPrefs.GetInt(PREF_SHOW_DAMAGE_NUMBERS, 1) != 0;
                 damageNumbersToggle.isOn = show;
                 TR.UI.DamageNumbers.SetEnabled(show);
             }
-            // VFX master enable + quality
+            
             bool vfxEnabled = PlayerPrefs.GetInt(PREF_VFX_ENABLE, 1) != 0;
             if (vfxEnableToggle != null) vfxEnableToggle.isOn = vfxEnabled;
             if (vfxQualityDropdown != null)
@@ -78,14 +78,14 @@ namespace TR.UI
                 vfxQualityDropdown.value = qual;
             }
             ApplyVfxEnableAndQuality(vfxEnabled, vfxQualityDropdown != null ? vfxQualityDropdown.value : 3);
-            // FPS cap
+            
             if (fpsCapDropdown != null)
             {
                 int cap = Mathf.Clamp(PlayerPrefs.GetInt(PREF_FPS_CAP, 3), 0, 3);
                 fpsCapDropdown.value = cap;
                 ApplyFpsCap(cap);
             }
-            // Pause/Settings hotkey
+            
             if (pauseHotkeyDropdown != null)
             {
                 int hk = Mathf.Clamp(PlayerPrefs.GetInt(PREF_PAUSE_HOTKEY, 0), 0, 3);
@@ -236,7 +236,7 @@ namespace TR.UI
 
         private void ApplyVfxEnableAndQuality(bool enabled, int qual)
         {
-            // If disabled, force Off and lock the dropdown
+            
             if (vfxQualityDropdown != null) vfxQualityDropdown.interactable = enabled;
             int applied = enabled ? Mathf.Clamp(qual, 0, 3) : 0;
             TR.VFX.ParticleQuality.SetQuality(applied);
@@ -244,7 +244,7 @@ namespace TR.UI
 
         private void ApplyFpsCap(int cap)
         {
-            // 0:30, 1:60, 2:120, 3:Unlimited
+            
             int target = -1;
             switch (cap)
             {
@@ -256,10 +256,10 @@ namespace TR.UI
             Application.targetFrameRate = target;
         }
 
-        // === Reset to defaults ===
+        
         public void ResetToDefaults()
         {
-            // Clear relevant keys
+            
             PlayerPrefs.DeleteKey(PREF_MUSIC_VOL);
             PlayerPrefs.DeleteKey(PREF_MUSIC_MUTE);
             PlayerPrefs.DeleteKey(PREF_SFX_VOL);
@@ -269,30 +269,30 @@ namespace TR.UI
             PlayerPrefs.DeleteKey(PREF_FPS_CAP);
             PlayerPrefs.Save();
 
-            // Reapply defaults
+            
             _suppressEvents = true;
-            // Music
+            
             if (musicVolumeSlider != null) musicVolumeSlider.value = 1f;
             if (musicMuteToggle != null) musicMuteToggle.isOn = false;
             ApplyVolume(1f, false);
-            // SFX
+            
             if (sfxVolumeSlider != null) sfxVolumeSlider.value = 1f;
             if (sfxMuteToggle != null) sfxMuteToggle.isOn = false;
             ApplySfxVolume(1f, false);
-            // Damage numbers
+            
             if (damageNumbersToggle != null) damageNumbersToggle.isOn = true;
             TR.UI.DamageNumbers.SetEnabled(true);
-            // VFX quality
+            
             if (vfxEnableToggle != null) vfxEnableToggle.isOn = true;
-            if (vfxQualityDropdown != null) vfxQualityDropdown.value = 3; // High
+            if (vfxQualityDropdown != null) vfxQualityDropdown.value = 3; 
             ApplyVfxEnableAndQuality(true, 3);
-            // FPS Cap
-            if (fpsCapDropdown != null) fpsCapDropdown.value = 3; // Unlimited
+            
+            if (fpsCapDropdown != null) fpsCapDropdown.value = 3; 
             ApplyFpsCap(3);
             _suppressEvents = false;
         }
 
-        // Convenience method for a Settings button in the Lobby to open this panel via PanelSwitcher
+        
         public void OpenViaPanelSwitcher(PanelSwitcher switcher, string panelName = "Settings")
         {
             if (switcher != null)

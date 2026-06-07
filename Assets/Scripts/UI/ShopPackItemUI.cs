@@ -10,7 +10,7 @@ namespace TR.UI
     {
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text descText;
-        [SerializeField] private TMP_Text costText; // new
+        [SerializeField] private TMP_Text costText; 
         [SerializeField] private Button openButton;
 
         private PackDefinition _pack;
@@ -76,7 +76,7 @@ namespace TR.UI
             int cost = GetEffectiveCost();
             if (cost > 0 && !PlayerProfile.TrySpendSoftCurrency(cost))
             {
-                // optional: feedback
+                
                 RefreshAffordability();
                 return;
             }
@@ -91,7 +91,7 @@ namespace TR.UI
             return _pack != null ? _pack.Cost : 0;
         }
 
-        // External control helpers (for Shop to present daily countdown state etc.)
+        
         public void SetButtonInteractable(bool value)
         {
             if (openButton) openButton.interactable = value;
@@ -108,10 +108,10 @@ namespace TR.UI
 
         public TMP_Text CostText => costText;
 
-        // Expose bound pack id for external systems (e.g., tutorial targeting)
+        
         public string PackId => _packId;
 
-        // Expose the open/buy button for precise targeting
+        
         public Button OpenButton => openButton;
     }
 }

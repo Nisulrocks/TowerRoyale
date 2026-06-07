@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Draws a simple circle ring using a LineRenderer.
-    // Set properties (Radius/Color/Segments/Thickness) and the ring updates automatically.
+    
+    
     [RequireComponent(typeof(LineRenderer))]
     public class RangeRing : MonoBehaviour
     {
@@ -40,7 +40,7 @@ namespace TR.Battle
             _lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _lr.receiveShadows = false;
             _lr.alignment = LineAlignment.TransformZ;
-            // Material
+            
             if (_lr.sharedMaterial == null)
             {
                 var mat = new Material(Shader.Find("Sprites/Default"));

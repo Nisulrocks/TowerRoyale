@@ -3,13 +3,13 @@ using UnityEngine.EventSystems;
 
 namespace TR.Tutorial
 {
-    // Lightweight drag detector for UI elements
+    
     public class TutorialDragListener : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public bool Dragged { get; private set; }
-        [Tooltip("Pixels of cursor movement required before considering it a drag.")]
+
         public float minPixels = 30f;
-        [Tooltip("If true, only mark as dragged once the pointer has moved outside this element's rect.")]
+
         public bool requireExitRect = false;
 
         private Vector2 _startScreenPos;
@@ -38,7 +38,7 @@ namespace TR.Tutorial
                 Vector2 lp;
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rt, eventData.position, eventData.pressEventCamera, out lp))
                 {
-                    if (_rt.rect.Contains(lp)) return; // still inside, keep waiting
+                    if (_rt.rect.Contains(lp)) return; 
                 }
             }
             Dragged = true;

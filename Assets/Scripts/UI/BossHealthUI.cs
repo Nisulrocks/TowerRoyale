@@ -5,17 +5,17 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Screen-space UI for boss health. Place under a screen overlay Canvas.
-    // Starts inactive; becomes active when a boss binds.
+    
+    
     public class BossHealthUI : MonoBehaviour
     {
         [Header("Refs")]
         [SerializeField] private Slider slider;
         [SerializeField] private TMP_Text hpText;
         [SerializeField] private TMP_Text nameText;
-        [SerializeField] private Image fillImage;          // slider fill image for color by HP
+        [SerializeField] private Image fillImage;          
         [Header("Abilities UI")]
-        [SerializeField] private TMP_Text abilitiesText;   // optional: shows boss abilities summary
+        [SerializeField] private TMP_Text abilitiesText;   
         [Header("Fill Colors (Low/Mid/High)")]
         [SerializeField] private Color lowColor = new Color(0.9f, 0.2f, 0.2f, 1f);
         [SerializeField] private Color midColor = new Color(1f, 0.9f, 0.2f, 1f);
@@ -29,7 +29,7 @@ namespace TR.UI
         private RectTransform _rect;
         private Vector2 _initialAnchoredPos;
 
-        // Static registry to stack multiple boss bars
+        
         private static readonly System.Collections.Generic.List<BossHealthUI> s_active = new();
         private static bool s_topInitialized = false;
         private static float s_topX;
@@ -47,7 +47,7 @@ namespace TR.UI
                 slider.minValue = 0f;
                 slider.maxValue = 1f;
                 slider.value = 0f;
-                // Try auto-wire fill image if not assigned
+                
                 if (fillImage == null && slider.fillRect != null)
                 {
                     fillImage = slider.fillRect.GetComponent<Image>();
@@ -60,32 +60,32 @@ namespace TR.UI
             if (boss == null)
                 return;
 
-            // Unbind any previous boss
+            
             Unbind();
 
             _boss = boss;
             _boss.OnHealthChanged += HandleBossHealthChanged;
 
             if (nameText) nameText.text = string.IsNullOrEmpty(displayName) ? "Boss" : displayName;
-            // Abilities summary
+            
             ApplyAbilitiesSummary(_boss);
 
-            // Ensure panel is active before we apply UI so the first frame renders correctly
+            
             if (!gameObject.activeSelf) gameObject.SetActive(true);
 
-            // Initialize from boss properties so we don't show 1/1
+            
             _maxHP = Mathf.Max(1f, _boss.MaxHealth);
             float current = Mathf.Clamp(_boss.CurrentHealth, 0f, _maxHP);
             ApplyUI(current, _maxHP);
             Canvas.ForceUpdateCanvases();
 
-            // Register and reflow stack
+            
             if (!s_active.Contains(this))
             {
                 s_active.Add(this);
                 if (!s_topInitialized)
                 {
-                    // Use this instance's initial anchored position as the top anchor
+                    
                     s_topInitialized = true;
                     s_topX = _rect != null ? _rect.anchoredPosition.x : 0f;
                     s_topY = _rect != null ? _rect.anchoredPosition.y : 0f;
@@ -108,7 +108,7 @@ namespace TR.UI
                 ReflowStack();
                 if (s_active.Count == 0)
                 {
-                    s_topInitialized = false; // reset for next wave
+                    s_topInitialized = false; 
                 }
             }
         }
@@ -135,7 +135,7 @@ namespace TR.UI
             if (hpText) hpText.text = $"{Mathf.CeilToInt(current)}/{Mathf.CeilToInt(max)}";
             if (fillImage != null)
             {
-                // 3-color mapping: low (red) -> mid (yellow) -> high (green)
+                
                 if (norm > 0.5f)
                 {
                     float t = (norm - 0.5f) / 0.5f;
@@ -164,7 +164,7 @@ namespace TR.UI
             string bossName = nameText != null && !string.IsNullOrEmpty(nameText.text) ? nameText.text : "Boss";
             sb.AppendLine($"{bossName} Abilities:");
 
-            // Regen ability
+            
             if (def.UseRegenAbility)
             {
                 float basePct = def.RegenPerSecondBase * 100f;
@@ -175,7 +175,7 @@ namespace TR.UI
                 sb.AppendLine($"- Regeneration: heals {basePct:0.#}%/s (+{missPct:0.#}% when low). Max {capPct:0.#}%/s. Starts after {sup:0.#}s. Total {lifeCapPct:0.#}% HP.");
             }
 
-            // Pulse nuke ability
+            
             if (def.UsePulseNukeAbility)
             {
                 float r = def.PulseNukeRadius;
@@ -184,7 +184,7 @@ namespace TR.UI
                 sb.AppendLine($"- Pulse Nuke: destroys towers in {r:0.##}u. Cooldown {cdMin:0.#}-{cdMax:0.#}s (random trigger).");
             }
 
-            // Stun pulse ability
+            
             if (def.UseStunPulseAbility)
             {
                 float r = def.StunPulseRadius;
@@ -194,7 +194,7 @@ namespace TR.UI
                 sb.AppendLine($"- Stun Pulse: stuns towers in {r:0.##}u for {d:0.#}s. Cooldown {cdMin:0.#}-{cdMax:0.#}s (random).");
             }
 
-            // If only header exists (no abilities), show Ordinary
+            
             var text = sb.ToString().TrimEnd();
             int newlineIdx = text.IndexOf('\n');
             bool hasLines = newlineIdx >= 0 && newlineIdx < text.Length - 1;
@@ -208,7 +208,7 @@ namespace TR.UI
             }
         }
 
-        // Reposition all active boss bars so they stack vertically from the top anchor
+        
         private static void ReflowStack()
         {
             for (int i = 0; i < s_active.Count; i++)

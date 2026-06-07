@@ -40,7 +40,7 @@ namespace TR.Systems
             }
         }
 
-        // Save a backup copy (best-effort)
+        
         public static void SaveBackup(string json)
         {
             try
@@ -56,7 +56,7 @@ namespace TR.Systems
             }
         }
 
-        // Load backup copy if present
+        
         public static string LoadBackup()
         {
             try

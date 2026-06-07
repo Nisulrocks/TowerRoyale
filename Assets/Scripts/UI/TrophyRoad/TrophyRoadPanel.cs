@@ -10,22 +10,22 @@ namespace TR.UI.TrophyRoad
     public class TrophyRoadPanel : MonoBehaviour
     {
         [Header("Panel Root")]
-        [SerializeField] private GameObject root; // enable/disable to show/hide
+        [SerializeField] private GameObject root; 
 
         [Header("Header UI")]
         [SerializeField] private TMP_Text trophiesText;
         [SerializeField] private TMP_Text nextMilestoneText;
-        [SerializeField] private Slider progressSlider; // place this as a child of 'content' so it scrolls and stretches across the road
+        [SerializeField] private Slider progressSlider; 
 
         [Header("Scroll Strip")]
         [SerializeField] private ScrollRect scrollRect;
-        [SerializeField] private RectTransform content; // horizontal content area (its width scales with max trophies)
+        [SerializeField] private RectTransform content; 
         [SerializeField] private TrophyRoadNode nodePrefab;
-        [SerializeField] private float contentPadding = 64f; // padding left/right
-        [SerializeField] private float pixelsPerTrophy = 2f; // how wide the road is per trophy point
-        [SerializeField] private float minContentWidth = 1500f; // ensure reasonable width even at low caps
+        [SerializeField] private float contentPadding = 64f; 
+        [SerializeField] private float pixelsPerTrophy = 2f; 
+        [SerializeField] private float minContentWidth = 1500f; 
         [Header("Unified Sizing")]
-        [Tooltip("Global scale that affects both slider height and node size.")]
+
         [SerializeField] private float sizeScale = 1f;
         [Tooltip("Base slider height in pixels (before scaling).")]
         [SerializeField] private float baseSliderHeight = 24f;
@@ -33,7 +33,7 @@ namespace TR.UI.TrophyRoad
         [SerializeField] private float baseNodeWidth = 110f;
         [Tooltip("Base node height in pixels (before scaling).")]
         [SerializeField] private float baseNodeHeight = 80f;
-        [SerializeField] private float nodeVerticalOffset = 0f; // offset from slider center
+        [SerializeField] private float nodeVerticalOffset = 0f; 
 
         private readonly List<TrophyRoadNode> _nodes = new();
         private readonly List<RectTransform> _markers = new();
@@ -67,7 +67,7 @@ namespace TR.UI.TrophyRoad
 
         public void ForceRefresh() => BuildOrRefresh();
 
-        // Hook this to a UI Button on the panel header to close the Trophy Road
+        
         public void OnClickClose()
         {
             Hide();
@@ -75,7 +75,7 @@ namespace TR.UI.TrophyRoad
 
         private void Update()
         {
-            // Allow closing with Escape while the panel is visible
+            
             if (root != null && root.activeInHierarchy)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) Hide();
@@ -90,7 +90,7 @@ namespace TR.UI.TrophyRoad
             int trophies = PlayerProfile.GetTrophies();
             if (trophiesText) trophiesText.text = $"Trophies: {trophies}";
 
-            // Compute content width based on max trophies
+            
             int max = Mathf.Max(1, _road.MaxTrophies);
             float targetWidth = Mathf.Max(minContentWidth, contentPadding * 2f + pixelsPerTrophy * max);
             if (content)
@@ -98,12 +98,12 @@ namespace TR.UI.TrophyRoad
                 var size = content.sizeDelta;
                 size.x = targetWidth;
                 content.sizeDelta = size;
-                // Ensure content starts at the left (so the start of the slider is visible)
+                
                 content.pivot = new Vector2(0f, content.pivot.y);
                 content.anchoredPosition = new Vector2(0f, content.anchoredPosition.y);
             }
 
-            // Configure progress slider to span the whole content and reflect progress
+            
             if (progressSlider)
             {
                 progressSlider.maxValue = max;
@@ -111,18 +111,18 @@ namespace TR.UI.TrophyRoad
                 var srt = progressSlider.transform as RectTransform;
                 if (srt != null)
                 {
-                    // Stretch horizontally within content and give it a fixed height
+                    
                     srt.anchorMin = new Vector2(0f, srt.anchorMin.y);
                     srt.anchorMax = new Vector2(1f, srt.anchorMax.y);
                     srt.offsetMin = new Vector2(contentPadding, srt.offsetMin.y);
                     srt.offsetMax = new Vector2(-contentPadding, srt.offsetMax.y);
-                    // Apply unified size scaling to slider height
+                    
                     float h = Mathf.Max(8f, baseSliderHeight * Mathf.Max(0.25f, sizeScale));
                     srt.sizeDelta = new Vector2(srt.sizeDelta.x, h);
                 }
             }
 
-            // Next milestone hint
+            
             if (nextMilestoneText)
             {
                 int nextIdx = TrophyRoadService.GetNextMilestoneIndex();
@@ -138,7 +138,7 @@ namespace TR.UI.TrophyRoad
                 }
             }
 
-            // Build nodes if needed
+            
             if (_nodes.Count == 0)
             {
                 BuildNodes();
@@ -169,7 +169,7 @@ namespace TR.UI.TrophyRoad
             {
                 var ms = milestones[i];
                 if (ms == null) continue;
-                // Create node and marker line at the exact milestone position
+                
                 var node = Instantiate(nodePrefab, content);
                 node.name = $"Node_{ms.trophyRequired}_{i}";
                 _nodes.Add(node);
@@ -177,7 +177,7 @@ namespace TR.UI.TrophyRoad
                 var label = CreateOrUpdateMarkerLabel(i, content);
 
                 float t = Mathf.Clamp01((float)ms.trophyRequired / max);
-                // Position marker and node together
+                
                 var rt = node.transform as RectTransform;
                 if (rt != null)
                 {
@@ -185,22 +185,22 @@ namespace TR.UI.TrophyRoad
                     rt.anchorMax = new Vector2(0f, rt.anchorMax.y);
                     rt.pivot = new Vector2(0.5f, rt.pivot.y);
                     float xCenter = contentPadding + usable * t;
-                    // Size to fit nicely within the slider track area (scaled)
+                    
                     rt.sizeDelta = new Vector2(nodeW, nodeH);
-                    // Center vertically on slider plus optional offset
+                    
                     float y = sliderCenterY + nodeVerticalOffset;
                     rt.anchoredPosition = new Vector2(xCenter, y);
 
                     if (markerRT != null)
                     {
-                        // Marker centered at same X, spanning slider height
+                        
                         markerRT.anchorMin = new Vector2(0f, 0.5f);
                         markerRT.anchorMax = new Vector2(0f, 0.5f);
                         markerRT.pivot = new Vector2(0.5f, 0.5f);
                         float mh = sliderRT != null ? Mathf.Max(8f, sliderRT.sizeDelta.y) : nodeH;
                         markerRT.sizeDelta = new Vector2(markerWidth, mh);
                         markerRT.anchoredPosition = new Vector2(xCenter, sliderCenterY);
-                        // Ensure marker is behind node in hierarchy
+                        
                         markerRT.SetSiblingIndex(Mathf.Max(0, rt.GetSiblingIndex() - 1));
                     }
 
@@ -226,7 +226,7 @@ namespace TR.UI.TrophyRoad
 
         private void RefreshNodes()
         {
-            // Recompute positions in case sizes/settings changed
+            
             float width = content != null ? content.rect.width : 0f;
             float usable = Mathf.Max(0f, width - contentPadding * 2f);
             int max = Mathf.Max(1, _road != null ? _road.MaxTrophies : 1);
@@ -241,9 +241,9 @@ namespace TR.UI.TrophyRoad
                 var node = _nodes[i];
                 if (node != null)
                 {
-                    // State
+                    
                     node.RefreshState();
-                    // Position
+                    
                     var ms = _road.Milestones[i];
                     if (ms != null && content != null)
                     {
@@ -255,12 +255,12 @@ namespace TR.UI.TrophyRoad
                             rt.anchorMax = new Vector2(0f, rt.anchorMax.y);
                             rt.pivot = new Vector2(0.5f, rt.pivot.y);
                             float xCenter = contentPadding + usable * t;
-                            // Keep size and vertical alignment consistent with slider (scaled)
+                            
                             rt.sizeDelta = new Vector2(nodeW, nodeH);
                             float y = sliderCenterY + nodeVerticalOffset;
                             rt.anchoredPosition = new Vector2(xCenter, y);
 
-                            // Update marker to stay under node
+                            
                             if (i < _markers.Count && _markers[i] != null)
                             {
                                 var markerRT = _markers[i];
@@ -272,7 +272,7 @@ namespace TR.UI.TrophyRoad
                                 markerRT.anchoredPosition = new Vector2(xCenter, sliderCenterY);
                             }
 
-                            // Update label position/text
+                            
                             if (i < _markerLabels.Count && _markerLabels[i] != null)
                             {
                                 var label = _markerLabels[i];
@@ -292,7 +292,7 @@ namespace TR.UI.TrophyRoad
                     }
                 }
             }
-            // Update header
+            
             int trophies = PlayerProfile.GetTrophies();
             if (trophiesText) trophiesText.text = $"Trophies: {trophies}";
             if (progressSlider)
@@ -309,14 +309,14 @@ namespace TR.UI.TrophyRoad
             if (nextIdx < 0 || nextIdx >= _road.Milestones.Count) return;
             var ms = _road.Milestones[nextIdx];
 
-            // Compute normalized scroll based on target x
+            
             float width = content.rect.width;
             float usable = Mathf.Max(0f, width - contentPadding * 2f);
             int max = Mathf.Max(1, _road.MaxTrophies);
             float t = Mathf.Clamp01((float)ms.trophyRequired / max);
-            // position in content pixels
+            
             float targetX = contentPadding + usable * t;
-            // Use assigned viewport if present; else fallback to ScrollRect's own RectTransform
+            
             RectTransform viewportRT = scrollRect.viewport != null ? scrollRect.viewport : (scrollRect.transform as RectTransform);
             float viewportWidth = viewportRT != null ? viewportRT.rect.width : 0f;
             float maxScrollX = Mathf.Max(0f, width - viewportWidth);
@@ -328,12 +328,12 @@ namespace TR.UI.TrophyRoad
         private void EnsureScrollBindings()
         {
             if (scrollRect == null) return;
-            // Assign content if not set
+            
             if (scrollRect.content == null && content != null)
             {
                 scrollRect.content = content;
             }
-            // Assign viewport if missing: try find child named "Viewport", else use ScrollRect's RectTransform
+            
             if (scrollRect.viewport == null)
             {
                 RectTransform found = null;
@@ -428,7 +428,7 @@ namespace TR.UI.TrophyRoad
 
         private void OnDisable()
         {
-            // optional cleanup or save
+            
         }
     }
 }

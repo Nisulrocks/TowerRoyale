@@ -6,8 +6,8 @@ using TR.Systems;
 
 namespace TR.Tutorial
 {
-    // Minimal tutorial runner: points an arrow at a target (by name) and shows dialogue with typewriter.
-    // Advances by WaitSeconds or waiting for the target Button to be clicked.
+    
+    
     public class TutorialManager : MonoBehaviour
     {
         [SerializeField] private TutorialFlow flow;
@@ -28,7 +28,7 @@ namespace TR.Tutorial
         private static TutorialManager _instance;
         public static TutorialManager Instance => _instance;
 
-        // Persistence via PlayerProfile
+        
         private int _resumeIndex = 0;
 
         [Header("Debug")]
@@ -40,7 +40,7 @@ namespace TR.Tutorial
             _instance = this;
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
-            // Try to auto-load flow if missing
+            
             if (flow == null && !string.IsNullOrEmpty(flowResourcePath))
             {
                 flow = Resources.Load<TutorialFlow>(flowResourcePath);
@@ -50,11 +50,11 @@ namespace TR.Tutorial
 
         private void Start()
         {
-            // If a tutorial was active previously, resume it
+            
             if (PlayerProfile.GetTutorialActive())
             {
                 _resumeIndex = Mathf.Max(0, PlayerProfile.GetTutorialStep());
-                // Validate saved index
+                
                 if (flow != null && _resumeIndex >= flow.steps.Count)
                 {
                     if (verboseLogs) Debug.Log("[Tutorial] Saved step is out of range; resetting to 0.");
@@ -66,7 +66,7 @@ namespace TR.Tutorial
                     if (verboseLogs) Debug.Log($"[Tutorial] Resuming at step {_resumeIndex}");
                     StartTutorial();
                 }
-                // Safeguard: ensure resume after a short delay if domain reload timing prevented start
+                
                 StartCoroutine(ResumeSafeguard());
             }
             else
@@ -82,17 +82,17 @@ namespace TR.Tutorial
 
         private void OnSceneLoaded(Scene s, LoadSceneMode mode)
         {
-            // Only prepare UI if tutorial is running or flagged active
+            
             bool activeFlag = PlayerProfile.GetTutorialActive();
             if (IsRunning() || activeFlag)
             {
-                // Rebind arrow/dialogue to a canvas on new scenes
+                
                 EnsureUI();
                 if (IsRunning())
                 {
-                    // Re-apply current step visuals
+                    
                     var step = flow.steps[_stepIndex];
-                    // Only show UI if we're in the required scene (if any). Otherwise keep UI hidden.
+                    
                     if (!string.IsNullOrEmpty(step.requiredSceneName) && s.name != step.requiredSceneName)
                     {
                         if (verboseLogs) Debug.Log($"[Tutorial] Scene loaded: {s.name}, step {_stepIndex} requires {step.requiredSceneName}. Hiding tutorial UI until scene matches.");
@@ -108,7 +108,7 @@ namespace TR.Tutorial
                 }
                 else if (activeFlag)
                 {
-                    // Resume if flagged active but not running (e.g., due to domain/scene quirks)
+                    
                     _resumeIndex = Mathf.Max(0, PlayerProfile.GetTutorialStep());
                     if (flow != null && _resumeIndex >= flow.steps.Count)
                     {
@@ -128,7 +128,7 @@ namespace TR.Tutorial
 
         private IEnumerator ResumeSafeguard()
         {
-            // Wait a short time for any bootstrap systems, then if still flagged active but not running, attempt to start again
+            
             yield return null;
             float t = 0.5f;
             while (t > 0f) { t -= Time.unscaledDeltaTime; yield return null; }
@@ -156,7 +156,7 @@ namespace TR.Tutorial
             }
             if (noTrophies && noCards)
             {
-                // Force a fresh start at step 0 (do not resume stale indices)
+                
                 _resumeIndex = 0;
                 PlayerProfile.SetTutorialActive(false);
                 PlayerProfile.SetTutorialStep(0);
@@ -170,13 +170,13 @@ namespace TR.Tutorial
             StopAllCoroutines();
             EnsureUI();
             _stepIndex = -1;
-            // Mark active and ensure a valid resume index
+            
             PlayerProfile.SetTutorialActive(true);
             PlayerProfile.SetTutorialStep(Mathf.Max(0, _resumeIndex));
             StartCoroutine(Run());
         }
 
-        // Public helpers for debugging/UX
+        
         public void ResetTutorialProgress()
         {
             _resumeIndex = 0;
@@ -211,10 +211,10 @@ namespace TR.Tutorial
             {
                 _stepIndex = i;
                 var step = flow.steps[i];
-                // If this step requires a specific scene, wait until active scene matches
+                
                 if (!string.IsNullOrEmpty(step.requiredSceneName))
                 {
-                    // While waiting for the required scene, DO NOT show dialogue or block input
+                    
                     while (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != step.requiredSceneName)
                     {
                         if (_blocker != null) _blocker.Disable();
@@ -222,13 +222,13 @@ namespace TR.Tutorial
                         if (verboseLogs) Debug.Log($"[Tutorial] Waiting for scene '{step.requiredSceneName}', current: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
                         yield return null;
                     }
-                    // Small settle delay so UI of the new scene can instantiate
-                    yield return null; // end of frame
+                    
+                    yield return null; 
                     float settle = 0.1f; while (settle > 0f) { settle -= Time.unscaledDeltaTime; yield return null; }
                     if (_overlayCanvas != null && !_overlayCanvas.gameObject.activeSelf) _overlayCanvas.gameObject.SetActive(true);
                 }
 
-                // Optional: auto-open a tab/panel by clicking a named Button at step start (useful when resuming mid-flow)
+                
                 if (!string.IsNullOrEmpty(step.autoClickObjectNameOnStart))
                 {
                     var go = GameObject.Find(step.autoClickObjectNameOnStart);
@@ -237,14 +237,14 @@ namespace TR.Tutorial
                     {
                         if (verboseLogs) Debug.Log($"[Tutorial] Auto-clicking '{step.autoClickObjectNameOnStart}' for step {i}.");
                         btn.onClick?.Invoke();
-                        // Give UI a moment to react (e.g., open Shop panel) before showing arrow/dialogue
+                        
                         yield return null;
                     }
                 }
 
                 ShowStepUI(step);
 
-                // Wait logic
+                
                 if (step.waitMode == StepWaitMode.WaitSeconds)
                 {
                     float t = Mathf.Max(0f, step.waitSeconds);
@@ -258,11 +258,11 @@ namespace TR.Tutorial
                 {
                     if (step.targetMode == TargetMode.OwnedCollectionCards)
                     {
-                        // Listen for click on ANY owned card tile (expects a Button somewhere under the tile)
+                        
                         var buttons = ResolveButtonsListOwnedCards();
                         while (buttons == null || buttons.Count == 0)
                         {
-                            // Retry until tiles exist
+                            
                             buttons = ResolveButtonsListOwnedCards();
                             yield return null;
                         }
@@ -283,15 +283,15 @@ namespace TR.Tutorial
                     }
                     else
                     {
-                        // if target has a Button, wait until it's clicked; otherwise, wait indefinitely (authoring expectation)
+                        
                         Button btn = null;
-                        // Wait until button appears (handles runtime-created targets like shop items)
+                        
                         while (btn == null)
                         {
                             btn = ResolveButton(step);
                             if (btn == null)
                             {
-                                // Try to hook arrow once the rect exists
+                                
                                 var rtTry = ResolveRect(step);
                                 if (_arrow != null)
                                 {
@@ -313,7 +313,7 @@ namespace TR.Tutorial
                                         }
                                     }
                                 }
-                                yield return null; // wait next frame and retry
+                                yield return null; 
                             }
                         }
 
@@ -322,13 +322,13 @@ namespace TR.Tutorial
                         btn.onClick.AddListener(OnListenedButtonClicked);
                         while (true)
                         {
-                            // clicked will be set in OnListenedButtonClicked, but we can't capture a local; so poll flag
-                            if (_listenedButton == null) break; // target destroyed, break to avoid lock
+                            
+                            if (_listenedButton == null) break; 
                             yield return null;
                             if (_listenedButton == null) break;
                             if (_buttonClickedFlag) break;
                         }
-                        // clear state after wait
+                        
                         if (_listenedButton != null)
                         {
                             _listenedButton.onClick.RemoveListener(OnListenedButtonClicked);
@@ -341,7 +341,7 @@ namespace TR.Tutorial
                 {
                     if (step.targetMode == TargetMode.OwnedCollectionCards)
                     {
-                        // Attach drag listeners to all owned card tiles (prefer the Button child for reliable event routing)
+                        
                         var buttons = ResolveButtonsListOwnedCards();
                         while (buttons == null || buttons.Count == 0)
                         {
@@ -356,7 +356,7 @@ namespace TR.Tutorial
                             var l = btn.GetComponent<TutorialDragListener>();
                             if (l == null) l = btn.gameObject.AddComponent<TutorialDragListener>();
                             l.minPixels = 30f;
-                            l.requireExitRect = true; // consider as proper placement-like drag
+                            l.requireExitRect = true; 
                             l.ResetFlag();
                             listeners.Add(l);
                         }
@@ -372,7 +372,7 @@ namespace TR.Tutorial
                     }
                     else
                     {
-                        // Single target drag: prefer a Button child for events; fallback to target root
+                        
                         TutorialDragListener listener = null;
                         Button tgtBtn = null;
                         RectTransform rt = null;
@@ -399,14 +399,14 @@ namespace TR.Tutorial
                 }
                 else
                 {
-                    // None: small frame delay so UI shows
+                    
                     yield return null;
                 }
 
-                // Persist the NEXT step index so if a scene changes immediately, we resume correctly on the next step
+                
                 PlayerProfile.SetTutorialStep(i + 1);
             }
-            // Finished
+            
             HideAllUI();
             _stepIndex = -1;
             _resumeIndex = 0;
@@ -423,7 +423,7 @@ namespace TR.Tutorial
         private void ShowStepUI(TutorialStep step)
         {
             EnsureUI();
-            // Safety: if this step targets a specific scene and we're not in it, do not show any tutorial UI
+            
             if (!string.IsNullOrEmpty(step.requiredSceneName) &&
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != step.requiredSceneName)
             {
@@ -433,15 +433,15 @@ namespace TR.Tutorial
                 return;
             }
             if (_overlayCanvas != null && !_overlayCanvas.gameObject.activeSelf) _overlayCanvas.gameObject.SetActive(true);
-            // Dialogue
+            
             if (_dialogue != null)
             {
                 _dialogue.Show(step.dialogueText, step.typewriterCharDelay);
             }
-            // Arrow
+            
             if (_arrow != null)
             {
-                // Clear any previous extra arrows
+                
                 for (int k = 0; k < _extraArrows.Count; k++)
                 {
                     if (_extraArrows[k] != null) _extraArrows[k].gameObject.SetActive(false);
@@ -453,12 +453,12 @@ namespace TR.Tutorial
                     var targets = ResolveRectsList(step);
                     if (targets != null && targets.Count > 0)
                     {
-                        // Cap to maxArrows
+                        
                         int count = Mathf.Min(step.maxArrows <= 0 ? targets.Count : step.maxArrows, targets.Count);
-                        // First arrow uses the primary instance
+                        
                         _arrow.gameObject.SetActive(true);
                         _arrow.Follow(targets[0], step.targetScreenOffset);
-                        // Create extra arrows for the rest
+                        
                         for (int idx = 1; idx < count; idx++)
                         {
                             var inst = (arrowPrefab != null)
@@ -469,7 +469,7 @@ namespace TR.Tutorial
                             inst.Follow(targets[idx], step.targetScreenOffset);
                             _extraArrows.Add(inst);
                         }
-                        // Blocker allows clicks on any of these targets
+                        
                         if (_blocker != null)
                         {
                             if (step.blockOutside) _blocker.EnableMany(targets); else _blocker.Disable();
@@ -537,7 +537,7 @@ namespace TR.Tutorial
                     {
                         if (it != null && it.PackId == step.targetPackId)
                         {
-                            // Prefer the open button's rect so the arrow points exactly where to click
+                            
                             var btn = it.OpenButton;
                             if (btn != null) return btn.GetComponent<RectTransform>();
                             return it.GetComponent<RectTransform>();
@@ -545,7 +545,7 @@ namespace TR.Tutorial
                     }
                     return null;
                 case TargetMode.OwnedCollectionCards:
-                    // Use the first owned tile if singular API is called
+                    
                     var list = ResolveRectsList(step);
                     return (list != null && list.Count > 0) ? list[0] : null;
                 default:
@@ -559,7 +559,7 @@ namespace TR.Tutorial
             if (step == null) return result;
             if (step.targetMode == TargetMode.OwnedCollectionCards)
             {
-                // Prefer CardItemUI tiles (Deck/Collection tiles use this), fallback to CollectionItemUI
+                
                 var cardTiles = Object.FindObjectsByType<TR.UI.CardItemUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                 if (cardTiles != null)
                 {
@@ -638,13 +638,13 @@ namespace TR.Tutorial
 
         private void EnsureUI()
         {
-            // Create a dedicated overlay canvas so our blocker is always on top
+            
             if (_overlayCanvas == null)
             {
                 var overlayGO = new GameObject("TutorialOverlayCanvas");
                 _overlayCanvas = overlayGO.AddComponent<Canvas>();
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                _overlayCanvas.sortingOrder = 999; // requested sorting order
+                _overlayCanvas.sortingOrder = 999; 
                 overlayGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
                 DontDestroyOnLoad(overlayGO);
             }

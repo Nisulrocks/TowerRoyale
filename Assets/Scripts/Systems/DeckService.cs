@@ -6,7 +6,7 @@ namespace TR.Systems
 {
     public static class DeckService
     {
-        // Default deck size fallback
+        
         private const int DefaultMaxDeckSize = 8;
         public static int MaxDeckSize
         {
@@ -26,7 +26,7 @@ namespace TR.Systems
             if (string.IsNullOrEmpty(cardId)) return false;
             if (IsInDeck(cardId)) return false;
             if (PlayerProfile.Data.deck.Count >= MaxDeckSize) return false;
-            // Ensure card exists
+            
             if (GameDB.GetCardById(cardId) == null) return false;
             PlayerProfile.Data.deck.Add(cardId);
             PlayerProfile.Save();

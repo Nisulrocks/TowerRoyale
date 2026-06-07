@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Simple reactive beam using a LineRenderer. Intensity controls width and color over lifetime.
-    // Designed to be driven by InfernoTower (per-target).
+    
+    
     [RequireComponent(typeof(LineRenderer))]
     public class BeamController : MonoBehaviour
     {
@@ -14,11 +14,11 @@ namespace TR.Battle
         [SerializeField] private float maxWidth = 0.1f;
         [SerializeField] private bool jitter = true;
         [SerializeField] private float jitterAmplitude = 0.05f;
-        [SerializeField] private int segments = 6; // number of points along the beam
+        [SerializeField] private int segments = 6; 
 
         private Vector3 _from;
         private Vector3 _to;
-        private float _intensity; // 0..1
+        private float _intensity; 
 
         private void Awake()
         {
@@ -66,7 +66,7 @@ namespace TR.Battle
         private void LateUpdate()
         {
             if (lr == null) return;
-            // Build points between from and to, with optional jitter.
+            
             int count = Mathf.Max(2, segments);
             lr.positionCount = count;
             for (int i = 0; i < count; i++)
@@ -75,7 +75,7 @@ namespace TR.Battle
                 Vector3 p = Vector3.Lerp(_from, _to, t);
                 if (jitter && jitterAmplitude > 1e-4f && i > 0 && i < count - 1)
                 {
-                    // Per-point pseudo-random offset that animates over time
+                    
                     float n = Mathf.PerlinNoise(Time.time * 10f + i * 0.37f, 0.123f + i * 0.77f) * 2f - 1f;
                     Vector3 perp = Vector3.Cross((_to - _from).normalized, Vector3.forward);
                     p += perp * n * jitterAmplitude * Mathf.Lerp(0.2f, 1f, _intensity);

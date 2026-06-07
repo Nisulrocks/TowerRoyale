@@ -4,7 +4,7 @@ using TR.Data;
 
 namespace TR.Battle
 {
-    // Buff tower: applies percentage buffs to nearby allied towers. Does no damage.
+    
     public class BuffTower : MonoBehaviour
     {
         private BuffCardDefinition _def;
@@ -15,7 +15,7 @@ namespace TR.Battle
         private float _decayPerSec;
         private readonly List<TowerBase> _snapshot = new();
         private readonly HashSet<TowerBase> _buffed = new();
-        private bool _dying; // guard to prevent double-destroy and disable Update logic during despawn
+        private bool _dying; 
 
         [Header("HP Ring (World-Space)")]
         [SerializeField] private float ringRadius = 0.6f;
@@ -26,10 +26,10 @@ namespace TR.Battle
         public BuffCardDefinition Definition => _def;
 
         [Header("VFX")]
-        [SerializeField] private string auraVfxKey = ""; // optional looping aura at tower
+        [SerializeField] private string auraVfxKey = ""; 
         [SerializeField] private Transform auraAnchor;
         private ParticleSystem _auraVfx;
-        [Tooltip("If true, automatically scales the aura particle to match the buff range.")]
+
         [SerializeField] private bool autoScaleAuraToRange = true;
         [Tooltip("Multiplier applied to computed scale to fit your authored particle (tweak to match visuals).\nFinal scale = buffRange * auraScaleMultiplier")]
         [SerializeField] private float auraScaleMultiplier = 1.0f;
@@ -44,7 +44,7 @@ namespace TR.Battle
             _decayPerSec = def.GetDecayPerSecond(_level);
             TrySpawnAura();
             ApplyAuraScaleFromRange();
-            // Create HP ring child
+            
             if (_ring == null)
             {
                 var go = new GameObject("HP_Ring");
@@ -60,7 +60,7 @@ namespace TR.Battle
 
         private void OnDisable()
         {
-            // Remove buffs from all previously buffed towers
+            
             if (_buffed.Count > 0)
             {
                 var list = new List<TowerBase>(_buffed);
@@ -86,23 +86,23 @@ namespace TR.Battle
         private void Update()
         {
             if (_def == null) return;
-            if (_dying) return; // skip logic while playing despawn
+            if (_dying) return; 
             float dt = Time.deltaTime;
-            // Ensure aura keeps playing if present
+            
             if (_auraVfx != null && !_auraVfx.isPlaying)
             {
                 _auraVfx.Play(true);
             }
-            // Scan towers in range
+            
             _snapshot.Clear();
             foreach (var t in TowerBase.All) _snapshot.Add((TowerBase)t);
 
-            // Compute multipliers from def
+            
             float dpsMul = _def.BuffDps ? (1f + _def.GetDpsPercent(_level)) : 1f;
             float frMul = _def.BuffFireRate ? (1f + _def.GetFireRatePercent(_level)) : 1f;
             float rgMul = _def.BuffRange ? (1f + _def.GetRangePercent(_level)) : 1f;
             float spMul = _def.BuffSplash ? (1f + _def.GetSplashPercent(_level)) : 1f;
-            // On-hit effect multipliers
+            
             float burnDpsMul = _def.BuffBurn ? (1f + _def.GetBurnDpsBuffPercent(_level)) : 1f;
             float burnDurMul = _def.BuffBurn ? (1f + _def.GetBurnDurBuffPercent(_level)) : 1f;
             float poisonDpsMul = _def.BuffPoison ? (1f + _def.GetPoisonDpsBuffPercent(_level)) : 1f;
@@ -111,19 +111,19 @@ namespace TR.Battle
             float slowDurMul = _def.BuffSlow ? (1f + _def.GetSlowDurBuffPercent(_level)) : 1f;
             float stunChanceMul = _def.BuffStun ? (1f + _def.GetStunChanceBuffPercent(_level)) : 1f;
             float stunDurMul = _def.BuffStun ? (1f + _def.GetStunDurBuffPercent(_level)) : 1f;
-            // Economy income multiplier
+            
             float econIncomeMul = _def.BuffEconomyIncome ? (1f + _def.GetEconomyIncomePercent(_level)) : 1f;
 
             var newlyBuffed = new HashSet<TowerBase>();
             for (int i = 0; i < _snapshot.Count; i++)
             {
                 var t = _snapshot[i];
-                if (t == null || t.gameObject == this.gameObject) continue; // skip self
-                // Use this tower's position as center
+                if (t == null || t.gameObject == this.gameObject) continue; 
+                
                 float d = Vector2.Distance((Vector2)transform.position, (Vector2)t.transform.position);
                 if (d <= _range)
                 {
-                    // Check rarity filter
+                    
                     if (_def.ShouldAffect(t.Definition))
                     {
                         newlyBuffed.Add(t);
@@ -133,17 +133,17 @@ namespace TR.Battle
                             poisonDpsMul, poisonDurMul,
                             slowPctMul, slowDurMul,
                             stunChanceMul, stunDurMul);
-                        // Visual glow enter
+                        
                         t.AddBuffGlowRef(this);
-                        // Economy towers: apply income buff if enabled
+                        
                         if (_def.BuffEconomyIncome)
                         {
                             var econ = t.GetComponent<EconomyTower>();
                             if (econ == null)
                             {
-                                // some economy might not derive from TowerBase; also search registry nearby
+                                
                                 var maybe = TR.Battle.EconomyTower.All;
-                                // No positional match needed since t is a tower base for economy towers too, but try component first
+                                
                             }
                             if (econ != null)
                             {
@@ -154,7 +154,7 @@ namespace TR.Battle
                 }
             }
 
-            // Remove buff from towers that left range
+            
             if (_buffed.Count > 0)
             {
                 var prev = new List<TowerBase>(_buffed);
@@ -166,9 +166,9 @@ namespace TR.Battle
                         if (t != null)
                         {
                             t.RemoveBuff(this);
-                            // Visual glow exit
+                            
                             t.RemoveBuffGlowRef(this);
-                            // Remove income buff if it was applied
+                            
                             if (_def.BuffEconomyIncome)
                             {
                                 var econ = t.GetComponent<EconomyTower>();
@@ -179,10 +179,10 @@ namespace TR.Battle
                     }
                 }
             }
-            // Add any newly buffed towers to tracking set
+            
             foreach (var t in newlyBuffed) _buffed.Add(t);
 
-            // Decay HP and update ring
+            
             if (_decayPerSec > 0f)
             {
                 _hp -= _decayPerSec * dt;
@@ -201,7 +201,7 @@ namespace TR.Battle
         private System.Collections.IEnumerator DespawnAndDestroy()
         {
             _dying = true;
-            // Remove buffs immediately so gameplay reflects tower gone
+            
             if (_buffed.Count > 0)
             {
                 var list = new List<TowerBase>(_buffed);
@@ -221,9 +221,9 @@ namespace TR.Battle
                 }
                 _buffed.Clear();
             }
-            // Stop aura VFX
+            
             TryReleaseAura();
-            // Fade out sprites and shrink slightly
+            
             var renderers = GetComponentsInChildren<SpriteRenderer>(true);
             var startColors = new System.Collections.Generic.Dictionary<SpriteRenderer, Color>(renderers.Length);
             for (int i = 0; i < renderers.Length; i++)
@@ -290,7 +290,7 @@ namespace TR.Battle
                     return;
                 }
             }
-            // Fallback: uniform transform scale
+            
             _auraVfx.transform.localScale = new Vector3(s, s, s);
         }
 

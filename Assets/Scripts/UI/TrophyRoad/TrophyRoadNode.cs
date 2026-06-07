@@ -26,8 +26,8 @@ namespace TR.UI.TrophyRoad
             if (thresholdText) thresholdText.text = milestone != null ? milestone.trophyRequired.ToString() : "-";
             if (rewardText) rewardText.text = milestone?.reward != null ? milestone.reward.GetDisplayName() : "-";
             if (rewardIcon) rewardIcon.sprite = milestone?.reward != null ? milestone.reward.GetIcon() : null;
-            if (claimedBadge) claimedBadge.SetActive(false); // default hidden until state is computed
-            if (lockedOverlay) lockedOverlay.SetActive(true); // default locked until state is computed
+            if (claimedBadge) claimedBadge.SetActive(false); 
+            if (lockedOverlay) lockedOverlay.SetActive(true); 
             RefreshState();
             if (button)
             {
@@ -50,7 +50,7 @@ namespace TR.UI.TrophyRoad
 
         private void OnClick()
         {
-            // Click to claim if eligible; otherwise ignore
+            
             var res = TrophyRoadService.Claim(_index);
             if (res.ok)
             {
@@ -58,7 +58,7 @@ namespace TR.UI.TrophyRoad
             }
             else
             {
-                // Optional: show tooltip/log
+                
                 Debug.Log($"[TrophyRoadNode] Claim failed: {res.message}");
             }
         }

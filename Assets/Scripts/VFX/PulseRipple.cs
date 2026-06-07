@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.VFX
 {
-    // Simple procedural ripple ring using a LineRenderer. Expands from small to target radius and fades out, then destroys itself.
+    
     public class PulseRipple : MonoBehaviour
     {
         [SerializeField] private float duration = 0.25f;
@@ -48,10 +48,10 @@ namespace TR.VFX
             _t += Time.deltaTime;
             float a = Mathf.Clamp01(_t / Mathf.Max(0.01f, duration));
             float r = Mathf.Lerp(startRadius, endRadius, Mathf.SmoothStep(0f, 1f, a));
-            // Fade out alpha over time
+            
             Color c = color; c.a = Mathf.Lerp(color.a, 0f, a);
             _lr.startColor = c; _lr.endColor = c;
-            // Slightly reduce width towards end
+            
             float w = Mathf.Lerp(lineWidth, lineWidth * 0.4f, a);
             _lr.startWidth = w; _lr.endWidth = w;
 

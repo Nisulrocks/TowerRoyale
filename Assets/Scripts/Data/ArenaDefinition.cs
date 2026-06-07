@@ -6,16 +6,16 @@ namespace TR.Data
     public class ArenaDefinition : ScriptableObject
     {
         [Header("Identity")]
-        [SerializeField] private string arenaId; // unique key (optional for now)
+        [SerializeField] private string arenaId; 
         [SerializeField] private string displayName = "Arena";
-        [SerializeField] private Sprite arenaImage; // image used in lobby play panel
+        [SerializeField] private Sprite arenaImage; 
 
         [Header("Progression")]
-        [SerializeField] private int trophyRequirement = 0; // trophies needed to unlock this arena
+        [SerializeField] private int trophyRequirement = 0; 
 
         [Header("Waves")]
         [SerializeField] private int waveCount = 10;
-        [SerializeField] private float waveInterval = 60f; // seconds between waves
+        [SerializeField] private float waveInterval = 60f; 
 
         [Header("Enemy Mix Weights (0..1)")]
         [Tooltip("Wave progress (0..1) at which Medium enemies start to be considered.")]
@@ -24,9 +24,9 @@ namespace TR.Data
         [Range(0f, 1f)] [SerializeField] private float hardStartPercent = 0.6f;
 
         [Header("Enemies by Tier")] 
-        [SerializeField] private EnemyDefinition[] easyEnemies;   // early waves
-        [SerializeField] private EnemyDefinition[] mediumEnemies; // mid waves
-        [SerializeField] private EnemyDefinition[] hardEnemies;   // late waves
+        [SerializeField] private EnemyDefinition[] easyEnemies;   
+        [SerializeField] private EnemyDefinition[] mediumEnemies; 
+        [SerializeField] private EnemyDefinition[] hardEnemies;   
 
         [System.Serializable]
         public struct WaveEnemyCountRange
@@ -36,15 +36,15 @@ namespace TR.Data
         }
 
         [Header("Per-Wave Enemy Counts (1-based)")]
-        [Tooltip("Size this list to your WaveCount. Each element is the [min,max] enemies to spawn in that wave.")]
+
         [SerializeField] private WaveEnemyCountRange[] waveEnemyCounts;
 
         [Header("Boss Settings")]
-        [Tooltip("Optional: Boss enemy to spawn based on the rules below.")]
+
         [SerializeField] private EnemyDefinition bossEnemy;
-        [Tooltip("If true, spawn boss only on a specific wave number. If false, spawn periodically every X waves.")]
+
         [SerializeField] private bool spawnBossOnSpecificWave = false;
-        [Tooltip("1-based specific wave number for boss spawn when 'Spawn on Specific wave no.' is enabled.")]
+
         [Min(1)] [SerializeField] private int bossSpecificWave = 1;
         [Tooltip("If 'Spawn on Specific wave no.' is disabled, spawn a boss every X waves (e.g., 5 means waves 5,10,15...).")]
         [Min(1)] [SerializeField] private int bossEveryXWaves = 5;
@@ -67,31 +67,31 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int bossKillMax = 100;
 
         [Header("Victory Rewards (Soft Currency)")]
-        [Tooltip("Range of money awarded to the player on victory in this arena.")]
+
         [Min(0)] [SerializeField] private int victoryMoneyMin = 100;
         [Min(0)] [SerializeField] private int victoryMoneyMax = 150;
 
         [Header("Victory Rewards (Castle XP)")]
-        [Tooltip("Range of castle XP awarded to the player on victory in this arena.")]
+
         [Min(0)] [SerializeField] private int victoryXPMin = 50;
         [Min(0)] [SerializeField] private int victoryXPMax = 75;
 
         [Header("Defeat Rewards (Castle XP)")]
-        [Tooltip("Range of castle XP awarded to the player on defeat in this arena.")]
+
         [Min(0)] [SerializeField] private int defeatXPMin = 25;
         [Min(0)] [SerializeField] private int defeatXPMax = 40;
 
         [Header("Victory Rewards (Trophies)")]
-        [Tooltip("Range of trophies awarded to the player on victory in this arena.")]
+
         [Min(0)] [SerializeField] private int victoryTrophiesMin = 5;
         [Min(0)] [SerializeField] private int victoryTrophiesMax = 10;
 
         [Header("Battle UI Prefabs (optional)")]
-        [Tooltip("If set, this prefab will be used for on-screen battle toasts in this arena. Prefab must contain a TextMeshProUGUI.")]
+
         [SerializeField] private GameObject battleToastPrefab;
 
         [Header("Defeat Penalties (Trophies)")]
-        [Tooltip("Range of trophies lost by the player on defeat in this arena.")]
+
         [Min(0)] [SerializeField] private int defeatTrophiesMin = 0;
         [Min(0)] [SerializeField] private int defeatTrophiesMax = 3;
 
@@ -156,7 +156,7 @@ namespace TR.Data
         public float BossHealthMultPerSpawn => Mathf.Max(0f, bossHealthMultPerSpawn);
         public float BossDamageMultPerSpawn => Mathf.Max(0f, bossDamageMultPerSpawn);
         public float BossSpeedMultPerSpawn => Mathf.Max(0f, bossSpeedMultPerSpawn);
-        // Back-compat convenience: all enemies combined
+        
         public EnemyDefinition[] Enemies
         {
             get
@@ -171,7 +171,7 @@ namespace TR.Data
             }
         }
 
-        // Get the enemy count range for a given 1-based wave index. Falls back to legacy formula if not defined.
+        
         public void GetEnemyCountRangeForWave(int waveNumber, out int min, out int max)
         {
             int total = Mathf.Max(1, WaveCount);
@@ -182,7 +182,7 @@ namespace TR.Data
                 max = Mathf.Max(min, waveEnemyCounts[idx].max);
                 if (max == 0 && min == 0)
                 {
-                    // If both are zero, treat as undefined and fallback
+                    
                     DefaultCountFallback(waveNumber, out min, out max);
                 }
                 return;
@@ -192,7 +192,7 @@ namespace TR.Data
 
         private void DefaultCountFallback(int waveNumber, out int min, out int max)
         {
-            // Legacy: 2 + wave, clamped 1..20
+            
             int legacy = Mathf.Clamp(2 + Mathf.Max(1, waveNumber), 1, 20);
             min = legacy;
             max = legacy;
@@ -209,7 +209,7 @@ namespace TR.Data
             return EnemyTier.Unknown;
         }
 
-        // Determines whether the given 1-based wave should spawn a boss, and returns an optional warning if misconfigured.
+        
         public bool ShouldSpawnBoss(int waveNumber, out string warning)
         {
             warning = null;
@@ -221,7 +221,7 @@ namespace TR.Data
                 int target = Mathf.Clamp(bossSpecificWave, 1, total);
                 return w == target;
             }
-            // Periodic spawning
+            
             int x = bossEveryXWaves;
             if (x <= 0)
             {
@@ -236,7 +236,7 @@ namespace TR.Data
             return (w % x) == 0;
         }
 
-        // Computes per-spawn scaling multipliers for periodic mode. Returns 1s in specific-wave mode.
+        
         public void GetBossScalingForWave(int waveNumber, out float healthMult, out float damageMult, out float speedMult)
         {
             healthMult = 1f; damageMult = 1f; speedMult = 1f;
@@ -245,18 +245,18 @@ namespace TR.Data
             int w = Mathf.Clamp(waveNumber, 1, total);
             if (spawnBossOnSpecificWave)
             {
-                // No progressive scaling for single spawn mode
+                
                 return;
             }
             int x = Mathf.Max(1, bossEveryXWaves);
             if (x <= 0) return;
-            // 1st occurrence is when w == x -> index = 1
+            
             int occurrence = Mathf.Max(1, w / x);
             int power = Mathf.Max(0, occurrence - 1);
             float h = Mathf.Max(0f, bossHealthMultPerSpawn);
             float d = Mathf.Max(0f, bossDamageMultPerSpawn);
             float s = Mathf.Max(0f, bossSpeedMultPerSpawn);
-            // If multipliers are 0, treat as 1 (no scaling)
+            
             if (h <= 1e-4f) h = 1f;
             if (d <= 1e-4f) d = 1f;
             if (s <= 1e-4f) s = 1f;
@@ -266,7 +266,7 @@ namespace TR.Data
         }
 
 #if UNITY_EDITOR
-        // Keep the waveEnemyCounts list sized to WaveCount for convenient editing
+        
         private void OnValidate()
         {
             int total = Mathf.Max(1, waveCount);
@@ -304,7 +304,7 @@ namespace TR.Data
             }
             else
             {
-                // Clamp each element to valid min/max
+                
                 for (int i = 0; i < waveEnemyCounts.Length; i++)
                 {
                     int mn = Mathf.Max(0, waveEnemyCounts[i].min);

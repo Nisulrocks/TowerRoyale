@@ -8,22 +8,22 @@ namespace TR.Systems
 {
     public static class ShopService
     {
-        // Dev countdown override: when set, countdown shows a fresh 24h window from the manual refresh time
+        
         private static DateTimeOffset? _devRefreshedAtUtc = null;
         [Serializable]
         public class CardPointsOffer
         {
             public string cardId;
-            public string rarityId; // for reference
+            public string rarityId; 
             public int points;
             public int cost;
             public bool sold;
         }
 
-        // Returns offers for the current refresh window; generates if stale.
-        // Special handling: if the player has no eligible cards yet (e.g., just started),
-        // do NOT generate placeholders nor set the day key. As soon as the player owns
-        // at least one eligible card, generate immediately (even if within the same day).
+        
+        
+        
+        
         public static List<CardPointsOffer> GetOrGenerateDailyCardPointOffers()
         {
             GameDB.EnsureLoaded();
@@ -33,11 +33,11 @@ namespace TR.Systems
                 return PlayerProfile.Data.cardPointOffers ?? new List<CardPointsOffer>();
             }
 
-            // Determine if there is at least one eligible card to offer (owned and not max level)
+            
             bool hasEligible = HasAnyEligibleCard();
             if (!hasEligible)
             {
-                // Defer generation: return whatever exists (likely empty) and do NOT set day key.
+                
                 if (PlayerProfile.Data.cardPointOffers == null) PlayerProfile.Data.cardPointOffers = new List<CardPointsOffer>();
                 return PlayerProfile.Data.cardPointOffers;
             }
@@ -45,7 +45,7 @@ namespace TR.Systems
             int dayKey = GetCurrentDayKey(cfg.offersRefreshHourUTC);
             if (PlayerProfile.Data.cardPointOffers == null) PlayerProfile.Data.cardPointOffers = new List<CardPointsOffer>();
 
-            // If day key changed, (re)generate for the new window
+            
             if (PlayerProfile.Data.cardPointOffersDayKey != dayKey)
             {
                 GenerateDailyCardPointOffers(cfg);
@@ -54,13 +54,13 @@ namespace TR.Systems
                 return PlayerProfile.Data.cardPointOffers;
             }
 
-            // Same day: if current offers are empty or placeholders (null ids), regenerate immediately
+            
             var offers = PlayerProfile.Data.cardPointOffers;
             bool stale = offers == null || offers.Count == 0 || offers.TrueForAll(o => o == null || string.IsNullOrEmpty(o.cardId));
             if (stale)
             {
                 GenerateDailyCardPointOffers(cfg);
-                PlayerProfile.Data.cardPointOffersDayKey = dayKey; // ensure aligned
+                PlayerProfile.Data.cardPointOffersDayKey = dayKey; 
                 PlayerProfile.Save();
             }
             return PlayerProfile.Data.cardPointOffers;
@@ -68,7 +68,7 @@ namespace TR.Systems
 
         public static TimeSpan GetTimeUntilNextRefresh()
         {
-            // If dev override is active, show 24h countdown from manual refresh
+            
             if (_devRefreshedAtUtc.HasValue)
             {
                 var nowDev = DateTimeOffset.UtcNow;
@@ -76,7 +76,7 @@ namespace TR.Systems
                 var remainDev = TimeSpan.FromHours(24) - elapsed;
                 if (remainDev <= TimeSpan.Zero)
                 {
-                    _devRefreshedAtUtc = null; // expired override; fall back to scheduled window
+                    _devRefreshedAtUtc = null; 
                 }
                 else
                 {
@@ -91,21 +91,21 @@ namespace TR.Systems
             return next - now;
         }
 
-        // DEV: force-generate new offers immediately (useful for testing). Resets the day key.
+        
         public static void ForceRefreshOffers()
         {
-            // Read current config directly
+            
             var cfgs = Resources.LoadAll<GameplayConfig>("Config");
             var cfg = (cfgs != null && cfgs.Length > 0) ? cfgs[0] : GameDB.GetGameplayConfig();
             if (cfg == null || cfg.cardPointsOfferSlots == null || cfg.cardPointsOfferSlots.Length == 0) return;
-            // Clear previous offers to force a full rebuild
+            
             if (PlayerProfile.Data.cardPointOffers != null)
                 PlayerProfile.Data.cardPointOffers.Clear();
-            // Regenerate offers from current ScriptableObject settings, using a non-daily seed so cards/points change immediately
+            
             GenerateDailyCardPointOffers(cfg, forceRandomSeed: true);
-            // Reset the day key to current day so countdown reflects the next scheduled refresh
+            
             PlayerProfile.Data.cardPointOffersDayKey = GetCurrentDayKey(cfg.offersRefreshHourUTC);
-            // Start dev countdown from now (24h)
+            
             _devRefreshedAtUtc = DateTimeOffset.UtcNow;
             PlayerProfile.Save();
         }
@@ -120,7 +120,7 @@ namespace TR.Systems
             var card = GameDB.GetCardById(offer.cardId);
             if (card == null) return false;
 
-            // Must be unlocked and not max level
+            
             var cp = PlayerProfile.GetOrCreateCard(card.CardId);
             if (cp.ownedCount <= 0) return false;
             if (cp.level >= (card.Rarity != null ? card.Rarity.MaxLevel : int.MaxValue)) return false;
@@ -137,41 +137,41 @@ namespace TR.Systems
         {
             var slots = cfg.cardPointsOfferSlots;
             var list = new List<CardPointsOffer>(slots.Length);
-            // Use a deterministic daily seed for scheduled refreshes, but a volatile seed for forced refreshes
+            
             var rng = forceRandomSeed
                 ? new System.Random(unchecked(Environment.TickCount * 397) ^ Guid.NewGuid().GetHashCode())
                 : new System.Random(CreateDailySeed());
 
-            // Build rarity lookup
+            
             var rarityById = GameDB.Rarities.ToDictionary(r => r.RarityId, r => r);
-            // Fallback order: sort rarities ascending by MaxLevel to simulate degrade
+            
             var fallbackOrder = GameDB.Rarities.OrderBy(r => r.MaxLevel).ToList();
 
-            // Precompute unlocked-not-max cards per rarity
+            
             var unlockedByRarity = new Dictionary<RarityDefinition, List<CardDefinition>>();
             foreach (var r in GameDB.Rarities)
             {
                 var cards = GameDB.GetCardsByRarity(r).Where(c =>
                 {
                     var cp = PlayerProfile.GetOrCreateCard(c.CardId);
-                    if (cp.ownedCount <= 0) return false; // not unlocked
-                    if (cp.level >= r.MaxLevel) return false; // exclude max level
+                    if (cp.ownedCount <= 0) return false; 
+                    if (cp.level >= r.MaxLevel) return false; 
                     return true;
                 }).ToList();
                 unlockedByRarity[r] = cards;
             }
 
-            // Track used cards to avoid duplicates across slots
+            
             var usedCardIds = new HashSet<string>();
 
             foreach (var slot in slots)
             {
                 if (slot == null) continue;
-                // Resolve primary rarity
+                
                 RarityDefinition primary = null;
                 if (!string.IsNullOrEmpty(slot.rarityId)) rarityById.TryGetValue(slot.rarityId, out primary);
 
-                // Collect candidate lists in degrade order starting from primary if given
+                
                 IEnumerable<RarityDefinition> searchOrder = Enumerable.Empty<RarityDefinition>();
                 if (primary != null)
                 {
@@ -188,7 +188,7 @@ namespace TR.Systems
                     var candidates = unlockedByRarity.TryGetValue(r, out var listForR) ? listForR : null;
                     if (candidates != null && candidates.Count > 0)
                     {
-                        // filter out used
+                        
                         var pool = candidates.Where(c => !usedCardIds.Contains(c.CardId)).ToList();
                         if (pool.Count > 0)
                         {
@@ -219,7 +219,7 @@ namespace TR.Systems
                 }
                 else
                 {
-                    // No suitable cards left for this slot: create a sold placeholder offer
+                    
                     points = 0;
                     cost = 0;
                     rarityIdOut = primary != null ? primary.RarityId : null;
@@ -241,7 +241,7 @@ namespace TR.Systems
 
         private static bool HasAnyEligibleCard()
         {
-            // Eligible means: owned (ownedCount > 0) and not at max level
+            
             foreach (var r in GameDB.Rarities)
             {
                 var cards = GameDB.GetCardsByRarity(r);

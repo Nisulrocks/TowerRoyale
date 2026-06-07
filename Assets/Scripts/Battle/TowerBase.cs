@@ -6,10 +6,10 @@ using TR.Audio;
 
 namespace TR.Battle
 {
-    // Tower runtime logic: reads stats from CardDefinition to attack enemies.
+    
     public class TowerBase : MonoBehaviour
     {
-        // Global registry for selection
+        
         private static readonly System.Collections.Generic.HashSet<TowerBase> s_all = new();
         public static System.Collections.Generic.IReadOnlyCollection<TowerBase> All => s_all;
         [SerializeField] private CardDefinition definition;
@@ -19,15 +19,15 @@ namespace TR.Battle
         private float _fireCooldown;
         private EnemyBase2D _lastTarget;
         private RangeRing _rangeRing;
-        // Aggregated buff multipliers (defaults 1)
+        
         private float _dpsMul = 1f, _fireRateMul = 1f, _rangeMul = 1f, _splashMul = 1f;
         private float _burnDpsMul = 1f, _burnDurMul = 1f, _poisonDpsMul = 1f, _poisonDurMul = 1f, _slowPctMul = 1f, _slowDurMul = 1f;
         private float _stunChanceMul = 1f, _stunDurMul = 1f;
         private static readonly List<EnemyBase2D> _enemySnapshot = new List<EnemyBase2D>(64);
-        [SerializeField] private bool disableCombat = false; // when true, Update() will not attack (used by specialized towers)
-        // Target ignore timers for move-on-after-effect behavior
+        [SerializeField] private bool disableCombat = false; 
+        
         private readonly System.Collections.Generic.Dictionary<EnemyBase2D, float> _ignoreTimers = new System.Collections.Generic.Dictionary<EnemyBase2D, float>();
-        // Runtime buff multipliers (aggregated from BuffTower auras)
+        
         private class BuffEntry
         {
             public float dps = 1f, fireRate = 1f, range = 1f, splash = 1f;
@@ -51,32 +51,32 @@ namespace TR.Battle
         [Header("VFX")]
         [Tooltip("ParticleManager key for a looping idle effect (e.g., Inferno tower flame). Leave empty to disable.")]
         [SerializeField] private string idleVfxKey = "";
-        [Tooltip("Optional anchor for idle VFX. If null, uses tower transform.")]
+
         [SerializeField] private Transform idleVfxAnchor;
         private ParticleSystem _idleVfx;
-        [Tooltip("ParticleManager key for a muzzle flash when firing. Leave empty to disable.")]
+
         [SerializeField] private string muzzleFlashVfxKey = "";
         [Tooltip("Optional anchor for muzzle flash (fire point). If null, uses tower transform.")]
         [SerializeField] private Transform muzzleFlashAnchor;
-        [Tooltip("Optional ParticleManager key to spawn at projectile impact")]
+
         [SerializeField] private string projectileImpactVfxKey = "";
 
-        // ===== Visual Buff Glow (no particles) =====
+        
         [Header("Buff Glow (Optional)")]
-        [Tooltip("If enabled by a BuffTower, the tower's sprite will be tinted towards this color.")]
+
         [SerializeField] private Color buffGlowColor = new Color(0.2f, 1f, 0.6f, 1f);
-        [Range(0f, 1f)] [SerializeField] private float buffGlowIntensity = 0.35f; // how strong to lerp towards glow color
+        [Range(0f, 1f)] [SerializeField] private float buffGlowIntensity = 0.35f; 
         [Tooltip("Speed of the glow pulse animation (cycles per second)")]
         [SerializeField] private float buffGlowPulseSpeed = 2.5f;
-        [Range(0f, 1f)] [SerializeField] private float buffGlowPulseAmplitude = 0.25f; // extra intensity added/removed by pulse
+        [Range(0f, 1f)] [SerializeField] private float buffGlowPulseAmplitude = 0.25f; 
         private readonly HashSet<object> _glowSources = new HashSet<object>();
         private SpriteRenderer[] _cachedRenderers;
         private System.Collections.Generic.Dictionary<SpriteRenderer, Color> _origColors;
         private bool _glowActive;
-        // Enemy-applied stun: disables attacking while active
+        
         private float _stunTimeFromEnemy;
 
-        // Towers can override this to opt-out of visual buff glow entirely
+        
         protected virtual bool SupportsBuffGlow() => true;
 
         public CardDefinition Definition => definition;
@@ -90,7 +90,7 @@ namespace TR.Battle
             level = Mathf.Max(1, lv);
             _stats = definition.GetStatsForLevel(level);
             _placementCost = _stats.cost;
-            // If OnEnable ran before definition was set, we may have skipped spawning idle VFX; try now
+            
             TrySpawnIdleVfx();
         }
 
@@ -102,7 +102,7 @@ namespace TR.Battle
         public bool ApplyOnHitEffects(EnemyBase2D enemy)
         {
             if (definition == null || enemy == null) return false;
-            // Read effect values from CardDefinition optional curves
+            
             float burnDps = definition.GetBurnDps(level) * _burnDpsMul;
             float burnDur = definition.GetBurnDuration(level) * _burnDurMul;
             bool appliedAny = false;
@@ -120,7 +120,7 @@ namespace TR.Battle
                 appliedAny = true;
                 var k = definition.GetSfxPoisonApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
             }
-            // Universal slow-on-hit (optional)
+            
             if (definition.HasSlowOnHit())
             {
                 float sp = definition.GetSlowPercent(level) * _slowPctMul;
@@ -132,7 +132,7 @@ namespace TR.Battle
                     var k = definition.GetSfxSlowApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
                 }
             }
-            // Frostbite DoT: apply if card has both Slow and Frostbite toggles (no threshold)
+            
             if (definition.HasSlowOnHit() && definition.HasFrostbiteOnHit())
             {
                 float fbDps = Mathf.Max(0f, definition.GetFrostbiteDps(level));
@@ -143,7 +143,7 @@ namespace TR.Battle
                     appliedAny = true;
                 }
             }
-            // Stun-on-hit (optional, affected by buffs via BuffTower)
+            
             bool stunApplied = false;
             if (definition.HasStunOnHit())
             {
@@ -159,7 +159,7 @@ namespace TR.Battle
             return appliedAny || stunApplied;
         }
 
-        // Ricochet chain helper: chains damage to N enemies behind the main hit, with per-jump falloff
+        
         public void TryDoChainRicochet(EnemyBase2D first, Vector3 sourcePos, float baseDamage)
         {
             if (definition == null || first == null) return;
@@ -168,12 +168,12 @@ namespace TR.Battle
             float falloff = definition.GetChainFalloffPerJump(level);
             if (maxJumps <= 0 || falloff < 0f) return;
 
-            // Nearest chaining: no directional filter, just chain to the nearest valid enemy each jump
+            
 
             var visited = new System.Collections.Generic.HashSet<EnemyBase2D>();
             visited.Add(first);
             var current = first;
-            float damage = ApplyCrit(baseDamage); // roll once for the initial ricochet damage
+            float damage = ApplyCrit(baseDamage); 
             Color zapCol = definition.GetChainZapColor();
 
             for (int j = 0; j < maxJumps; j++)
@@ -195,7 +195,7 @@ namespace TR.Battle
                 }
                 if (best == null) break;
 
-                // Apply damage and (optionally) on-hit effects to chained target
+                
                 best.TakeDamage(damage);
                 if (definition.GetChainTransfersOnHitEffects())
                 {
@@ -243,15 +243,15 @@ namespace TR.Battle
         private void OnEnable()
         {
             s_all.Add(this);
-            // Note: UI is handled elsewhere; no health bar spawn here for towers.
-            // Ensure selection component exists on all towers at runtime
+            
+            
             if (GetComponent<TowerSelectable>() == null)
             {
                 gameObject.AddComponent<TowerSelectable>();
             }
-            // Spawn idle VFX if configured
+            
             TrySpawnIdleVfx();
-            // Cache sprite renderers for glow
+            
             if (_cachedRenderers == null)
             {
                 _cachedRenderers = GetComponentsInChildren<SpriteRenderer>(true);
@@ -261,9 +261,9 @@ namespace TR.Battle
         private void OnDisable()
         {
             s_all.Remove(this);
-            // Cleanup idle VFX back to pool
+            
             TryReleaseIdleVfx();
-            // Ensure glow is cleared
+            
             if (_glowSources.Count > 0)
             {
                 _glowSources.Clear();
@@ -274,12 +274,12 @@ namespace TR.Battle
 
         private void Update()
         {
-            // Always animate glow if active, regardless of combat state
+            
             if (_glowActive)
             {
                 UpdateGlowPulse();
             }
-            // Tick enemy-applied stun timer
+            
             if (_stunTimeFromEnemy > 0f)
             {
                 _stunTimeFromEnemy -= Time.deltaTime;
@@ -287,10 +287,10 @@ namespace TR.Battle
             }
             if (definition == null) return;
             if (disableCombat) return;
-            // If stunned by enemy pulse, block combat actions
+            
             if (_stunTimeFromEnemy > 0f) return;
 
-            // Tick ignore timers
+            
             if (_ignoreTimers.Count > 0)
             {
                 var keys = new System.Collections.Generic.List<EnemyBase2D>(_ignoreTimers.Keys);
@@ -308,7 +308,7 @@ namespace TR.Battle
                 }
             }
 
-            // Acquire target for rotation every frame so rotation is smooth even during cooldown
+            
             EnemyBase2D targetForAim = null;
             if (definition.ShouldRotateToTarget())
             {
@@ -318,7 +318,7 @@ namespace TR.Battle
                     Vector3 to = (Vector3)targetForAim.transform.position - transform.position;
                     if (to.sqrMagnitude > 1e-6f)
                     {
-                        // Front is the bottom of the sprite => use Vector3.down as the forward reference
+                        
                         Quaternion desired = Quaternion.FromToRotation(Vector3.down, to.normalized);
                         float speed = definition.GetRotateSpeedDegPerSec();
                         transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, speed * Time.deltaTime);
@@ -326,33 +326,33 @@ namespace TR.Battle
                 }
             }
 
-            // Cooldown ticking
+            
             if (_fireCooldown > 0f) _fireCooldown -= Time.deltaTime;
             if (_fireCooldown > 0f) return;
 
-            // If this tower has no DPS (e.g., economy/support towers), do not attempt to attack
+            
             if (_stats.dps <= 1e-4f)
             {
                 return;
             }
 
-            // Reuse the aimed target if available, otherwise acquire now
+            
             var target = targetForAim != null ? targetForAim : AcquireTarget();
             if (target == null) return;
 
-            // If rotation-to-target is enabled, only fire when within tolerance
+            
             if (definition.ShouldRotateToTarget())
             {
                 Vector3 toNow = (Vector3)target.transform.position - transform.position;
                 if (toNow.sqrMagnitude > 1e-6f)
                 {
-                    // Compare with the tower's CURRENT facing; front is its local down axis
-                    Vector3 currentForward = -transform.up; // equals transform.down
+                    
+                    Vector3 currentForward = -transform.up; 
                     float ang = Vector3.Angle(currentForward, toNow.normalized);
-                    const float aimToleranceDeg = 15f; // slightly looser tolerance
+                    const float aimToleranceDeg = 15f; 
                     if (ang > aimToleranceDeg)
                     {
-                        return; // wait until we're roughly facing the target
+                        return; 
                     }
                 }
             }
@@ -361,13 +361,13 @@ namespace TR.Battle
             float effectiveFireRate = Mathf.Max(0.01f, _stats.fireRate * _fireRateMul);
             _fireCooldown = Mathf.Max(0.01f, 1f / effectiveFireRate);
 
-            // (glow pulse already updated at frame start)
+            
         }
 
         public int GetCost() => definition != null ? definition.GetStatsForLevel(level).cost : 0;
         public int GetPlacementCost() => _placementCost;
 
-        // === Enemy interaction API ===
+        
         public void ApplyTowerStun(float duration)
         {
             duration = Mathf.Max(0f, duration);
@@ -375,10 +375,10 @@ namespace TR.Battle
             _stunTimeFromEnemy = Mathf.Max(_stunTimeFromEnemy, duration);
         }
 
-        // External read-only access
+        
         public bool IsStunnedByEnemy => _stunTimeFromEnemy > 0f;
 
-        // Refunds a percentage of the original placement cost and destroys the tower
+        
         public void DestroyForRefund(float refundPercent)
         {
             refundPercent = Mathf.Clamp01(refundPercent);
@@ -388,7 +388,7 @@ namespace TR.Battle
             {
                 econ.Earn(refund);
             }
-            // Play defeat/destroy VFX & SFX if configured on the card definition
+            
             if (definition != null)
             {
                 string vfxKey = definition.GetDefeatDestroyVfxKey();
@@ -431,7 +431,7 @@ namespace TR.Battle
 
         private EnemyBase2D AcquireTarget()
         {
-            // Prefer last target if still in range and alive
+            
             if (_lastTarget != null)
             {
                 float dist = Vector2.Distance((Vector2)transform.position, (Vector2)_lastTarget.transform.position);
@@ -441,13 +441,13 @@ namespace TR.Battle
             }
             EnemyBase2D best = null;
             float maxRange = _stats.range * _rangeMul;
-            // Take a stable snapshot to avoid collection-modified exceptions
+            
             _enemySnapshot.Clear();
             foreach (var e in EnemyBase2D.All) _enemySnapshot.Add(e);
 
             if (definition != null && definition.FocusOnHighestHp)
             {
-                // Select the enemy with the highest current HP within range.
+                
                 float bestHp = -1f;
                 float bestTieDist = float.MaxValue;
                 for (int i = 0; i < _enemySnapshot.Count; i++)
@@ -468,7 +468,7 @@ namespace TR.Battle
             }
             else
             {
-                // Default behavior: nearest within range
+                
                 float bestDist = maxRange;
                 for (int i = 0; i < _enemySnapshot.Count; i++)
                 {
@@ -490,16 +490,16 @@ namespace TR.Battle
         private void FireAt(EnemyBase2D target)
         {
             if (target == null) return;
-            // Compute damage per shot from DPS and fireRate
+            
             float effectiveDps = Mathf.Max(0f, _stats.dps * _dpsMul);
             float effectiveFireRate = Mathf.Max(0.01f, _stats.fireRate * _fireRateMul);
             float damagePerShot = effectiveDps / effectiveFireRate;
-            // Roll crit once per shot
+            
             _lastCrit = false;
             float shotDamage = ApplyCrit(damagePerShot);
             Vector3 hitPos = target.transform.position;
             bool useZap = definition.UseLightningZapOnHit();
-            // Projectile path (if prefab assigned on CardDefinition) and zap override is OFF
+            
             var projPrefab = definition != null ? definition.GetProjectilePrefab() : null;
             float projSpeed = definition != null ? definition.GetProjectileSpeed() : 0f;
             if (!useZap && projPrefab != null)
@@ -510,11 +510,11 @@ namespace TR.Battle
                 var go = Instantiate(projPrefab, spawnPos, Quaternion.identity);
                 var proj = go.GetComponent<ProjectileSimple>();
                 if (proj == null) proj = go.AddComponent<ProjectileSimple>();
-                // Allow per-tower override via serialized field; otherwise use definition's key
+                
                 string impactKey = !string.IsNullOrEmpty(projectileImpactVfxKey) ? projectileImpactVfxKey : definition.GetProjectileImpactVfxKey();
                 proj.Init(target, projSpeed, shotDamage, _stats.splashRadius * _splashMul,
                           this, definition, level, impactKey, _lastCrit);
-                // Move-on-after-effect will be handled on impact by the projectile
+                
             }
             else
             {
@@ -523,13 +523,13 @@ namespace TR.Battle
                 float effectiveSplash = _stats.splashRadius * _splashMul;
                 if (effectiveSplash > 0.01f)
                 {
-                    // Splash damage to all enemies within radius (use same crit roll for the whole shot)
+                    
                     float r = effectiveSplash;
                     _enemySnapshot.Clear();
                     foreach (var e in EnemyBase2D.All) _enemySnapshot.Add(e);
-                    // Apply on-hit effects to the primary target first so we can detect stun for move-on logic
+                    
                     bool stunPrimary = ApplyOnHitEffects(target);
-                    // If crit, show burst once at the primary target and play crit SFX
+                    
                     if (_lastCrit)
                     {
                         TR.UI.DamageNumbers.ShowCrit(target.transform, definition.GetCritBurstText());
@@ -547,10 +547,10 @@ namespace TR.Battle
                         }
                     }
                     var splashKey = definition.GetSfxSplashKey(); if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
-                    // Optional lightning zap override visual for splash: strike center then branch to all enemies hit
+                    
                     if (useZap)
                     {
-                        // Main strike from tower -> splash center (hitPos)
+                        
                         TR.Battle.LightningZap.Spawn(transform.position,
                                                      hitPos,
                                                      definition.GetZapDuration(),
@@ -559,7 +559,7 @@ namespace TR.Battle
                                                      definition.GetZapSegments(),
                                                      definition.GetZapColor());
                         var zapFireKey = definition.GetSfxZapFireKey(); if (!string.IsNullOrEmpty(zapFireKey)) TR.Audio.SFXManager.Instance?.Play(zapFireKey);
-                        // Branch spokes from center -> each affected enemy
+                        
                         float spokeDur = Mathf.Max(0.02f, definition.GetZapDuration() * 0.7f);
                         float spokeWidth = Mathf.Max(0.001f, definition.GetZapWidth() * 0.75f);
                         for (int i = 0; i < _enemySnapshot.Count; i++)
@@ -581,24 +581,24 @@ namespace TR.Battle
                         string zapHitVfxKey = definition.GetZapHitVfxKey(); if (!string.IsNullOrEmpty(zapHitVfxKey)) TR.VFX.ParticleManager.SpawnOneShot(zapHitVfxKey, hitPos);
                         var zapHitKey = definition.GetSfxZapHitKey(); if (!string.IsNullOrEmpty(zapHitKey)) TR.Audio.SFXManager.Instance?.Play(zapHitKey);
                     }
-                    // Debug ring
+                    
                     DebugDrawCircle(hitPos, r, Color.red, 0.15f);
-                    // Move-on-after-effect ONLY if the primary target was stunned
+                    
                     TryScheduleMoveOnAfterEffect(target, stunPrimary);
                 }
                 else
                 {
-                    // Single target
+                    
                     target.TakeDamage(shotDamage);
                     if (_lastCrit) TR.UI.DamageNumbers.ShowCrit(target.transform, definition.GetCritBurstText());
                     bool stunned = ApplyOnHitEffects(target);
                     var hitKey = definition.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
-                    // Chain ricochet (single-target only)
+                    
                     TryDoChainRicochet(target, transform.position, shotDamage);
-                    // Optional lightning zap override visual
+                    
                     if (useZap)
                     {
-                        // Visual only: draw zap from tower to target
+                        
                         var mat = definition.GetForceDefaultZapMaterial() ? null : definition.GetZapMaterial();
                         bool glowOn = definition.GetZapGlowEnabled();
                         float glow = definition.GetZapGlowBoost();
@@ -655,7 +655,7 @@ namespace TR.Battle
                                                maxTargets, allowEasy, allowMedium, allowHard, allowBoss,
                                                vfxKey, vfxMul,
                                                allowCenterStack, falloffPower);
-                            // SFX loop for tornado
+                            
                             var tornadoKey = definition.GetSfxTornadoKey();
                             if (tf != null && !string.IsNullOrEmpty(tornadoKey))
                             {
@@ -666,7 +666,7 @@ namespace TR.Battle
                     TryScheduleMoveOnAfterEffect(target, stunned);
                 }
 
-                // Optional debug tracer
+                
                 Debug.DrawLine(transform.position, hitPos, Color.yellow, 0.1f);
             }
         }
@@ -674,16 +674,16 @@ namespace TR.Battle
         public void TryScheduleMoveOnAfterEffect(EnemyBase2D hitTarget, bool stunApplied)
         {
             if (hitTarget == null) return;
-            // Only for regular towers; inferno uses its own logic and TowerBase.combat may be disabled
-            // Focus-on-highest-HP overrides move-on targeting; keep lock on the highest-HP rather than switching.
+            
+            
             if (definition != null && definition.FocusOnHighestHp) return;
             if (!definition.MoveOnAfterEffect) return;
-            // New rule: move on ONLY if a stun was actually applied this hit
+            
             if (!stunApplied) return;
             float ignoreFor = definition.GetMoveOnIgnoreSeconds();
             if (ignoreFor <= 0f) return;
             _ignoreTimers[hitTarget] = Mathf.Max(_ignoreTimers.TryGetValue(hitTarget, out var t) ? t : 0f, ignoreFor);
-            // Force drop last target so AcquireTarget finds a new one next frame
+            
             if (_lastTarget == hitTarget) _lastTarget = null;
         }
 
@@ -708,7 +708,7 @@ namespace TR.Battle
             Gizmos.DrawWireSphere(transform.position, stats.range * _rangeMul);
         }
 
-        // === Buff API (called by BuffTower) ===
+        
         public void AddOrUpdateBuff(UnityEngine.Object source, float dpsMultiplier, float fireRateMultiplier, float rangeMultiplier, float splashMultiplier)
         {
             if (source == null) return;
@@ -740,7 +740,7 @@ namespace TR.Battle
             entry.stunDur = Mathf.Max(0f, stunDurMultiplier);
             _buffs[source] = entry;
             RecomputeBuffs();
-            // Update range ring live
+            
             if (_rangeRing != null && _rangeRing.gameObject.activeSelf)
             {
                 _rangeRing.Radius = GetEffectiveRange();
@@ -796,7 +796,7 @@ namespace TR.Battle
             OnBuffsChanged?.Invoke();
         }
 
-        // Public read-only accessors for specialized towers
+        
         public float GetDpsMultiplier() => _dpsMul;
         public float GetFireRateMultiplier() => _fireRateMul;
         public float GetRangeMultiplier() => _rangeMul;
@@ -810,7 +810,7 @@ namespace TR.Battle
         public float GetStunChanceMultiplier() => _stunChanceMul;
         public float GetStunDurMultiplier() => _stunDurMul;
 
-        // Effective stat helpers (used by hover UI)
+        
         public float GetEffectiveDps() => Mathf.Max(0f, _stats.dps * _dpsMul);
         public float GetEffectiveFireRate() => Mathf.Max(0.01f, _stats.fireRate * _fireRateMul);
         public float GetEffectiveRange()
@@ -823,7 +823,7 @@ namespace TR.Battle
 
         private void TrySpawnIdleVfx()
         {
-            // Prefer per-tower override; otherwise use CardDefinition's idle VFX key
+            
             string key = !string.IsNullOrEmpty(idleVfxKey) ? idleVfxKey : (definition != null ? definition.GetIdleVfxKey() : string.Empty);
             if (string.IsNullOrEmpty(key)) return;
             if (_idleVfx != null) return;
@@ -849,7 +849,7 @@ namespace TR.Battle
             }
             else
             {
-                // Fallback: stop and disable
+                
                 _idleVfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 _idleVfx.gameObject.SetActive(false);
             }
@@ -863,7 +863,7 @@ namespace TR.Battle
             ParticleManager.SpawnOneShot(muzzleFlashVfxKey, pos);
         }
 
-        // ===== Public API for Buff Glow (called by BuffTower) =====
+        
         public void AddBuffGlowRef(object source)
         {
             if (!SupportsBuffGlow()) return;
@@ -892,7 +892,7 @@ namespace TR.Battle
             if (_cachedRenderers == null || _cachedRenderers.Length == 0) return;
             if (enable)
             {
-                // Preserve originals once; do NOT overwrite on subsequent enables, otherwise we lose true base colors
+                
                 if (_origColors == null || _origColors.Count == 0)
                 {
                     _origColors = new System.Collections.Generic.Dictionary<SpriteRenderer, Color>();
@@ -903,11 +903,11 @@ namespace TR.Battle
                         _origColors[sr] = sr.color;
                     }
                 }
-                // Initial application uses base intensity; pulse will animate subsequently
+                
                 for (int i = 0; i < _cachedRenderers.Length; i++)
                 {
                     var sr = _cachedRenderers[i]; if (sr == null) continue;
-                    // Get original for this renderer; if missing, fall back to current then cache it for future restores
+                    
                     Color baseCol;
                     if (!_origColors.TryGetValue(sr, out baseCol)) { baseCol = sr.color; _origColors[sr] = baseCol; }
                     Color target = Color.Lerp(baseCol, buffGlowColor, Mathf.Clamp01(buffGlowIntensity));
@@ -932,7 +932,7 @@ namespace TR.Battle
         {
             if (_origColors == null || _origColors.Count == 0) return;
             float t = Time.time * Mathf.Max(0f, buffGlowPulseSpeed) * Mathf.PI * 2f;
-            // Pulse around the base intensity
+            
             float pulse = (Mathf.Sin(t) * 0.5f + 0.5f) * Mathf.Clamp01(buffGlowPulseAmplitude);
             float lerpAmt = Mathf.Clamp01(buffGlowIntensity + pulse);
             foreach (var kv in _origColors)

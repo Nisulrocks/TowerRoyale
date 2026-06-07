@@ -5,24 +5,24 @@ using TR.Audio;
 
 namespace TR.Battle
 {
-    // Inferno-style tower: continuous hitscan DPS that ramps up per target while it stays in range,
-    // with weakening when splitting among multiple targets.
+    
+    
     public class InfernoTower : MonoBehaviour
     {
         private InfernoCardDefinition _def;
         private int _level;
         private TowerStats _stats;
-        private TowerBase _hostBase; // to read buff multipliers
+        private TowerBase _hostBase; 
 
-        private readonly Dictionary<EnemyBase2D, float> _ramp = new(); // per-target ramp factor
+        private readonly Dictionary<EnemyBase2D, float> _ramp = new(); 
         private readonly List<EnemyBase2D> _enemySnapshot = new(64);
         private readonly List<EnemyBase2D> _currentTargets = new(8);
         private readonly System.Collections.Generic.Dictionary<EnemyBase2D, BeamController> _beams = new();
         private int _beamSfxHandle = -1;
-        // Slow reapply throttle per target
-        [SerializeField] private float slowReapplyInterval = 0.5f; // seconds between slow applications per target
+        
+        [SerializeField] private float slowReapplyInterval = 0.5f; 
         private readonly Dictionary<EnemyBase2D, float> _slowCooldown = new();
-        // Burn/Poison/Stun reapply throttles per target
+        
         [SerializeField] private float burnReapplyInterval = 0.5f;
         [SerializeField] private float poisonReapplyInterval = 0.5f;
         [SerializeField] private float stunReapplyInterval = 0.6f;
@@ -41,7 +41,7 @@ namespace TR.Battle
         private void OnDisable()
         {
             _ramp.Clear();
-            // Cleanup any active beams
+            
             if (_beams.Count > 0)
             {
                 var vals = new System.Collections.Generic.List<BeamController>(_beams.Values);
@@ -60,12 +60,12 @@ namespace TR.Battle
         private void Update()
         {
             if (_def == null) return;
-            // If the hosting TowerBase is stunned by an enemy effect, pause all Inferno behavior and clear beams/SFX
+            
             if (_hostBase != null && _hostBase.IsStunnedByEnemy)
             {
-                // Clear current targets so visuals stop
+                
                 _currentTargets.Clear();
-                // Tear down any active beams
+                
                 if (_beams.Count > 0)
                 {
                     var vals = new System.Collections.Generic.List<BeamController>(_beams.Values);
@@ -75,7 +75,7 @@ namespace TR.Battle
                     }
                     _beams.Clear();
                 }
-                // Stop beam loop SFX if playing
+                
                 if (_beamSfxHandle > 0 && SFXManager.Instance != null)
                 {
                     SFXManager.Instance.StopLoop(_beamSfxHandle, 0.2f);
@@ -84,7 +84,7 @@ namespace TR.Battle
                 return;
             }
 
-            // Acquire up to maxTargets within range
+            
             int maxTargets = _def.GetMaxTargets(_level);
             float rangeMul = _hostBase != null ? _hostBase.GetRangeMultiplier() : 1f;
             float dpsMul = _hostBase != null ? _hostBase.GetDpsMultiplier() : 1f;
@@ -97,7 +97,7 @@ namespace TR.Battle
             _enemySnapshot.Clear();
             foreach (var e in EnemyBase2D.All) _enemySnapshot.Add(e);
 
-            // Filter in-range and alive
+            
             for (int i = _enemySnapshot.Count - 1; i >= 0; i--)
             {
                 var e = _enemySnapshot[i];
@@ -113,14 +113,14 @@ namespace TR.Battle
                 }
             }
 
-            // Sort targets
+            
             if (_def != null && _def.FocusOnHighestHp)
             {
-                // Highest HP first, tie-break by distance (closer first)
+                
                 _enemySnapshot.Sort((a, b) =>
                 {
                     if (a == null || b == null) return 0;
-                    int hpCmp = b.CurrentHealth.CompareTo(a.CurrentHealth); // desc by HP
+                    int hpCmp = b.CurrentHealth.CompareTo(a.CurrentHealth); 
                     if (hpCmp != 0) return hpCmp;
                     float da = Vector2.Distance((Vector2)transform.position, (Vector2)a.transform.position);
                     float db = Vector2.Distance((Vector2)transform.position, (Vector2)b.transform.position);
@@ -129,7 +129,7 @@ namespace TR.Battle
             }
             else
             {
-                // Default: closest first
+                
                 _enemySnapshot.Sort((a, b) =>
                 {
                     float da = Vector2.Distance((Vector2)transform.position, (Vector2)a.transform.position);
@@ -138,16 +138,16 @@ namespace TR.Battle
                 });
             }
 
-            // Select up to maxTargets
+            
             if (_enemySnapshot.Count > maxTargets)
             {
                 _enemySnapshot.RemoveRange(maxTargets, _enemySnapshot.Count - maxTargets);
             }
 
-            // Maintain ramps: increase for selected, optionally decay for others
+            
             var selectedSet = new HashSet<EnemyBase2D>(_enemySnapshot);
             float dt = Time.deltaTime;
-            // Decay for non-selected
+            
             if (rampDownPerSec > 0f && _ramp.Count > 0)
             {
                 var keys = new List<EnemyBase2D>(_ramp.Keys);
@@ -162,7 +162,7 @@ namespace TR.Battle
                 }
             }
 
-            // Increase for selected
+            
             for (int i = 0; i < _enemySnapshot.Count; i++)
             {
                 var e = _enemySnapshot[i];
@@ -176,11 +176,11 @@ namespace TR.Battle
             float splitDivisor = 1f + penalty * (kTargets - 1);
             float baseDps = Mathf.Max(0f, _stats.dps * Mathf.Max(0.01f, dpsMul));
 
-            // Cache current targets for gizmo drawing
+            
             _currentTargets.Clear();
             _currentTargets.AddRange(_enemySnapshot);
 
-            // Tick slow cooldowns and purge invalid entries
+            
             if (_slowCooldown.Count > 0)
             {
                 var keys = new List<EnemyBase2D>(_slowCooldown.Keys);
@@ -196,7 +196,7 @@ namespace TR.Battle
                     _slowCooldown[k] = Mathf.Max(0f, _slowCooldown[k] - delta);
                 }
             }
-            // Tick burn/poison/stun cooldowns
+            
             if (_burnCooldown.Count > 0)
             {
                 var keys = new List<EnemyBase2D>(_burnCooldown.Keys);
@@ -243,7 +243,7 @@ namespace TR.Battle
                 }
             }
 
-            // Deal damage per frame to selected targets
+            
             for (int i = 0; i < _enemySnapshot.Count; i++)
             {
                 var e = _enemySnapshot[i];
@@ -251,14 +251,14 @@ namespace TR.Battle
                 float perTargetDps = (baseDps * f) / splitDivisor;
                 float dmg = perTargetDps * dt;
                 e.TakeDamage(dmg);
-                // Apply on-hit effects if enabled on the card definition
+                
                 if (_def != null && _def.HasSlowOnHit())
                 {
                     float sp = _def.GetSlowPercent(_level);
                     float sd = _def.GetSlowDuration(_level);
                     if (sp > 0f && sd > 0f)
                     {
-                        // Throttle slow application per target to avoid reapplying every frame
+                        
                         float cd = 0f;
                         _slowCooldown.TryGetValue(e, out cd);
                         if (cd <= 0f)
@@ -269,7 +269,7 @@ namespace TR.Battle
                     }
                 }
 
-                // Burn
+                
                 if (_def != null)
                 {
                     float burnDps = _def.GetBurnDps(_level) * (_hostBase != null ? _hostBase.GetBurnDpsMultiplier() : 1f);
@@ -284,7 +284,7 @@ namespace TR.Battle
                         }
                     }
                 }
-                // Poison
+                
                 if (_def != null)
                 {
                     float poisonDps = _def.GetPoisonDps(_level) * (_hostBase != null ? _hostBase.GetPoisonDpsMultiplier() : 1f);
@@ -299,7 +299,7 @@ namespace TR.Battle
                         }
                     }
                 }
-                // Stun
+                
                 if (_def != null && _def.HasStunOnHit())
                 {
                     float chance = Mathf.Clamp01(_def.GetStunChance(_level));
@@ -319,10 +319,10 @@ namespace TR.Battle
                 }
             }
 
-            // === Beam visuals ===
+            
             UpdateBeams();
 
-            // === Beam SFX loop ===
+            
             bool haveTargets = _currentTargets.Count > 0;
             string beamKey = _def != null ? _def.GetSfxBeamKey() : string.Empty;
             if (haveTargets && !string.IsNullOrEmpty(beamKey))
@@ -344,8 +344,8 @@ namespace TR.Battle
 
         private void UpdateBeams()
         {
-            // Ensure beams exist for current targets; remove for others
-            // Config from definition
+            
+            
             Color cStart = _def.GetBeamStartColor();
             Color cEnd = _def.GetBeamEndColor();
             float wBase = _def.GetBeamBaseWidth();
@@ -354,7 +354,7 @@ namespace TR.Battle
             float jitterAmp = _def.GetBeamJitterAmplitude();
             float rampMax = _def.GetRampMaxMultiplier(_level);
 
-            // Remove beams for targets no longer selected
+            
             if (_beams.Count > 0)
             {
                 var keys = new System.Collections.Generic.List<EnemyBase2D>(_beams.Keys);
@@ -371,7 +371,7 @@ namespace TR.Battle
                 }
             }
 
-            // Add/update beams for current targets
+            
             for (int i = 0; i < _currentTargets.Count; i++)
             {
                 var e = _currentTargets[i];
@@ -381,7 +381,7 @@ namespace TR.Battle
                     var go = new GameObject("InfernoBeam");
                     bc = go.AddComponent<BeamController>();
                     var lr = go.GetComponent<LineRenderer>();
-                    // Prefer material from definition; fallback to simple default
+                    
                     var matFromDef = _def.GetBeamMaterial();
                     if (matFromDef != null)
                     {
@@ -396,7 +396,7 @@ namespace TR.Battle
                     bc.Configure(cStart, cEnd, wBase, wMax, jitter, jitterAmp);
                     _beams[e] = bc;
                 }
-                // Position and intensity
+                
                 bc.SetEndpoints(transform.position, e.transform.position);
                 float ramp = 1f; _ramp.TryGetValue(e, out ramp);
                 float t01 = Mathf.InverseLerp(1f, Mathf.Max(1.01f, rampMax), ramp);
@@ -407,15 +407,15 @@ namespace TR.Battle
         private void OnDrawGizmos()
         {
             if (_currentTargets == null || _currentTargets.Count == 0) return;
-            // Draw a line to each current target; color intensity based on ramp factor
+            
             for (int i = 0; i < _currentTargets.Count; i++)
             {
                 var e = _currentTargets[i];
                 if (e == null) continue;
                 float f = 1f;
                 if (_ramp != null && _ramp.TryGetValue(e, out var rf)) f = rf;
-                // Map ramp factor to color between yellow (low) and red (high)
-                float t = Mathf.InverseLerp(1f, 3f, f); // assumes typical 1..3x; safe if out of range
+                
+                float t = Mathf.InverseLerp(1f, 3f, f); 
                 Color c = Color.Lerp(new Color(1f, 0.9f, 0.2f, 1f), Color.red, t);
                 Gizmos.color = c;
                 Gizmos.DrawLine(transform.position, e.transform.position);

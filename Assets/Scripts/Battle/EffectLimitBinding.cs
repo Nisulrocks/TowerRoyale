@@ -5,7 +5,7 @@ using TR.Data;
 
 namespace TR.Battle
 {
-    // Attach to a tower instance to unregister its effect types when destroyed
+    
     public class EffectLimitBinding : MonoBehaviour
     {
         private HashSet<EffectType> _types;

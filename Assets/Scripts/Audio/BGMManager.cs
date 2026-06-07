@@ -5,27 +5,27 @@ using UnityEngine.SceneManagement;
 
 namespace TR.Audio
 {
-    // Background Music Manager (BGM)
-    // - Place one instance in the first persistent scene (Lobby)
-    // - Configure tracks per scene in the inspector
-    // - Persists across scene loads and switches music based on scene name
+    
+    
+    
+    
     public class BGMManager : MonoBehaviour
     {
         [System.Serializable]
         public class SceneTrack
         {
-            [Tooltip("Exact scene name as it appears in Build Settings")] public string sceneName;
+public string sceneName;
             public AudioClip clip;
             [Range(0f, 1f)] public float volume = 1f;
             public bool loop = true;
         }
 
         [Header("Tracks by Scene")]
-        [Tooltip("Add entries mapping scene names to music tracks.")]
+
         public List<SceneTrack> tracks = new List<SceneTrack>();
 
         [Header("Defaults")]
-        [Tooltip("Optional default track if the current scene has no specific entry.")]
+
         public AudioClip defaultClip;
         [Range(0f, 1f)] public float defaultVolume = 0.8f;
         public bool defaultLoop = true;
@@ -37,13 +37,13 @@ namespace TR.Audio
         private static BGMManager _instance;
         private AudioSource _a;
         private AudioSource _b;
-        private AudioSource _active; // currently audible source
-        private AudioSource _idle;   // used for next track during crossfade
+        private AudioSource _active; 
+        private AudioSource _idle;   
         private Coroutine _fadeCo;
         private string _currentScene;
         private SceneTrack _currentTrack;
 
-        // Mirror SettingsPanelController keys (string-literals to avoid cross-assembly dependency)
+        
         private const string PREF_MUSIC_VOL = "tr_music_volume";
         private const string PREF_MUSIC_MUTE = "tr_music_mute";
 
@@ -98,8 +98,8 @@ namespace TR.Audio
 
         private void Start()
         {
-            // Start current scene's music when the manager initializes
-            // Apply saved master volume/mute BEFORE any playback so it takes effect immediately
+            
+            
             try
             {
                 float vol = PlayerPrefs.GetFloat(PREF_MUSIC_VOL, 1f);
@@ -120,14 +120,14 @@ namespace TR.Audio
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            // Ensure after load we are on the right track (useful for additive/persistent workflows)
+            
             if (scene.name == _currentScene)
             {
                 PlayForScene(_currentScene, sceneSwitchFade);
             }
         }
 
-        // Public API
+        
         public void PlayForScene(string sceneName, float fadeSeconds = 0f)
         {
             var track = FindTrackForScene(sceneName);
@@ -157,13 +157,13 @@ namespace TR.Audio
             }
             if (_active.clip == clip)
             {
-                // Same track; just ensure settings applied
+                
                 _active.loop = loop;
                 _active.volume = volume * masterVolume;
                 if (!_active.isPlaying) _active.Play();
                 return;
             }
-            // Crossfade to new clip using the idle source
+            
             if (_fadeCo != null) StopCoroutine(_fadeCo);
             _fadeCo = StartCoroutine(CrossfadeTo(clip, loop, volume * masterVolume, Mathf.Max(0f, fadeSeconds)));
         }
@@ -188,7 +188,7 @@ namespace TR.Audio
             masterVolume = Mathf.Clamp01(volume);
             float target = masterVolume * GetCurrentTrackVolume();
             if (_active != null) _active.volume = target;
-            // If crossfading, idle volume will be managed by the coroutine; we skip forcing it here
+            
         }
 
         public float GetCurrentTrackVolume()
@@ -231,7 +231,7 @@ namespace TR.Audio
         private IEnumerator CrossfadeTo(AudioClip nextClip, bool loop, float targetVolume, float duration)
         {
             targetVolume = Mathf.Clamp01(targetVolume);
-            // Prepare idle source with next clip
+            
             _idle.clip = nextClip;
             _idle.loop = loop;
             _idle.volume = 0f;
@@ -241,10 +241,10 @@ namespace TR.Audio
             float t = 0f;
             if (duration <= 0f)
             {
-                // Instant switch
+                
                 _active.Stop();
                 _active.clip = null;
-                // Swap roles
+                
                 var tmp = _active; _active = _idle; _idle = tmp;
                 _active.volume = targetVolume;
                 _fadeCo = null;
@@ -258,11 +258,11 @@ namespace TR.Audio
                 _idle.volume = Mathf.Lerp(0f, targetVolume, k);
                 yield return null;
             }
-            // Finish: stop old active, swap
+            
             _active.Stop();
             _active.clip = null;
             var swap = _active; _active = _idle; _idle = swap;
-            // Ensure idle (old active) is silent
+            
             _idle.volume = 0f;
             _fadeCo = null;
         }

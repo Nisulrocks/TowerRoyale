@@ -4,12 +4,12 @@ using TR.Systems;
 
 namespace TR.Battle
 {
-    // Minimal hitscan tower that pulls stats from CardDefinition at player's current level.
+    
     public class Tower : MonoBehaviour
     {
         [Header("Card Data")]
         [SerializeField] private CardDefinition card;
-        [Tooltip("Optional: override player level for testing. 0 = use player profile.")]
+
         [SerializeField] private int overrideLevel = 0;
 
         [Header("Runtime (read-only)")]
@@ -35,7 +35,7 @@ namespace TR.Battle
             var target = AcquireTarget();
             if (target == null) return;
 
-            // Fire
+            
             DealDamage(target, damagePerShot);
             _cooldown = 1f / Mathf.Max(0.01f, fireRate);
         }
@@ -77,7 +77,7 @@ namespace TR.Battle
         {
             if (e == null) return;
             e.TakeDamage(dmg);
-            // Optional: add muzzle flash/VFX here later
+            
         }
 
         public CardDefinition Card => card;

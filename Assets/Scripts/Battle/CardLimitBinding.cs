@@ -3,7 +3,7 @@ using TR.Systems;
 
 namespace TR.Battle
 {
-    // Attach to a tower instance to unregister per-card count when destroyed
+    
     public class CardLimitBinding : MonoBehaviour
     {
         private string _cardId;

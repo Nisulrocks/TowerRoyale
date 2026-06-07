@@ -8,12 +8,12 @@ namespace TR.Audio
         [System.Serializable]
         public class Entry
         {
-            [Tooltip("Unique key to reference this sound, e.g. 'tower_shoot'")] public string key;
-            [Tooltip("One or more clips; a random one will be chosen each play")] public AudioClip[] clips;
+public string key;
+public AudioClip[] clips;
             [Range(0f, 1f)] public float volume = 1f;
-            [Tooltip("Random pitch range. 1 = no change")] public float pitchMin = 1f;
+public float pitchMin = 1f;
             public float pitchMax = 1f;
-            [Tooltip("Optional: Minimum seconds between plays for this key")] public float cooldown = 0f;
+public float cooldown = 0f;
             [Tooltip("Optional: Limit how many of this key can overlap at once (0 = no limit)")] public int maxConcurrent = 0;
         }
 

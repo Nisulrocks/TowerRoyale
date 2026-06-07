@@ -7,39 +7,39 @@ namespace TR.Data
     public class RarityWeight
     {
         public RarityDefinition rarity;
-        public int weight = 1; // higher = more likely
-        [Range(0f,100f)] public float percent = 0f; // optional percentage if using percentage mode
+        public int weight = 1; 
+        [Range(0f,100f)] public float percent = 0f; 
     }
 
     [CreateAssetMenu(fileName = "PackDefinition", menuName = "TR/Data/Pack Definition")]
     public class PackDefinition : ScriptableObject
     {
         [Header("Identity")]
-        [SerializeField] private string packId; // unique key
+        [SerializeField] private string packId; 
         [SerializeField] private string displayName;
 
         [Header("Economy")]
-        [Min(0)] [SerializeField] private int cost = 100; // soft currency cost per pack
+        [Min(0)] [SerializeField] private int cost = 100; 
 
         [Header("Contents")]
         [Min(1)] [SerializeField] private int cardsPerPack = 5;
         [SerializeField] private RarityWeight[] rarityWeights;
-        [Tooltip("Optional: if assigned, this pack guarantees at least one card of this rarity.")]
+
         [SerializeField] private RarityDefinition guaranteedRarity;
         [Header("Weights vs Percentages")]
-        [Tooltip("If ON, 'percent' fields are used and normalized to 100%. If OFF, integer 'weight' fields are used.")]
+
         [SerializeField] private bool usePercentages = false;
 
         [Header("Specific Card (optional)")]
-        [Tooltip("If true, this pack ignores rarity weights and always grants the specific card below for all slots.")]
+
         [SerializeField] private bool giveSpecificCardOnly = false;
-        [Tooltip("Specific card to grant when 'Give Specific Card Only' is enabled.")]
+
         [SerializeField] private CardDefinition specificCard;
 
         [Header("Pack Opening Art (optional)")]
-        [Tooltip("Prefab to represent this pack in the Pack Opening scene. If set, it will be instantiated under the pack anchor.")]
+
         [SerializeField] private GameObject packArtPrefab;
-        [Tooltip("Sprite to represent this pack if no prefab is provided.")]
+
         [SerializeField] private Sprite packArtSprite;
 
         [Header("Pack Opening SFX (optional)")]
@@ -49,7 +49,7 @@ namespace TR.Data
         [SerializeField] private string openWhooshKey;
 
         [Header("Unlocking")]
-        [Tooltip("Minimum arena required to unlock this pack in the shop. Leave empty for no restriction.")]
+
         [SerializeField] private ArenaDefinition unlockArena;
 
         [Header("Shop")]
@@ -73,7 +73,7 @@ namespace TR.Data
         public int RequiredTrophies => unlockArena != null ? Mathf.Max(0, unlockArena.TrophyRequirement) : 0;
         public int ShopOrder => shopOrder;
 
-        // Unlock checks
+        
         public bool IsUnlockedForTrophies(int trophies)
         {
             if (unlockArena == null) return true;

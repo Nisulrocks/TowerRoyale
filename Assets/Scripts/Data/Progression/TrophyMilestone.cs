@@ -6,7 +6,7 @@ namespace TR.Data.Progression
     public class TrophyMilestone
     {
         [Min(0)] public int trophyRequired = 0;
-        [SerializeField] public RewardDefinition reward; // assign a concrete reward (e.g., SoftCurrencyReward, RandomPackReward)
+        [SerializeField] public RewardDefinition reward; 
         public bool oneTimeOnly = true;
     }
 }

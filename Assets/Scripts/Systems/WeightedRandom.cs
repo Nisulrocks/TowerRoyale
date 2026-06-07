@@ -4,7 +4,7 @@ namespace TR.Systems
 {
     public static class WeightedRandom
     {
-        // Returns index into weights array, proportional to weight values
+        
         public static int PickIndex(int[] weights, System.Random rng = null)
         {
             if (weights == null || weights.Length == 0) return -1;

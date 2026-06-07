@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace TR.Battle
 {
-    // Simple homing projectile that travels toward a target enemy and applies damage (with optional splash) on hit.
+    
     public class Projectile : MonoBehaviour
     {
         [Header("Click/Physics Settings")]
@@ -16,7 +16,7 @@ namespace TR.Battle
         [SerializeField] private float burnDuration = 0f;
         [SerializeField] private float poisonDps = 0f;
         [SerializeField] private float poisonDuration = 0f;
-        [SerializeField] private float slowPercent = 0f;   // 0..1 fraction
+        [SerializeField] private float slowPercent = 0f;   
         [SerializeField] private float slowDuration = 0f;
 
         private EnemyBase2D _target;
@@ -24,9 +24,9 @@ namespace TR.Battle
 
         private void Awake()
         {
-            // Ensure this projectile and its children cannot intercept mouse clicks
+            
             TrySetLayerRecursive(gameObject, nonBlockingLayer);
-            // Disable any colliders if present (we don't rely on physics collisions for hits)
+            
             foreach (var c in GetComponentsInChildren<Collider2D>(true))
             {
                 if (c == null) continue;
@@ -76,7 +76,7 @@ namespace TR.Battle
 
         private void Update()
         {
-            // Determine current target position
+            
             Vector3 targetPos;
             if (_target != null && _target.gameObject.activeInHierarchy && _target.CurrentHealth > 0f)
             {
@@ -88,14 +88,14 @@ namespace TR.Battle
                 targetPos = _lastKnownTargetPos;
             }
 
-            // Move toward target position
+            
             Vector3 pos = transform.position;
             Vector3 to = targetPos - pos;
             float dist = to.magnitude;
             float step = speed * Time.deltaTime;
             if (dist <= step || dist < 0.01f)
             {
-                // Hit!
+                
                 ApplyHitAt(targetPos);
                 Destroy(gameObject);
                 return;
@@ -103,7 +103,7 @@ namespace TR.Battle
 
             Vector3 dir = to / (dist > 1e-5f ? dist : 1f);
             transform.position = pos + dir * step;
-            // Align forward (optional for visuals)
+            
             if (dir.sqrMagnitude > 1e-6f)
             {
                 transform.rotation = Quaternion.FromToRotation(Vector3.right, dir);
@@ -114,8 +114,8 @@ namespace TR.Battle
         {
             if (splashRadius > 0.01f)
             {
-                // Splash to all enemies in radius
-                // Take a snapshot to avoid modifying the collection while iterating (enemies can die/remove)
+                
+                
                 var list = EnemyBase2D.All != null ? EnemyBase2D.All.ToArray() : System.Array.Empty<EnemyBase2D>();
                 foreach (var e in list)
                 {
@@ -132,11 +132,11 @@ namespace TR.Battle
             }
             else
             {
-                // Single target (prefer current target)
+                
                 var e = _target;
                 if (e == null)
                 {
-                    // Find closest enemy to hitPos if target died mid-flight
+                    
                     EnemyBase2D closest = null;
                     float best = float.MaxValue;
                     foreach (var cand in EnemyBase2D.All)

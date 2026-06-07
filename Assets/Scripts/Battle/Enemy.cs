@@ -17,7 +17,7 @@ namespace TR.Battle
         public System.Action<Enemy> OnDeath;
         public System.Action<Enemy> OnGoal;
 
-        // Global registry and events for convenience
+        
         public static readonly HashSet<Enemy> All = new HashSet<Enemy>();
         public static System.Action<Enemy> OnAnyDeath;
         public static System.Action<Enemy> OnAnyGoal;

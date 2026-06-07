@@ -10,7 +10,7 @@ using TR.Data;
 
 namespace TR.UI
 {
-    // Controls the simple pack opening animation scene.
+    
     public class PackOpeningSceneController : MonoBehaviour
     {
         [Header("Config")]
@@ -19,9 +19,9 @@ namespace TR.UI
         [SerializeField] private float packDropDuration = 0.6f;
         [SerializeField] private float cardRiseDuration = 0.4f;
         [SerializeField] private float cardInterval = 0.2f;
-        [SerializeField] private float revealSpacing = 160f;     // wide spacing during reveal
-        [SerializeField] private float finalOverlapSpacing = 80f; // tighter spacing after reveal
-        [SerializeField] private float compressDuration = 0.35f;  // time to compress to final spacing
+        [SerializeField] private float revealSpacing = 160f;     
+        [SerializeField] private float finalOverlapSpacing = 80f; 
+        [SerializeField] private float compressDuration = 0.35f;  
         [Header("Reveal FX")]
         [SerializeField] private float flipDuration = 0.45f;
         [SerializeField] private float flipOvershootScale = 1.08f;
@@ -29,9 +29,9 @@ namespace TR.UI
         [Header("Back Face")]
         [Tooltip("Optional prefab for the card back face (will be instantiated under each card). If null, a sprite or color will be used.")]
         [SerializeField] private GameObject backFacePrefab;
-        [Tooltip("Optional sprite for the card back face if no prefab is provided.")]
+
         [SerializeField] private Sprite cardBackSprite;
-        [SerializeField] private Color backFaceColor = new Color(0.36f, 0.22f, 0.56f, 1f); // magical purple
+        [SerializeField] private Color backFaceColor = new Color(0.36f, 0.22f, 0.56f, 1f); 
         [SerializeField] private string sfxFlipKey = "card_flip";
         [SerializeField] private string sfxRarityCommon = "rarity_common";
         [SerializeField] private string sfxRarityRare = "rarity_rare";
@@ -39,10 +39,10 @@ namespace TR.UI
         [SerializeField] private string sfxRarityLegendary = "rarity_legendary";
 
         [Header("Refs")]
-        [SerializeField] private RectTransform packRect;      // the pack visual in center
-        [SerializeField] private CanvasGroup packCanvasGroup; // for fading
-        [SerializeField] private RectTransform cardsRoot;     // parent where cards will appear
-        [SerializeField] private CardItemUI cardPrefab;       // UI prefab for a single revealed card
+        [SerializeField] private RectTransform packRect;      
+        [SerializeField] private CanvasGroup packCanvasGroup; 
+        [SerializeField] private RectTransform cardsRoot;     
+        [SerializeField] private CardItemUI cardPrefab;       
         [SerializeField] private Button continueButton;
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private bool allowKeyboardContinue = true;
@@ -50,36 +50,36 @@ namespace TR.UI
         [Header("Result Label (NEW!/points)")]
         [Tooltip("Offset applied to the result label under each card (x,y) in anchored pixels")]
         [SerializeField] private Vector2 resultLabelOffset = new Vector2(0f, -28f);
-        [Tooltip("Text color used when the card is NEW!")]
+
         [SerializeField] private Color resultLabelNewColor = new Color(0.2f, 1f, 0.4f);
         [Tooltip("Text color used when awarding duplicate points (e.g., +15 pts)")]
         [SerializeField] private Color resultLabelPointsColor = new Color(1f, 0.9f, 0.3f);
-        [Tooltip("Font size for the NEW! label")] 
+
         [SerializeField] private float resultLabelFontSizeNew = 22f;
-        [Tooltip("Font size for the +pts label")] 
+
         [SerializeField] private float resultLabelFontSizePoints = 22f;
         [Header("Upgrade Label (separate)")]
         [Tooltip("Offset applied to the 'Upgrade Available' label under each card (x,y) in anchored pixels")] 
         [SerializeField] private Vector2 upgradeLabelOffset = new Vector2(0f, -52f);
-        [Tooltip("Color for the 'Upgrade Available' label")] 
+
         [SerializeField] private Color upgradeLabelColor = new Color(0.6f, 1f, 0.6f);
-        [Tooltip("Font size for the 'Upgrade Available' label")] 
+
         [SerializeField] private float upgradeLabelFontSize = 20f;
-        [Tooltip("Text to show when an upgrade is available")] 
+
         [SerializeField] private string upgradeAvailableText = "Upgrade Available";
-        [Tooltip("Fade-out duration for the 'Upgrade Available' label once cards compress to final overlap")] 
+
         [SerializeField] private float upgradeLabelFadeOutDuration = 0.6f;
 
         [Header("Hover Spread")]
-        [SerializeField] private float hoverSpread = 60f;         // how much neighbors move away
-        [SerializeField] private float hoverAnimDuration = 0.2f;  // animation time for hover transitions
-        [SerializeField] private float hoverScale = 1.07f;        // slight scale on hovered card
+        [SerializeField] private float hoverSpread = 60f;         
+        [SerializeField] private float hoverAnimDuration = 0.2f;  
+        [SerializeField] private float hoverScale = 1.07f;        
 
         private List<CollectionService.AwardResult> _results;
         private readonly List<RectTransform> _spawned = new();
         private readonly List<CanvasGroup> _frontGroups = new();
         private readonly List<RectTransform> _backFaces = new();
-        private Vector2[] _finalPositions; // compact layout positions after compress
+        private Vector2[] _finalPositions; 
         private readonly List<RectTransform> _resultLabels = new();
         private readonly List<RectTransform> _upgradeLabelRects = new();
         private Coroutine _hoverTween;
@@ -107,7 +107,7 @@ namespace TR.UI
             _currentPack = pack;
             if (headerText) headerText.text = pack != null ? pack.DisplayName : "Pack";
 
-            // Ensure we have an anchor to place the pack art (centered) if none assigned
+            
             if (packRect == null)
             {
                 var anchorGO = new GameObject("PackAnchor", typeof(RectTransform));
@@ -123,10 +123,10 @@ namespace TR.UI
                 packCanvasGroup = packRect.gameObject.AddComponent<CanvasGroup>();
             }
 
-            // Build per-pack art under the (auto) packRect anchor if available
+            
             if (packRect != null && pack != null)
             {
-                // Clear previous children (if any placeholder art)
+                
                 var toDestroy = new System.Collections.Generic.List<GameObject>();
                 for (int i = 0; i < packRect.childCount; i++) toDestroy.Add(packRect.GetChild(i).gameObject);
                 for (int i = 0; i < toDestroy.Count; i++) Destroy(toDestroy[i]);
@@ -159,13 +159,13 @@ namespace TR.UI
 
                 if (visualRT != null)
                 {
-                    // Animate the visual child instead of the empty anchor
+                    
                     packRect = visualRT;
                     packCanvasGroup = packRect.GetComponent<CanvasGroup>() ?? packRect.gameObject.AddComponent<CanvasGroup>();
                 }
             }
 
-            // Final safety: make sure we have a CanvasGroup and start fully visible
+            
             if (packRect != null && packCanvasGroup == null)
                 packCanvasGroup = packRect.gameObject.AddComponent<CanvasGroup>();
             if (packCanvasGroup != null) packCanvasGroup.alpha = 1f;
@@ -173,12 +173,12 @@ namespace TR.UI
             _results = new List<CollectionService.AwardResult>();
             if (pack != null)
             {
-                // Roll once per requested openCount, aggregate results
+                
                 var rolled = new List<CardDefinition>();
                 for (int i = 0; i < openCount; i++)
                     rolled.AddRange(PackService.OpenPack(pack));
 
-                // Award with details for UI
+                
                 _results = CollectionService.AwardCardsDetailed(rolled);
             }
 
@@ -199,23 +199,23 @@ namespace TR.UI
 
         private IEnumerator RunSequence()
         {
-            // Initial state: pack pop (scale) then slide down while fading out
+            
             Vector2 startPos = packRect.anchoredPosition;
             Vector2 endPos = startPos + new Vector2(0f, -200f);
-            // Pop
+            
             var startScale = Vector3.one * 0.85f;
             var overScale = Vector3.one * 1.05f;
             var finalScale = Vector3.one;
             packRect.localScale = startScale;
             if (packCanvasGroup) packCanvasGroup.alpha = 1f;
             float t = 0f;
-            // Per-pack SFX: seal crack at the start of pop
+            
             TryPlaySfx(_currentPack != null ? _currentPack.SealCrackKey : null);
             while (t < 1f)
             {
                 t += Time.deltaTime / Mathf.Max(0.01f, packPopDuration);
                 float e = EaseOutCubic(t);
-                // two-phase: 0->0.7 to overscale, 0.7->1 to settle
+                
                 if (e < 0.7f)
                 {
                     float e1 = e / 0.7f;
@@ -229,7 +229,7 @@ namespace TR.UI
                 yield return null;
             }
 
-            // Slide down + fade out
+            
             t = 0f;
             _whooshPlayed = false;
             while (t < 1f)
@@ -241,13 +241,13 @@ namespace TR.UI
                 if (!_whooshPlayed)
                 {
                     _whooshPlayed = true;
-                    // Per-pack SFX: opening whoosh as it starts sliding
+                    
                     TryPlaySfx(_currentPack != null ? _currentPack.OpenWhooshKey : null);
                 }
                 yield return null;
             }
 
-            // Raise cards facedown, with wider spacing
+            
             _spawned.Clear();
             _frontGroups.Clear();
             _backFaces.Clear();
@@ -260,7 +260,7 @@ namespace TR.UI
                 var card = res.card;
                 var ui = Instantiate(cardPrefab, cardsRoot);
                 ui.Bind(card, 0);
-                // Create a FrontFace wrapper so we can hide only the front without affecting back
+                
                 var frontGO = new GameObject("FrontFace", typeof(RectTransform));
                 var frontRT = frontGO.GetComponent<RectTransform>();
                 frontRT.SetParent(ui.transform, false);
@@ -268,20 +268,20 @@ namespace TR.UI
                 frontRT.anchorMax = new Vector2(1f, 1f);
                 frontRT.offsetMin = Vector2.zero;
                 frontRT.offsetMax = Vector2.zero;
-                // Move existing children under FrontFace
+                
                 var tmpChildren = new System.Collections.Generic.List<Transform>();
                 for (int ci = 0; ci < ui.transform.childCount; ci++) tmpChildren.Add(ui.transform.GetChild(ci));
                 for (int ci = 0; ci < tmpChildren.Count; ci++)
                 {
-                    // Skip the newly created FrontFace itself
+                    
                     if (tmpChildren[ci] == frontRT) continue;
                     tmpChildren[ci].SetParent(frontRT, false);
                 }
-                // Prepare front canvas group (hide until flip)
+                
                 var cg = frontGO.AddComponent<CanvasGroup>();
                 cg.alpha = 0f;
                 _frontGroups.Add(cg);
-                // Create back face from prefab/sprite/color
+                
                 RectTransform backRT = null;
                 if (backFacePrefab != null)
                 {
@@ -313,7 +313,7 @@ namespace TR.UI
                         backImg.color = backFaceColor;
                     }
                 }
-                // Ensure back renders on top initially (so it's clearly visible before flip)
+                
                 backRT.SetAsLastSibling();
                 var backCg = backRT.GetComponent<CanvasGroup>();
                 if (backCg == null) backCg = backRT.gameObject.AddComponent<CanvasGroup>();
@@ -323,7 +323,7 @@ namespace TR.UI
                 var rt = (RectTransform)ui.transform;
                 rt.anchoredPosition = new Vector2(startX + i * revealSpacing, endPos.y);
 
-                // Slide up
+                
                 float t2 = 0f;
                 Vector2 target = new Vector2(rt.anchoredPosition.x, endPos.y + 220f);
                 while (t2 < 1f)
@@ -334,7 +334,7 @@ namespace TR.UI
                     yield return null;
                 }
 
-                // Add hover notifier (after reveal we will keep)
+                
                 var hover = ui.gameObject.AddComponent<PackOpenedCardHover>();
                 hover.Init(this, i);
 
@@ -342,20 +342,20 @@ namespace TR.UI
                 yield return new WaitForSeconds(cardInterval);
             }
 
-            // Flip reveal one-by-one (magical 2D flip with color pulse and SFX)
+            
             for (int i = 0; i < _spawned.Count; i++)
             {
                 yield return StartCoroutine(FlipReveal(_spawned[i], _frontGroups[i], _backFaces[i], _results[i]));
-                // Create label under the card to indicate NEW or points awarded
+                
                 CreateResultLabel(_spawned[i], _results[i]);
                 yield return new WaitForSeconds(flipInterval);
             }
 
-            // After all cards are revealed, compress them to the final overlap spacing
+            
             if (_spawned.Count > 0)
             {
                 float startX2 = -finalOverlapSpacing * (Mathf.Max(0, _spawned.Count - 1) * 0.5f);
-                // Cache initial and target positions
+                
                 Vector2[] from = new Vector2[_spawned.Count];
                 Vector2[] to = new Vector2[_spawned.Count];
                 for (int i = 0; i < _spawned.Count; i++)
@@ -375,13 +375,13 @@ namespace TR.UI
                     yield return null;
                 }
 
-                // Cache final compact positions for hover logic
+                
                 _finalPositions = new Vector2[_spawned.Count];
                 for (int i = 0; i < _spawned.Count; i++)
                     _finalPositions[i] = _spawned[i].anchoredPosition;
             }
 
-            // Fade out the "Upgrade Available" labels after we've reached final overlap
+            
             if (_upgradeLabelRects != null && _upgradeLabelRects.Count > 0)
             {
                 StartCoroutine(FadeOutUpgradeLabels());
@@ -426,7 +426,7 @@ namespace TR.UI
             tmp.text = msg;
             _resultLabels.Add(rt);
 
-            // Create a separate 'Upgrade Available' label below if eligible
+            
             var cp = PlayerProfile.GetOrCreateCard(res.card.CardId);
             var rarity = res.card.Rarity;
             bool showUpgrade = false;
@@ -454,7 +454,7 @@ namespace TR.UI
                 tmpUp.color = upgradeLabelColor;
                 tmpUp.fontSize = upgradeLabelFontSize;
                 tmpUp.alignment = TextAlignmentOptions.Center;
-                // Ensure we can fade it out later
+                
                 var cgUp = goUp.GetComponent<CanvasGroup>();
                 if (cgUp == null) cgUp = goUp.AddComponent<CanvasGroup>();
                 cgUp.alpha = 1f;
@@ -462,7 +462,7 @@ namespace TR.UI
             }
         }
 
-        // Expose read-only access so you can tweak label positions at runtime if needed
+        
         public IReadOnlyList<RectTransform> ResultLabelRects => _resultLabels;
         public IReadOnlyList<RectTransform> UpgradeLabelRects => _upgradeLabelRects;
 
@@ -471,7 +471,7 @@ namespace TR.UI
             float dur = Mathf.Max(0f, upgradeLabelFadeOutDuration);
             if (dur <= 0f)
             {
-                // Immediate hide
+                
                 for (int i = 0; i < _upgradeLabelRects.Count; i++)
                 {
                     var rt = _upgradeLabelRects[i]; if (rt == null) continue;
@@ -481,7 +481,7 @@ namespace TR.UI
                 yield break;
             }
             float t = 0f;
-            // Snapshot starting alphas in case some were modified
+            
             var groups = new System.Collections.Generic.List<CanvasGroup>(_upgradeLabelRects.Count);
             for (int i = 0; i < _upgradeLabelRects.Count; i++)
             {
@@ -510,16 +510,16 @@ namespace TR.UI
 
         private IEnumerator FlipReveal(RectTransform card, CanvasGroup front, RectTransform back, CollectionService.AwardResult res)
         {
-            // Prepare scales and rotation for a simple 2D flip illusion
+            
             float t = 0f;
             Vector3 baseScale = card.localScale;
-            // Play flip SFX
+            
             TryPlaySfx(sfxFlipKey);
             while (t < 1f)
             {
                 t += Time.deltaTime / Mathf.Max(0.01f, flipDuration);
                 float e = EaseOutCubic(t);
-                // Simulate flip by scaling X to 0 then back to 1
+                
                 float sx;
                 if (e < 0.5f)
                 {
@@ -531,18 +531,18 @@ namespace TR.UI
                     float p = (e - 0.5f) / 0.5f;
                     sx = Mathf.Lerp(0f, 1f, p);
                 }
-                // Overshoot pulse
+                
                 float pulse = 1f + (flipOvershootScale - 1f) * Mathf.Sin(Mathf.PI * e);
                 card.localScale = new Vector3(Mathf.Max(0.0001f, sx) * pulse, baseScale.y * pulse, baseScale.z);
-                // Swap visibility at midpoint
+                
                 if (e >= 0.5f && back.gameObject.activeSelf)
                 {
                     back.gameObject.SetActive(false);
                     if (front) front.alpha = 1f;
-                    // Rarity pulse color feedback
+                    
                     PulseRarityColor(card, res.card?.Rarity);
                     TryPlayRarityHit(res.card?.Rarity);
-                    // Rarity-based confetti (exposed on RarityDefinition)
+                    
                     if (res.card?.Rarity != null && res.card.Rarity.ConfettiOnReveal)
                     {
                         StartCoroutine(ConfettiBurst(card));
@@ -551,7 +551,7 @@ namespace TR.UI
                 }
                 yield return null;
             }
-            // Ensure final state
+            
             card.localScale = baseScale;
             if (front) front.alpha = 1f;
             if (back) back.gameObject.SetActive(false);
@@ -560,14 +560,14 @@ namespace TR.UI
         private void PulseRarityColor(RectTransform card, RarityDefinition rarity)
         {
             if (rarity == null) return;
-            // Create a quick overlay image under the card to pulse its rarity color
+            
             var go = new GameObject("RarityPulse", typeof(RectTransform), typeof(UnityEngine.UI.Image));
             var rt = go.GetComponent<RectTransform>();
             rt.SetParent(card, false);
-            rt.SetAsFirstSibling(); // behind content
+            rt.SetAsFirstSibling(); 
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
-            // Expand slightly beyond the card to read as an outline glow
+            
             const float padX = 18f;
             const float padY = 24f;
             rt.offsetMin = new Vector2(-padX, -padY);
@@ -575,7 +575,7 @@ namespace TR.UI
             var img = go.GetComponent<UnityEngine.UI.Image>();
             var col = rarity.Color; col.a = 0.0f; img.color = col;
             img.raycastTarget = false;
-            // Continuous pulse loop for a persistent outline
+            
             StartCoroutine(PulseImageAlphaLoop(img, 0.2f, 0.55f, 1.8f));
         }
 
@@ -588,7 +588,7 @@ namespace TR.UI
             {
                 t += Time.deltaTime / Mathf.Max(0.01f, duration);
                 float e = EaseOutCubic(t);
-                float a = Mathf.Sin(e * Mathf.PI); // up then down
+                float a = Mathf.Sin(e * Mathf.PI); 
                 var c = baseCol; c.a = peakAlpha * a; img.color = c;
                 yield return null;
             }
@@ -605,7 +605,7 @@ namespace TR.UI
             while (img != null && img.gameObject != null)
             {
                 t += Time.deltaTime * Mathf.Max(0.01f, speed);
-                float s = 0.5f * (Mathf.Sin(t * Mathf.PI * 2f) + 1f); // 0..1
+                float s = 0.5f * (Mathf.Sin(t * Mathf.PI * 2f) + 1f); 
                 float a = Mathf.Lerp(minAlpha, maxAlpha, s);
                 var c = baseCol; c.a = a; img.color = c;
                 yield return null;
@@ -621,7 +621,7 @@ namespace TR.UI
         private void TryPlayRarityHit(RarityDefinition rarity)
         {
             if (rarity == null) return;
-            // Map by exact rarity ID
+            
             string key = sfxRarityCommon;
             var id = rarity.RarityId;
             if (!string.IsNullOrEmpty(id))
@@ -662,11 +662,11 @@ namespace TR.UI
         private IEnumerator ConfettiBurst(RectTransform card)
         {
             if (card == null) yield break;
-            // Parent to the same parent as cards so it isn't clipped by the card's rect
+            
             var parent = card.parent as RectTransform;
             if (parent == null) yield break;
 
-            // Container to hold one-shot particles above cards
+            
             var containerGO = new GameObject("ConfettiBurst", typeof(RectTransform));
             var container = containerGO.GetComponent<RectTransform>();
             container.SetParent(parent, false);
@@ -678,8 +678,8 @@ namespace TR.UI
 
             int count = 28;
             float life = 0.8f;
-            float gravity = 560f; // px/s^2 downward
-            float startSpeed = 320f; // px/s
+            float gravity = 560f; 
+            float startSpeed = 320f; 
             float startSpeedJitter = 120f;
             float startScale = 0.9f;
             float endScale = 0.6f;
@@ -698,10 +698,10 @@ namespace TR.UI
                 rt.localScale = Vector3.one * startScale;
                 var img = go.GetComponent<UnityEngine.UI.Image>();
                 img.raycastTarget = false;
-                // Pleasant color range with some golds and blues
+                
                 img.color = Color.HSVToRGB(Random.value, Random.Range(0.3f, 0.8f), 1f);
                 imgs.Add(img);
-                // Random outward velocity in a cone upward
+                
                 float ang = Mathf.Deg2Rad * Random.Range(60f, 120f);
                 float spd = startSpeed + Random.Range(-startSpeedJitter, startSpeedJitter);
                 vel.Add(new Vector2(Mathf.Cos(ang) * spd, Mathf.Sin(ang) * spd));
@@ -718,14 +718,14 @@ namespace TR.UI
                 {
                     var img = imgs[i]; if (img == null) continue;
                     var rt = img.rectTransform;
-                    // Integrate velocity with gravity
+                    
                     var v = vel[i];
                     v.y -= gravity * dt;
                     vel[i] = v;
                     rt.anchoredPosition += v * dt;
-                    // Rotation
+                    
                     rt.localRotation = Quaternion.Euler(0, 0, rt.localEulerAngles.z + angVel[i] * dt);
-                    // Fade/scale over life
+                    
                     var c = img.color; c.a = 1f - u; img.color = c;
                     float sc = Mathf.Lerp(startScale, endScale, u);
                     rt.localScale = new Vector3(sc, sc, 1f);
@@ -735,12 +735,12 @@ namespace TR.UI
             if (container != null) Destroy(container.gameObject);
         }
 
-        // Hover API called by PackOpenedCardHover
+        
         public void StartHover(int index)
         {
             if (_spawned.Count == 0 || _finalPositions == null) return;
             _currentHover = index;
-            // Compute target positions spread away from hovered index
+            
             var targets = new Vector2[_spawned.Count];
             for (int i = 0; i < _spawned.Count; i++)
             {

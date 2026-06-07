@@ -3,13 +3,13 @@ using UnityEngine.UI;
 
 namespace TR.Battle
 {
-    // Attach this to your Slider-based health bar prefab.
-    // It follows an enemy in world space and updates the slider from EnemyBase2D.OnHealthChanged.
+    
+    
     public class EnemyHealthBarUI : MonoBehaviour
     {
         [Header("Binding")]
         [SerializeField] private Slider slider;
-        [SerializeField] private Image fillImage; // optional: for color gradient
+        [SerializeField] private Image fillImage; 
 
         [Header("Follow Settings")]
         [SerializeField] private bool billboardToCamera = true;
@@ -20,7 +20,7 @@ namespace TR.Battle
         private RectTransform _rt;
         private Canvas _canvas;
 
-        // Optional gradient colors
+        
         [Header("Fill Colors by Percent")] 
         [SerializeField] private Color colorFull = new Color(0.2f, 1f, 0.2f, 1f);
         [SerializeField] private Color colorMid = new Color(1f, 0.9f, 0.2f, 1f);
@@ -63,12 +63,12 @@ namespace TR.Battle
                 if (billboardToCamera && Camera.main != null)
                 {
                     _rt.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
-                    _rt.right = Camera.main.transform.right; // face camera orthographically
+                    _rt.right = Camera.main.transform.right; 
                 }
             }
             else
             {
-                // Screen-space: convert to screen point
+                
                 if (Camera.main != null)
                 {
                     Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, worldPos);

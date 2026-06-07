@@ -4,7 +4,7 @@ using TR.Data;
 
 namespace TR.Systems
 {
-    // Handles arena progression, lookup, and match rewards.
+    
     public static class ArenaService
     {
         [System.Serializable]
@@ -17,20 +17,20 @@ namespace TR.Systems
             public int totalTrophiesAfter;
             public ArenaDefinition arenaBefore;
             public ArenaDefinition arenaAfter;
-            // True if computed trophy change hit a cap/floor (e.g., at max trophies or zero)
+            
             public bool trophiesCapped;
         }
 
-        [Header("Reward Config")] // tweak as needed or expose via ScriptableObject later
+        [Header("Reward Config")] 
         public static int MinTrophiesPerMatch = 5;
         public static int MaxTrophiesPerMatch = 10;
-        public static int BaseMoneyPerMatch = 100;     // base soft currency for finishing a match
-        public static int MoneyPerWave = 0;            // extra per wave cleared (set to >0 if desired)
-        public static int CastleXPOnVictory = 50;      // base castle XP for a win
-        public static int CastleXPPerWave = 5;         // additional XP per wave cleared
-        public static int CastleXPOnDefeat = 25;       // XP awarded even on defeat
+        public static int BaseMoneyPerMatch = 100;     
+        public static int MoneyPerWave = 0;            
+        public static int CastleXPOnVictory = 50;      
+        public static int CastleXPPerWave = 5;         
+        public static int CastleXPOnDefeat = 25;       
 
-        // Returns the arena associated with the player's current trophies.
+        
         public static ArenaDefinition GetCurrentArena()
         {
             GameDB.EnsureLoaded();
@@ -61,11 +61,11 @@ namespace TR.Systems
             {
                 if (trophies < a.TrophyRequirement) return a;
             }
-            return null; // at highest arena
+            return null; 
         }
 
-        // Compute rewards for a completed match and apply them to the profile.
-        // wavesCleared can be used to scale money if desired.
+        
+        
         public static MatchRewards AwardMatchCompletion(ArenaDefinition arena, int wavesCleared)
         {
             GameDB.EnsureLoaded();
@@ -106,7 +106,7 @@ namespace TR.Systems
                 castleXPGain = Mathf.Max(0, CastleXPOnVictory + Mathf.Max(0, wavesCleared) * Mathf.Max(0, CastleXPPerWave));
             }
 
-            // Add trophies; PlayerProfile will clamp to the trophy road max internally
+            
             PlayerProfile.AddTrophies(trophiesGain);
 
             var afterArena = GetCurrentArena();
@@ -117,13 +117,13 @@ namespace TR.Systems
             PlayerProfile.AddSoftCurrency(moneyGain);
             PlayerProfile.AddCastleXP(castleXPGain);
 
-            // Gating: once a new arena is reached, prevent dropping below it by raising the trophy floor
+            
             if (afterArena != null && beforeArena != null && afterArena != beforeArena)
             {
-                // Player advanced to a higher arena; set the floor to the new arena's trophy requirement
+                
                 int req = Mathf.Max(0, afterArena.TrophyRequirement);
                 TR.Systems.PlayerProfile.SetTrophyFloorAtLeast(req);
-                // Also queue a lobby notification to celebrate the unlock
+                
                 TR.Systems.PlayerProfile.SetPendingArenaUnlock(afterArena.DisplayName);
             }
 
@@ -141,7 +141,7 @@ namespace TR.Systems
             };
         }
 
-        // Defeat: subtract trophies using arena defeat range, plus award defeat XP
+        
         public static MatchRewards AwardMatchDefeat(ArenaDefinition arena, int wavesCleared)
         {
             GameDB.EnsureLoaded();
@@ -154,7 +154,7 @@ namespace TR.Systems
                 int dmax = Mathf.Max(dmin, arena.DefeatTrophiesMax);
                 trophiesLoss = Random.Range(dmin, dmax + 1);
             }
-            // apply trophy loss (floored at 0 or at the player's trophy floor internally)
+            
             if (trophiesLoss > 0) PlayerProfile.RemoveTrophies(trophiesLoss);
             int castleXPGain;
             if (arena != null && arena.DefeatXPMax > 0)
@@ -171,12 +171,12 @@ namespace TR.Systems
 
             var afterArena = GetCurrentArena();
             int trophiesAfter = PlayerProfile.GetTrophies();
-            int actualDelta = trophiesAfter - trophiesBefore; // negative or zero
+            int actualDelta = trophiesAfter - trophiesBefore; 
             bool capped = (trophiesLoss > 0) && (trophiesAfter == 0) && (trophiesBefore > 0);
 
             return new MatchRewards
             {
-                trophiesEarned = actualDelta, // negative or zero
+                trophiesEarned = actualDelta, 
                 moneyEarned = 0,
                 castleXPEarned = castleXPGain,
                 victory = false,
@@ -187,7 +187,7 @@ namespace TR.Systems
             };
         }
 
-        // Backward compatible overload: uses the player's current arena
+        
         public static MatchRewards AwardMatchDefeat(int wavesCleared)
         {
             return AwardMatchDefeat(GetCurrentArena(), wavesCleared);

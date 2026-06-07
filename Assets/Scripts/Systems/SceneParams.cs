@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace TR.Systems
 {
-    // Lightweight cross-scene parameter passing. Not persisted.
+    
     public static class SceneParams
     {
         private static readonly Dictionary<string, object> _store = new();

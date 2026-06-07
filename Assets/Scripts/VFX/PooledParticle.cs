@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.VFX
 {
-    // Helper that notifies ParticleManager when a particle finishes playing
+    
     [RequireComponent(typeof(ParticleSystem))]
     public class PooledParticle : MonoBehaviour
     {
@@ -24,7 +24,7 @@ namespace TR.VFX
 
         private void OnEnable()
         {
-            // Ensure it will stop naturally
+            
             if (_ps != null && _ps.isStopped) _ps.Play(true);
         }
 
@@ -33,7 +33,7 @@ namespace TR.VFX
             if (_ps == null) return;
             if (!_ps.IsAlive(true))
             {
-                // Return to pool
+                
                 if (_manager != null && !string.IsNullOrEmpty(_key))
                 {
                     _manager.ReturnToPool(_key, _ps);
@@ -41,7 +41,7 @@ namespace TR.VFX
             }
         }
 
-        // Allows code to explicitly return a looping particle to the pool
+        
         public void ForceReturn()
         {
             if (_ps != null)

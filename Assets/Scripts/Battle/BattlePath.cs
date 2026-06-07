@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Holds a series of waypoints for enemies to follow in 2D.
+    
     public class BattlePath : MonoBehaviour
     {
         [SerializeField] private Transform[] waypoints;

@@ -26,10 +26,10 @@ namespace TR.Data
             return Mathf.Clamp(decayPerSecBase + decayPerSecPerLevel * (lv - 1), 0f, float.MaxValue);
         }
 
-        // Economy towers should not attack; override combat stat evaluation to zeros except cost from base
+        
         public override TowerStats GetStatsForLevel(int level)
         {
-            // Ask base for cost only, then zero out combat stats
+            
             var baseStats = base.GetStatsForLevel(level);
             baseStats.dps = 0f;
             baseStats.fireRate = 0f;

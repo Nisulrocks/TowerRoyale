@@ -4,8 +4,8 @@ using TR.VFX;
 
 namespace TR.Battle
 {
-    // Behaviour for an economy-generating tower. It does not attack.
-    // While alive, it grants match money per second. Its own health decays over time until it breaks.
+    
+    
     [RequireComponent(typeof(TowerBase))]
     public class EconomyTower : MonoBehaviour
     {
@@ -17,7 +17,7 @@ namespace TR.Battle
         private float _decayPerSec;
         private MatchEconomy _economy;
         private RadialProgressRing _ring;
-        private bool _dying; // guard during despawn
+        private bool _dying; 
         private static readonly System.Collections.Generic.HashSet<EconomyTower> s_all = new();
         public static System.Collections.Generic.IReadOnlyCollection<EconomyTower> All => s_all;
 
@@ -30,13 +30,13 @@ namespace TR.Battle
         [Header("VFX")]
         [Tooltip("ParticleManager key to play when this tower generates money (one-shot)")]
         [SerializeField] private string incomeVfxKey = "";
-        [Tooltip("Optional anchor for the income VFX. If null, uses this transform position.")]
+
         [SerializeField] private Transform incomeVfxAnchor;
         [Tooltip("Seconds between income VFX spawns while generating (regular cadence)")]
         [SerializeField] private float incomeVfxEverySeconds = 1.0f;
         private float _incomeVfxAccum;
 
-        // Optional: expose for UI
+        
         public float CurrentHP => _hp;
         public float MaxHP => _maxHp;
         public EconomyCardDefinition Definition => _def;
@@ -51,14 +51,14 @@ namespace TR.Battle
             _decayPerSec = def.GetDecayPerSecond(_level);
             _economy = FindFirstObjectByType<MatchEconomy>(FindObjectsInactive.Include);
 
-            // Ensure TowerBase won't try to fire (design: set DPS curve to 0 in SO). This is a safety fallback.
+            
             var baseTower = GetComponent<TowerBase>();
             if (baseTower != null && baseTower.Stats.dps > 0f)
             {
                 Debug.LogWarning("[EconomyTower] CardDefinition has non-zero DPS; economy towers should have DPS=0 in curves.");
             }
 
-            // Create HP ring child
+            
             if (_ring == null)
             {
                 var go = new GameObject("HP_Ring");
@@ -85,13 +85,13 @@ namespace TR.Battle
         private void Update()
         {
             if (_def == null) return;
-            if (_dying) return; // skip while despawning
+            if (_dying) return; 
             float dt = Time.deltaTime;
 
-            // Generate income
+            
             if (_economy != null && _incomePerSec > 0f)
             {
-                // Accumulate fractional income smoothly and emit integer amounts
+                
                 float gain = GetEffectiveIncomePerSecond() * dt;
                 _incomeAcc += gain;
                 int whole = Mathf.FloorToInt(_incomeAcc);
@@ -101,7 +101,7 @@ namespace TR.Battle
                     _economy.Earn(whole);
                 }
 
-                // Emit VFX on a steady cadence while income is active (not tied to integer grant cadence)
+                
                 _incomeVfxAccum += dt;
                 if (!string.IsNullOrEmpty(incomeVfxKey) && _incomeVfxAccum >= Mathf.Max(0.1f, incomeVfxEverySeconds))
                 {
@@ -111,7 +111,7 @@ namespace TR.Battle
                 }
             }
 
-            // Decay HP
+            
             if (_decayPerSec > 0f)
             {
                 _hp -= _decayPerSec * dt;
@@ -129,7 +129,7 @@ namespace TR.Battle
 
         private float _incomeAcc;
 
-        // === Income Buff API ===
+        
         private readonly System.Collections.Generic.Dictionary<object, float> _incomeBuffs = new System.Collections.Generic.Dictionary<object, float>();
         private float _incomeMul = 1f;
         public void AddOrUpdateIncomeBuff(object source, float incomeMultiplier)
@@ -151,7 +151,7 @@ namespace TR.Battle
                 mul *= Mathf.Max(0f, kv.Value);
             }
             _incomeMul = Mathf.Max(0f, mul);
-            // Notify UI (HoverCardDetailsUI listens to TowerBase.OnBuffsChanged)
+            
             var tb = GetComponent<TowerBase>();
             if (tb != null && tb.OnBuffsChanged != null) tb.OnBuffsChanged.Invoke();
         }
@@ -163,7 +163,7 @@ namespace TR.Battle
         private System.Collections.IEnumerator DespawnAndDestroy()
         {
             _dying = true;
-            // Fade out sprites (including child renderers) and shrink
+            
             var renderers = GetComponentsInChildren<SpriteRenderer>(true);
             var startColors = new System.Collections.Generic.Dictionary<SpriteRenderer, Color>(renderers.Length);
             for (int i = 0; i < renderers.Length; i++)
@@ -186,7 +186,7 @@ namespace TR.Battle
                 }
                 if (_ring != null)
                 {
-                    // also fade the ring via its color alpha if it has a renderer
+                    
                     var rr = _ring.GetComponent<SpriteRenderer>();
                     if (rr != null)
                     {

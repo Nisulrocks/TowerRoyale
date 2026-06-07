@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TR.Battle
 {
-    // Ensures only one tower is selected at a time. Drop this in the battle scene once.
+    
     public class TowerSelectionManager : MonoBehaviour
     {
         private bool _handling;
@@ -23,7 +23,7 @@ namespace TR.Battle
             if (!selected || tower == null) return;
 
             _handling = true;
-            // Deselect all other towers
+            
             foreach (var t in TowerBase.All)
             {
                 if (t == null || t == tower) continue;
@@ -33,7 +33,7 @@ namespace TR.Battle
                     sel.SetSelected(false);
                 }
             }
-            // Re-affirm selection to ensure the correct UI is visible after deselections
+            
             var currentSel = tower.GetComponent<TowerSelectable>();
             if (currentSel != null && !currentSel.Selected)
             {

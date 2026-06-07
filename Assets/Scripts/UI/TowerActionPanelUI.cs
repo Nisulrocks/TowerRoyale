@@ -5,24 +5,24 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Simple panel that appears when a tower is selected. Shows basic info and a Destroy button with refund.
+    
     public class TowerActionPanelUI : MonoBehaviour
     {
         [Header("Panel Root")]
-        [SerializeField] private GameObject root; // enable/disable to show/hide
+        [SerializeField] private GameObject root; 
 
         [Header("Texts")] 
-        [SerializeField] private TMP_Text refundText; // shows exact refund amount
+        [SerializeField] private TMP_Text refundText; 
 
         [Header("Actions")] 
         [SerializeField] private Button destroyButton;
-        [SerializeField] private Button confirmButton; // hidden by default; shown when confirming
+        [SerializeField] private Button confirmButton; 
 
         [Header("Settings")]
-        [Range(0f,1f)] [SerializeField] private float refundPercent = 0.6f; // 60% default
+        [Range(0f,1f)] [SerializeField] private float refundPercent = 0.6f; 
         [SerializeField] private bool requireConfirm = false;
         [SerializeField] private string confirmMessage = "Destroy this tower for a {0}% refund?";
-        [SerializeField] private bool showDetails = false; // if true, also show details via optional fields below
+        [SerializeField] private bool showDetails = false; 
 
         [Header("Optional Details (only if showDetails)")]
         [SerializeField] private TMP_Text nameTextOptional;
@@ -115,24 +115,24 @@ namespace TR.UI
             float pct = Mathf.Clamp01(refundPercent);
             if (requireConfirm)
             {
-                // Toggle confirmation state
+                
                 _awaitingConfirm = !_awaitingConfirm;
                 if (_awaitingConfirm)
                 {
-                    // Show confirm prompt and button
+                    
                     if (refundText) refundText.text = string.Format(confirmMessage, Mathf.RoundToInt(pct * 100f));
                     if (confirmButton != null) confirmButton.gameObject.SetActive(true);
                 }
                 else
                 {
-                    // Cancel confirmation, restore refund info
+                    
                     RefreshInfo();
                     if (confirmButton != null) confirmButton.gameObject.SetActive(false);
                 }
                 return;
             }
 
-            // No confirm path: destroy immediately
+            
             var tower = _current;
             _current = null;
             SetVisible(false);
