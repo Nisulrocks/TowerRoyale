@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: poison_tower
   displayName: Poison Tower
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 17497536eaa40844399b958b5f992981, type: 3}
   rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}

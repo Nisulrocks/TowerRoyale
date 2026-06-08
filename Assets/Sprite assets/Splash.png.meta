@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0d6319450f3faaf4caa1b4474d03cb33
+guid: 350bf788bdd60624799f2a30c01c56fc
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6738745622693550556
-    second: scrollbar horizontal_0
+      213: 7209622655568544861
+    second: Splash_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: scrollbar horizontal_0
+      name: Splash_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 480
-        height: 60
+        width: 1365
+        height: 768
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 20, y: 20, z: 20, w: 20}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cd91e50c075d48d50800000000000000
-      internalID: 6738745622693550556
+      spriteID: d5485c56b99bd0460800000000000000
+      internalID: 7209622655568544861
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: b5e32d652c3599647a345c1c19db71b8
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      scrollbar horizontal_0: 6738745622693550556
+      Splash_0: 7209622655568544861
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
