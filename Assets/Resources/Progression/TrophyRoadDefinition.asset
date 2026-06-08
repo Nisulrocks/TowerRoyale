@@ -16,18 +16,6 @@ MonoBehaviour:
   maxTrophies: 200
   retroactiveClaim: 1
   milestones:
-  - trophyRequired: 10
+  - trophyRequired: 50
     reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 11
-    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 12
-    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 13
-    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 14
-    reward: {fileID: 11400000, guid: 5b2812da073f2cc48817fc0aaabb69ec, type: 2}
     oneTimeOnly: 1

@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: SoftCurrencyReward
   m_EditorClassIdentifier: 
   amount: 1000
-  icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  icon: {fileID: 21300000, guid: 4f6a847b3880da4419e0f12ec9c900da, type: 3}
