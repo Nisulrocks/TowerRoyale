@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ogre_warlord
   displayName: Ogre Warlord
-  maxHealth: 200
+  maxHealth: 50
   movementSpeed: 0.8
   attackInterval: 1
   damagePerHit: 20

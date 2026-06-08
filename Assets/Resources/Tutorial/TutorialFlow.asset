@@ -69,19 +69,20 @@ MonoBehaviour:
     requiredSceneName: Lobby
     autoClickObjectNameOnStart: 
     maxArrows: 12
-    dialogueText: Go to the Play Menu and Enter a Game To test Your Deck
+    dialogueText: Go to the Play Menu and Enter a single player Arena for your first
+      battle!
     typewriterCharDelay: 0.04
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
   - targetMode: 0
-    targetObjectName: Play
+    targetObjectName: Play Single
     targetPackId: 
     targetScreenOffset: {x: 0, y: -1}
     requiredSceneName: Lobby
     autoClickObjectNameOnStart: 
     maxArrows: 12
-    dialogueText: Click Play to Go Into your First Arrena Match
+    dialogueText: Click Play to Go Into your First Single Arena Match
     typewriterCharDelay: 0.04
     waitMode: 2
     waitSeconds: 0
