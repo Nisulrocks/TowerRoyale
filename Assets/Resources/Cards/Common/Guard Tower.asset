@@ -22,7 +22,7 @@ MonoBehaviour:
   dpsPerLevel: 1
   fireRateBase: 1
   fireRatePerLevel: 0.25
-  rangeBase: 2
+  rangeBase: 3
   rangePerLevel: 0
   splashBase: 0
   splashPerLevel: 0

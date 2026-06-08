@@ -61,6 +61,7 @@ namespace TR.UI
         {
             Refresh();
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
+            PlayerProfile.OnTrophiesChanged += HandleTrophiesChanged;
             if (deckWarningText != null) _deckWarnBaseColor = deckWarningText.color;
             if (playButton != null) _playBtnBaseScale = playButton.transform.localScale;
             
@@ -91,6 +92,7 @@ namespace TR.UI
         private void OnDisable()
         {
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
+            PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
             StopDeckFlash();
             RestoreDeckWarningVisuals();
             if (_banCountdownCo != null) { StopCoroutine(_banCountdownCo); _banCountdownCo = null; }
@@ -116,6 +118,11 @@ namespace TR.UI
                 softCurrencyText.text = $"Coins: {newBalance}";
             }
             UpdateBanGatingUI();
+        }
+
+        private void HandleTrophiesChanged(int newTrophies)
+        {
+            Refresh();
         }
 
         public void Refresh()

@@ -130,7 +130,7 @@ MonoBehaviour:
     requiredSceneName: Lobby
     autoClickObjectNameOnStart: 
     maxArrows: 12
-    dialogueText: 'Click on the Arena to Open the trohpy Road '
+    dialogueText: Click on the Arena to Open the trohpy Road and Collect your rewards
     typewriterCharDelay: 0.04
     waitMode: 2
     waitSeconds: 0

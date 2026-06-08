@@ -112,7 +112,8 @@ namespace TR.Systems
         }
 
         
-        public static event Action<int> OnSoftCurrencyChanged; 
+        public static event Action<int> OnSoftCurrencyChanged;
+        public static event Action<int> OnTrophiesChanged;
 
         public static PlayerProfileDTO LoadOrCreate()
         {
@@ -258,6 +259,19 @@ namespace TR.Systems
             return left > 0;
         }
 
+        public static void Ban(int minutes = 60)
+        {
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            Data.banUntilUnix = now + Mathf.Max(1, minutes) * 60L;
+            Save();
+        }
+
+        public static void Unban()
+        {
+            Data.banUntilUnix = 0;
+            Save();
+        }
+
         
         public static long GetLastDailyPackUnix() => Data.lastDailyPackUnix;
         public static void SetLastDailyPackNow()
@@ -320,6 +334,7 @@ namespace TR.Systems
                 Data.trophies = current + add;
             }
             Save();
+            OnTrophiesChanged?.Invoke(Data.trophies);
         }
 
         
@@ -341,6 +356,7 @@ namespace TR.Systems
             int floor = Mathf.Max(0, Data.trophiesFloor);
             Data.trophies = Mathf.Max(floor, current - sub);
             Save();
+            OnTrophiesChanged?.Invoke(Data.trophies);
         }
         public static int GetSoftCurrency() => Data.softCurrency;
         public static void AddSoftCurrency(int amount)

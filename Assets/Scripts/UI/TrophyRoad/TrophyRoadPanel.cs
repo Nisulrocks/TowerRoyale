@@ -426,9 +426,20 @@ namespace TR.UI.TrophyRoad
             return existing;
         }
 
+        private void OnEnable()
+        {
+            PlayerProfile.OnTrophiesChanged += HandleTrophiesChanged;
+        }
+
         private void OnDisable()
         {
-            
+            PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
+        }
+
+        private void HandleTrophiesChanged(int newTrophies)
+        {
+            if (root != null && root.activeInHierarchy)
+                BuildOrRefresh();
         }
     }
 }
