@@ -644,8 +644,11 @@ namespace TR.Tutorial
                 var overlayGO = new GameObject("TutorialOverlayCanvas");
                 _overlayCanvas = overlayGO.AddComponent<Canvas>();
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                _overlayCanvas.sortingOrder = 999; 
+                _overlayCanvas.sortingOrder = 999;
                 overlayGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                var scaler = overlayGO.AddComponent<UnityEngine.UI.CanvasScaler>();
+                scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
                 DontDestroyOnLoad(overlayGO);
             }
             if (_arrow == null)
