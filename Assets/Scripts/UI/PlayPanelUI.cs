@@ -49,6 +49,8 @@ namespace TR.UI
         [SerializeField] private Button playButton;              
         [SerializeField] private Button duoButton;               
         [SerializeField] private TMP_Text deckWarningText;       
+        [Header("Duo Matchmaking")]
+        [SerializeField] private DuoMatchmakingUI matchmakingUI; 
 
         
         private Coroutine _deckFlashCo;
@@ -245,12 +247,34 @@ namespace TR.UI
             string arenaIdOrIndex = !string.IsNullOrEmpty(currentArena.ArenaId) ? currentArena.ArenaId : (index + 1).ToString();
             string sceneName = string.Format(battleSceneNameFormat, arenaIdOrIndex);
             Debug.Log($"[PlayPanelUI] Loading battle scene '{sceneName}' for arena '{arenaIdOrIndex}' ({currentArena.DisplayName}).");
+
+            
+            if (mode == GameMode.Duo)
+            {
+                StartDuoMatchmaking(arenaIdOrIndex, trophies, sceneName, currentArena.ArenaImage, currentArena.DisplayName);
+                return;
+            }
+
             
             if (currentArena != null && !string.IsNullOrEmpty(currentArena.DisplayName))
             {
                 TR.Infrastructure.SceneFader.Instance.SetNextTransitionMessage(currentArena.DisplayName, 1.0f);
             }
             await SceneFader.Instance.LoadSceneWithFade(sceneName);
+        }
+
+        
+        private void StartDuoMatchmaking(string arenaId, int trophies, string battleSceneName, Sprite arenaSprite, string arenaDisplayName)
+        {
+            var mgr = TR.Net.DuoNetworkManager.Instance;
+            if (mgr == null)
+            {
+                Debug.LogError("[PlayPanelUI] DuoNetworkManager not found in scene. Add it to the Lobby to enable Duo mode.");
+                return;
+            }
+            int castleLevel = PlayerProfile.GetCastleLevel();
+            if (matchmakingUI != null) matchmakingUI.Show(arenaSprite);
+            mgr.StartMatchmaking(arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName);
         }
 
         private void ShowAndFlashDeckWarning()

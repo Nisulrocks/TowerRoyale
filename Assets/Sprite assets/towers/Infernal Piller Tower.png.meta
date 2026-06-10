@@ -1,10 +1,19 @@
 fileFormatVersion: 2
-guid: 13731984334f80845af1612e738b4f63
+guid: a827ab38159f0224a93fb6c01e8be4a6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5454253112040848421
-    second: button wide idle_0
+      213: 1736030970000954991
+    second: Infernal Piller Tower_0
+  - first:
+      213: -5764408748718036594
+    second: Infernal Piller Tower_1
+  - first:
+      213: 8272879600724938133
+    second: Infernal Piller Tower_2
+  - first:
+      213: -992465390707893684
+    second: Infernal Piller Tower_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +46,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -46,7 +55,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -75,7 +84,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -100,23 +109,89 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: button wide idle_0
+      name: Infernal Piller Tower_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 320
-        height: 120
+        x: 14
+        y: 3
+        width: 1008
+        height: 1019
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 40, y: 40, z: 40, w: 40}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 52c734abe4661bb40800000000000000
-      internalID: 5454253112040848421
+      spriteID: f66dbf528fe971810800000000000000
+      internalID: 1736030970000954991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Infernal Piller Tower_1
+      rect:
+        serializedVersion: 2
+        x: 502
+        y: 1000
+        width: 23
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e89e180c8c4b000b0800000000000000
+      internalID: -5764408748718036594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Infernal Piller Tower_2
+      rect:
+        serializedVersion: 2
+        x: 562
+        y: 999
+        width: 15
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59d09ce4a2c2fc270800000000000000
+      internalID: 8272879600724938133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Infernal Piller Tower_3
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 991
+        width: 21
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4a9cf64cfd0a32f0800000000000000
+      internalID: -992465390707893684
       vertices: []
       indices: 
       edges: []
@@ -125,7 +200,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 8ab62d600cf654744930d5697fcd515e
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +210,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      button wide idle_0: 5454253112040848421
+      Infernal Piller Tower_0: 1736030970000954991
+      Infernal Piller Tower_1: -5764408748718036594
+      Infernal Piller Tower_2: 8272879600724938133
+      Infernal Piller Tower_3: -992465390707893684
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: infernal_piller
   displayName: Infernal Pillar
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: a827ab38159f0224a93fb6c01e8be4a6, type: 3}
   rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
