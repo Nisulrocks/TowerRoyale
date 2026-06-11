@@ -273,8 +273,9 @@ namespace TR.UI
                 return;
             }
             int castleLevel = PlayerProfile.GetCastleLevel();
+            string nickname = PlayerProfile.HasPlayerName() ? PlayerProfile.GetPlayerName() : null;
             if (matchmakingUI != null) matchmakingUI.Show(arenaSprite);
-            mgr.StartMatchmaking(arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName);
+            mgr.StartMatchmaking(arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName, nickname);
         }
 
         private void ShowAndFlashDeckWarning()

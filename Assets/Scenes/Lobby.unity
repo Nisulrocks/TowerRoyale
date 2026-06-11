@@ -2471,6 +2471,7 @@ MonoBehaviour:
   flowResourcePath: Tutorial/TutorialFlow
   arrowPrefab: {fileID: 5281419335158171871, guid: b0dae658d2c0c784a8470b2cfb269f9d, type: 3}
   dialoguePrefab: {fileID: 8033550831943161400, guid: 14d254f3f28496248a01ee9bc2ff04e5, type: 3}
+  nameInputPrefab: {fileID: 7377149913621093293, guid: 2311d7483658db1419522af60cc4bbaf, type: 3}
   verboseLogs: 1
 --- !u!114 &1945811971
 MonoBehaviour:

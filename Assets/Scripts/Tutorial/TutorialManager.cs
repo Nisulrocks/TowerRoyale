@@ -16,10 +16,13 @@ namespace TR.Tutorial
         [Header("Optional Prefabs")]
         [SerializeField] private TutorialArrowUI arrowPrefab;
         [SerializeField] private TutorialDialogueUI dialoguePrefab;
+        [Tooltip("Prefab for the name-input panel used by WaitForNameInput steps. Required for name steps.")]
+        [SerializeField] private TutorialNameInputUI nameInputPrefab;
 
         private TutorialArrowUI _arrow;
         private TutorialDialogueUI _dialogue;
         private TutorialBlockerUI _blocker;
+        private TutorialNameInputUI _nameInput;
         private Canvas _overlayCanvas;
         private int _stepIndex = -1;
         private Button _listenedButton;
@@ -397,6 +400,39 @@ namespace TR.Tutorial
                         while (!listener.Dragged) { yield return null; }
                     }
                 }
+                else if (step.waitMode == StepWaitMode.WaitForNameInput)
+                {
+                    EnsureUI();
+                    
+                    if (_blocker != null) _blocker.Disable();
+                    bool done = false;
+                    string enteredName = null;
+                    if (_nameInput != null)
+                    {
+                        _nameInput.Show(step.namePromptText, step.namePlaceholderText, n => { enteredName = n; done = true; });
+                        
+                        if (_dialogue != null) _dialogue.transform.SetAsLastSibling();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Tutorial] WaitForNameInput step but no name input UI available; skipping.");
+                        done = true;
+                    }
+                    while (!done) yield return null;
+                    if (_nameInput != null) _nameInput.Hide();
+
+                    
+                    if (!string.IsNullOrEmpty(step.nameGreetingFormat))
+                    {
+                        string nameForGreeting = !string.IsNullOrEmpty(enteredName) ? enteredName : PlayerProfile.GetPlayerName();
+                        string greeting;
+                        try { greeting = string.Format(step.nameGreetingFormat, nameForGreeting); }
+                        catch { greeting = step.nameGreetingFormat; }
+                        if (_dialogue != null) _dialogue.Show(greeting, step.typewriterCharDelay);
+                        float g = Mathf.Max(0f, step.nameGreetingSeconds);
+                        while (g > 0f) { g -= Time.unscaledDeltaTime; yield return null; }
+                    }
+                }
                 else
                 {
                     
@@ -686,6 +722,14 @@ namespace TR.Tutorial
                 _blocker = go.AddComponent<TutorialBlockerUI>();
                 _blocker.AttachToCanvas(_overlayCanvas);
                 _blocker.Disable();
+            }
+            
+            if (_nameInput == null && nameInputPrefab != null)
+            {
+                _nameInput = Instantiate(nameInputPrefab, _overlayCanvas.transform, false);
+                _nameInput.gameObject.name = "TutorialNameInputUI";
+                _nameInput.transform.SetAsLastSibling();
+                _nameInput.Hide();
             }
         }
 

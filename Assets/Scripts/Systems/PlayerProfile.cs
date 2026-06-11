@@ -16,6 +16,7 @@ namespace TR.Systems
     [Serializable]
     public class PlayerProfileDTO
     {
+        public string playerName = ""; 
         public int softCurrency = 0;
         public int trophies = 0; 
         
@@ -447,6 +448,37 @@ namespace TR.Systems
             var cfg = TR.Systems.GameDB.GetCastleProgression();
             int level = GetCastleLevel();
             return cfg != null ? Mathf.Max(1, cfg.GetHealthForLevel(level)) : 100;
+        }
+
+        
+        public const int PlayerNameMinLength = 2;
+        public const int PlayerNameMaxLength = 16;
+
+        public static string GetPlayerName() => Data.playerName ?? string.Empty;
+
+        public static bool HasPlayerName() => !string.IsNullOrWhiteSpace(Data.playerName);
+
+        
+        public static void SetPlayerName(string name)
+        {
+            Data.playerName = SanitizePlayerName(name);
+            Save();
+        }
+
+        
+        public static bool IsValidPlayerName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            string trimmed = name.Trim();
+            return trimmed.Length >= PlayerNameMinLength && trimmed.Length <= PlayerNameMaxLength;
+        }
+
+        public static string SanitizePlayerName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+            string trimmed = name.Trim();
+            if (trimmed.Length > PlayerNameMaxLength) trimmed = trimmed.Substring(0, PlayerNameMaxLength);
+            return trimmed;
         }
 
         public static CardProgress GetOrCreateCard(string cardId)

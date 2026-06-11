@@ -15,6 +15,23 @@ MonoBehaviour:
   autoStartForFreshProfiles: 1
   steps:
   - targetMode: 0
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Greetings Commander, We've not seen your around, What shall we
+      call you?
+    typewriterCharDelay: 0.04
+    waitMode: 4
+    waitSeconds: 0
+    blockOutside: 0
+    namePromptText: Enter your Name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Highest of Greetings, Commander {0}!
+    nameGreetingSeconds: 5
+  - targetMode: 0
     targetObjectName: Shop Tab
     targetPackId: 
     targetScreenOffset: {x: 0, y: -1}
@@ -26,6 +43,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 1
     targetObjectName: 
     targetPackId: starter_pack
@@ -38,6 +59,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Deck Tab
     targetPackId: 
@@ -50,6 +75,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 2
     targetObjectName: 
     targetPackId: 
@@ -62,6 +91,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 0
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Play Tab
     targetPackId: 
@@ -75,6 +108,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Play Single
     targetPackId: 
@@ -87,6 +124,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 2
     targetObjectName: 
     targetPackId: 
@@ -99,6 +140,10 @@ MonoBehaviour:
     waitMode: 3
     waitSeconds: 0
     blockOutside: 0
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Start
     targetPackId: 
@@ -111,6 +156,10 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 0
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Castle
     targetPackId: 
@@ -123,6 +172,10 @@ MonoBehaviour:
     waitMode: 1
     waitSeconds: 3
     blockOutside: 0
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5
   - targetMode: 0
     targetObjectName: Arena Icon
     targetPackId: 
@@ -135,3 +188,7 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingSeconds: 1.5

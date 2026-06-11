@@ -14,7 +14,8 @@ namespace TR.Tutorial
         None,
         WaitSeconds,
         WaitForTargetClick,
-        WaitForTargetDrag
+        WaitForTargetDrag,
+        WaitForNameInput
     }
 
     [System.Serializable]
@@ -49,5 +50,15 @@ public float waitSeconds = 0f;
         [Header("Options")]
         [Tooltip("If true, input outside the target is ignored (MVP: not enforced).")]
         public bool blockOutside = false;
+
+        [Header("Name Input (waitMode = WaitForNameInput)")]
+        [Tooltip("Prompt label shown above the name input field.")]
+        public string namePromptText = "Enter your name";
+        [Tooltip("Placeholder text inside the input field.")]
+        public string namePlaceholderText = "Your name...";
+        [Tooltip("Greeting shown in the dialogue box after the name is confirmed. Use {0} for the name. Leave empty to skip.")]
+        public string nameGreetingFormat = "Hello, {0}!";
+        [Tooltip("How long (seconds) to show the greeting before moving to the next step.")]
+        public float nameGreetingSeconds = 1.5f;
     }
 }
