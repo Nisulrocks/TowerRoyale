@@ -3,109 +3,145 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Video;
 using TMPro;
 using TR.Audio;
 
 namespace TR.Infrastructure
 {
-    
-    
-    
     public class LoadingScreen : MonoBehaviour
     {
         [Header("Target Scene")] public string lobbySceneName = "Lobby";
-        [Header("UI (optional)")]
-        public Slider progressBar; 
-        public TMP_Text progressText; 
 
-        public Image blackOverlay; 
-        [Header("Splash Text (optional)")]
-        public TMP_Text companyNameText; 
-        public TMP_Text gameNameText; 
-        [Header("SFX (optional)")]
-        [Tooltip("SFX key to play (via SFXManager) right when the game name appears")]
-        public string gameNameSfxKey = "";
-        [Header("Timings")] 
-        public float fadeOutDuration = 0.35f; 
+        [Header("Company Splash (Video)")]
+        public GameObject blackOverlay;
+        [Tooltip("If null, auto-finds VideoPlayer on blackOverlay")]
+        public VideoPlayer companyVideoPlayer;
+
+        [Header("Game Splash UI")]
+        public GameObject gameSplashScreen;
+
+        [Header("Loading UI")]
+        public Slider progressBar;
+        public TMP_Text progressText;
+
+        [Header("Timings")]
+        public float fadeOutDuration = 0.35f;
         public float fadeInDuration = 0.35f;
-        public float companyFadeIn = 0.4f, companyHold = 0.8f, companyFadeOut = 0.4f;
-        public float gameFadeIn = 0.4f, gameHold = 0.9f, gameFadeOut = 0.4f;
-        public float minTotalSplashTime = 2.0f; 
+        public float companyVideoFadeOut = 0.4f;
+        public float gameSplashFadeIn = 0.4f;
+        public float minTotalSplashTime = 2.0f;
 
         private async void Start()
         {
-            
             var fader = SceneFader.Instance;
-            fader.SetAlpha(0f); 
-
-            
-            SetTextAlpha(companyNameText, 1f);
-            SetTextAlpha(gameNameText, 1f);
-            
-            if (blackOverlay != null)
-            {
-                var c = blackOverlay.color; c.a = 1f; blackOverlay.color = c;
-                if (!blackOverlay.gameObject.activeSelf) blackOverlay.gameObject.SetActive(true);
-            }
-
-            
-            if (progressBar != null)
-            {
-                EnsureActiveHierarchy(progressBar.gameObject);
-            }
-            if (progressText != null)
-            {
-                EnsureActiveHierarchy(progressText.gameObject);
-            }
-
-            
-            var op = SceneManager.LoadSceneAsync(lobbySceneName, LoadSceneMode.Single);
-            op.allowSceneActivation = false;
+            if (fader != null) fader.SetAlpha(0f);
 
             float splashStart = Time.unscaledTime;
 
-            
-            if (companyNameText != null)
+            VideoPlayer vp = companyVideoPlayer;
+            if (vp == null && blackOverlay != null)
             {
-                EnsureActiveHierarchy(companyNameText.gameObject);
-                var cg = GetOrAddCanvasGroup(companyNameText.gameObject);
-                await FadeTMPWithGroup(companyNameText, cg, 0f, 1f, companyFadeIn);
-                await Hold(companyHold);
-                await FadeTMPWithGroup(companyNameText, cg, 1f, 0f, companyFadeOut);
+                vp = blackOverlay.GetComponent<VideoPlayer>();
+                if (vp == null) vp = blackOverlay.GetComponentInChildren<VideoPlayer>(true);
             }
 
-            
+            bool hasVideo = vp != null && (vp.clip != null || !string.IsNullOrEmpty(vp.url));
+            if (!hasVideo && vp != null)
+                Debug.LogWarning("[LoadingScreen] VideoPlayer found but has no clip/url assigned.");
+
             if (blackOverlay != null)
             {
-                await FadeImageAlpha(blackOverlay, 1f, 0f, fadeInDuration);
-                
-                blackOverlay.gameObject.SetActive(false);
+                if (!blackOverlay.activeSelf) blackOverlay.SetActive(true);
+                var cg = GetOrAddCanvasGroup(blackOverlay);
+                cg.alpha = 1f;
             }
 
-            
-            if (gameNameText != null)
+            if (gameSplashScreen != null)
             {
-                EnsureActiveHierarchy(gameNameText.gameObject);
-                var cg2 = GetOrAddCanvasGroup(gameNameText.gameObject);
-                
-                if (!string.IsNullOrEmpty(gameNameSfxKey))
-                {
-                    try { SFXManager.Instance.Play(gameNameSfxKey); } catch { /* ignore if manager not ready */ }
-                }
-                await FadeTMPWithGroup(gameNameText, cg2, 0f, 1f, gameFadeIn);
-                await Hold(gameHold);
-                await FadeTMPWithGroup(gameNameText, cg2, 1f, 0f, gameFadeOut);
+                if (!gameSplashScreen.activeInHierarchy) gameSplashScreen.SetActive(true);
+                var cg = GetOrAddCanvasGroup(gameSplashScreen);
+                cg.alpha = 0f;
             }
 
-            
+            if (progressBar != null)
+            {
+                EnsureActiveHierarchy(progressBar.gameObject);
+                progressBar.value = 0f;
+                var cg = GetOrAddCanvasGroup(progressBar.gameObject);
+                cg.alpha = 0f;
+            }
+
+            if (progressText != null)
+            {
+                EnsureActiveHierarchy(progressText.gameObject);
+                progressText.text = "0%";
+                var cg = GetOrAddCanvasGroup(progressText.gameObject);
+                cg.alpha = 0f;
+            }
+
+            if (hasVideo)
+            {
+                Debug.Log("[LoadingScreen] Playing company video...");
+                var tcs = new System.Threading.Tasks.TaskCompletionSource<object>();
+
+                vp.loopPointReached += source => tcs.TrySetResult(null);
+                vp.errorReceived += (source, msg) =>
+                {
+                    Debug.LogError($"[LoadingScreen] Video error: {msg}");
+                    tcs.TrySetResult(null);
+                };
+
+                vp.Stop();
+                vp.Play();
+
+                await System.Threading.Tasks.Task.WhenAny(
+                    tcs.Task,
+                    System.Threading.Tasks.Task.Delay(30000)
+                );
+                Debug.Log("[LoadingScreen] Company video finished.");
+            }
+            else
+            {
+                Debug.Log("[LoadingScreen] No company video configured; skipping to splash.");
+            }
+
+            if (blackOverlay != null)
+            {
+                var cg = GetOrAddCanvasGroup(blackOverlay);
+                await FadeCanvasGroup(cg, 1f, 0f, companyVideoFadeOut);
+                blackOverlay.SetActive(false);
+            }
+
+            var op = SceneManager.LoadSceneAsync(lobbySceneName, LoadSceneMode.Single);
+            op.allowSceneActivation = false;
+
+            if (gameSplashScreen != null)
+            {
+                var cg = GetOrAddCanvasGroup(gameSplashScreen);
+                await FadeCanvasGroup(cg, 0f, 1f, gameSplashFadeIn);
+            }
+
+            if (progressBar != null)
+            {
+                var cg = GetOrAddCanvasGroup(progressBar.gameObject);
+                await FadeCanvasGroup(cg, 0f, 1f, gameSplashFadeIn);
+            }
+
+            if (progressText != null)
+            {
+                var cg = GetOrAddCanvasGroup(progressText.gameObject);
+                await FadeCanvasGroup(cg, 0f, 1f, gameSplashFadeIn);
+            }
+
             float elapsed = Time.unscaledTime - splashStart;
             if (elapsed < minTotalSplashTime)
             {
                 float wait = minTotalSplashTime - elapsed;
-                float t = 0f; while (t < wait) { t += Time.unscaledDeltaTime; await Task.Yield(); }
+                float t = 0f;
+                while (t < wait) { t += Time.unscaledDeltaTime; await Task.Yield(); }
             }
 
-            
             while (op.progress < 0.9f)
             {
                 OnProgress(Mathf.Clamp01(op.progress / 0.9f));
@@ -113,9 +149,8 @@ namespace TR.Infrastructure
             }
             OnProgress(1f);
 
-            
-            await fader.FadeOut(fadeOutDuration);
-            fader.ScheduleFadeInAfterSceneLoad(fadeInDuration);
+            if (fader != null) await fader.FadeOut(fadeOutDuration);
+            if (fader != null) fader.ScheduleFadeInAfterSceneLoad(fadeInDuration);
             op.allowSceneActivation = true;
             while (!op.isDone) { await Task.Yield(); }
         }
@@ -126,50 +161,11 @@ namespace TR.Infrastructure
             if (progressText != null) progressText.text = Mathf.RoundToInt(p * 100f) + "%";
         }
 
-        private async Task RunSplashSequence()
-        {
-            
-            if (companyNameText != null)
-            {
-                await FadeText(companyNameText, 0f, 1f, companyFadeIn);
-                await Hold(companyHold);
-                await FadeText(companyNameText, 1f, 0f, companyFadeOut);
-            }
-            
-            if (gameNameText != null)
-            {
-                await FadeText(gameNameText, 0f, 1f, gameFadeIn);
-                await Hold(gameHold);
-                await FadeText(gameNameText, 1f, 0f, gameFadeOut);
-            }
-        }
-
-        private void SetTextAlpha(TMP_Text t, float a)
-        {
-            if (t == null) return;
-            var c = t.color; c.a = Mathf.Clamp01(a); t.color = c;
-        }
-
-        private async Task FadeText(TMP_Text t, float from, float to, float duration)
-        {
-            if (t == null) return;
-            float d = Mathf.Max(0.01f, duration);
-            float time = 0f;
-            while (time < d)
-            {
-                time += Time.unscaledDeltaTime;
-                float u = Mathf.Clamp01(time / d);
-                float a = Mathf.Lerp(from, to, u);
-                SetTextAlpha(t, a);
-                await Task.Yield();
-            }
-            SetTextAlpha(t, to);
-        }
-
         private async Task Hold(float duration)
         {
             float d = Mathf.Max(0f, duration);
-            float t = 0f; while (t < d) { t += Time.unscaledDeltaTime; await Task.Yield(); }
+            float t = 0f;
+            while (t < d) { t += Time.unscaledDeltaTime; await Task.Yield(); }
         }
 
         private async Task FadeImageAlpha(Image img, float from, float to, float duration)
@@ -211,8 +207,6 @@ namespace TR.Infrastructure
             }
         }
 
-        
-
         private async Task FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration)
         {
             if (cg == null) return;
@@ -227,27 +221,6 @@ namespace TR.Infrastructure
                 await Task.Yield();
             }
             cg.alpha = to;
-        }
-
-        private async Task FadeTMPWithGroup(TMP_Text txt, CanvasGroup cg, float from, float to, float duration)
-        {
-            if (txt == null) return;
-            var baseColor = txt.color;
-            float d = Mathf.Max(0.01f, duration);
-            float t = 0f;
-            if (cg != null) cg.alpha = from;
-            while (t < d)
-            {
-                t += Time.unscaledDeltaTime;
-                float u = Mathf.Clamp01(t / d);
-                float a = Mathf.Lerp(from, to, u);
-                
-                if (cg != null) cg.alpha = a;
-                var c = baseColor; c.a = a; txt.color = c;
-                await Task.Yield();
-            }
-            if (cg != null) cg.alpha = to;
-            var c2 = baseColor; c2.a = to; txt.color = c2;
         }
     }
 }
