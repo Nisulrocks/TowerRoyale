@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Photon.Pun;
 using TR.Systems;
 using TR.VFX;
 using TR.Audio;
+using TR.Net;
 
 namespace TR.Battle
 {
@@ -43,11 +45,12 @@ namespace TR.Battle
         public System.Action OnCastleDestroyed;
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
+        private bool _destroyed;
 
         private void Start()
         {
             
-            maxHealth = PlayerProfile.GetCastleMaxHealth();
+            maxHealth = DuoRuntime.IsDuo ? ComputeDuoAveragedMaxHealth() : PlayerProfile.GetCastleMaxHealth();
             currentHealth = maxHealth;
             
             if (healthSlider != null)
@@ -63,6 +66,8 @@ namespace TR.Battle
 
         public void TakeDamage(int amount)
         {
+            
+            if (!DuoRuntime.IsSimulationAuthority) return;
             amount = Mathf.Max(0, amount);
             if (amount <= 0) return;
             currentHealth = Mathf.Max(0, currentHealth - amount);
@@ -71,6 +76,46 @@ namespace TR.Battle
             {
                 HandleDestroyed();
             }
+        }
+
+        
+        
+        public void SetNetworkedHealth(int value)
+        {
+            value = Mathf.Clamp(value, 0, maxHealth);
+            if (value == currentHealth) return;
+            currentHealth = value;
+            RefreshUI();
+            if (currentHealth <= 0)
+            {
+                HandleDestroyed();
+            }
+        }
+
+        
+        private int ComputeDuoAveragedMaxHealth()
+        {
+            var cfg = GameDB.GetCastleProgression();
+            var players = PhotonNetwork.PlayerList;
+            if (players == null || players.Length == 0)
+            {
+                return PlayerProfile.GetCastleMaxHealth();
+            }
+            long sum = 0;
+            int n = 0;
+            for (int i = 0; i < players.Length; i++)
+            {
+                int lvl = 1;
+                if (players[i] != null && players[i].CustomProperties != null &&
+                    players[i].CustomProperties.TryGetValue(DuoNetworkManager.PROP_CASTLE, out var v) && v != null)
+                {
+                    lvl = System.Convert.ToInt32(v);
+                }
+                int hp = cfg != null ? Mathf.Max(1, cfg.GetHealthForLevel(Mathf.Max(1, lvl))) : 100;
+                sum += hp;
+                n++;
+            }
+            return n > 0 ? Mathf.Max(1, (int)(sum / n)) : PlayerProfile.GetCastleMaxHealth();
         }
 
         public void Heal(int amount)
@@ -157,6 +202,8 @@ namespace TR.Battle
 
         private void HandleDestroyed()
         {
+            if (_destroyed) return;
+            _destroyed = true;
             Debug.Log("[BaseCastle] Castle destroyed!");
             
             if (!string.IsNullOrEmpty(deathVfxKey))

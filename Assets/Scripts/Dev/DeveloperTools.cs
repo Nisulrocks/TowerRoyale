@@ -27,6 +27,13 @@ namespace TR.Dev
             Debug.Log("[Dev] Gave player +100 trophies.");
         }
 
+        [ContextMenu("Remove Trophies (-50)")]
+        public void RemoveTrophies()
+        {
+            PlayerProfile.RemoveTrophies(50);
+            Debug.Log("[Dev] Removed 50 trophies from player.");
+        }
+
         [ContextMenu("Ban Player (60 min)")]
         public void BanPlayer()
         {

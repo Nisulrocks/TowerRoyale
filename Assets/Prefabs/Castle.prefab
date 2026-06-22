@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 482452287282856455}
   - component: {fileID: 6228876627309804322}
   - component: {fileID: 8553031257702342071}
+  - component: {fileID: -9138338390658454248}
+  - component: {fileID: 1846972086328279535}
   m_Layer: 0
   m_Name: Castle
   m_TagString: Untagged
@@ -113,3 +115,37 @@ MonoBehaviour:
   deathSfxKey: 
   maxHealth: 0
   currentHealth: 0
+--- !u!114 &-9138338390658454248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5125272604410283186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &1846972086328279535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5125272604410283186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1081789b685de0641811c72eab1187a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

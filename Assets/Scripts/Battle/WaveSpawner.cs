@@ -100,16 +100,15 @@ namespace TR.Battle
                 }
             }
             
+            
+            float coop = TR.Net.DuoRuntime.IsDuo ? CoopEnemyStatMultiplier : 1f;
+
             if (boss != null)
             {
                 var sp = GetSpawnPoint(Random.Range(0, Mathf.Max(1, spawnPoints.Length)));
-                var bossEnemy = SpawnEnemy(boss, sp);
-                if (bossEnemy != null)
-                {
-                    
-                    _arena.GetBossScalingForWave(waveNumber, out float hMul, out float dMul, out float sMul);
-                    bossEnemy.ApplyBossScaling(hMul, dMul, sMul);
-                }
+                _arena.GetBossScalingForWave(waveNumber, out float hMul, out float dMul, out float sMul);
+                
+                SpawnEnemyScaled(boss, sp, hMul * coop, dMul * coop, sMul);
                 _spawnedThisWave++;
                 
                 count = Mathf.Max(0, count - 1);
@@ -120,7 +119,8 @@ namespace TR.Battle
             {
                 var def = GetWeightedEnemyForWave(waveNumber);
                 var sp = GetSpawnPoint(i % spawnPoints.Length);
-                _ = SpawnEnemy(def, sp);
+                
+                SpawnEnemyScaled(def, sp, coop, coop, 1f);
                 _spawnedThisWave++;
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
@@ -148,13 +148,27 @@ namespace TR.Battle
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
         }
 
-        private EnemyBase2D SpawnEnemy(EnemyDefinition def, Transform point)
+        
+        [Tooltip("Multiplier applied to enemy health and damage in duo co-op mode.")]
+        public const float CoopEnemyStatMultiplier = 2f;
+
+        
+        
+        private EnemyBase2D SpawnEnemyScaled(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul)
         {
             if (def == null)
             {
                 Debug.LogWarning("[WaveSpawner] Null EnemyDefinition; skipping spawn.");
                 return null;
             }
+
+            
+            
+            if (TR.Net.DuoRuntime.IsDuo)
+            {
+                return SpawnEnemyNetworked(def, point, healthMul, damageMul, speedMul);
+            }
+
             GameObject go = null;
             if (def.Prefab != null)
             {
@@ -176,6 +190,42 @@ namespace TR.Battle
             if (enemy == null) enemy = go.AddComponent<EnemyBase2D>();
             enemy.Initialize(def, path);
             enemy.SetArena(_arena);
+            
+            if (!(Mathf.Approximately(healthMul, 1f) && Mathf.Approximately(damageMul, 1f) && Mathf.Approximately(speedMul, 1f)))
+            {
+                enemy.ApplyBossScaling(healthMul, damageMul, speedMul);
+            }
+            return enemy;
+        }
+
+        
+        
+        private EnemyBase2D SpawnEnemyNetworked(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul)
+        {
+            
+            if (!Photon.Pun.PhotonNetwork.IsMasterClient) return null;
+
+            if (def.Prefab == null)
+            {
+                Debug.LogError($"[WaveSpawner] Duo spawn requires a prefab on EnemyDefinition '{def.name}'. Placeholder enemies are not supported in duo.");
+                return null;
+            }
+
+            string prefabId = TR.Net.DuoEnemyPrefabPool.EnemyPrefabId(def);
+            Vector3 pos = point != null ? point.position : Vector3.zero;
+            object[] data = new object[] { def.EnemyId, healthMul, damageMul, speedMul };
+
+            var go = Photon.Pun.PhotonNetwork.InstantiateRoomObject(prefabId, pos, Quaternion.identity, 0, data);
+            if (go == null)
+            {
+                Debug.LogError($"[WaveSpawner] InstantiateRoomObject failed for '{prefabId}'. Ensure the enemy prefab has a PhotonView + EnemyNetSync.");
+                return null;
+            }
+            go.name = $"{def.name}";
+
+            
+            
+            var enemy = go.GetComponent<EnemyBase2D>();
             return enemy;
         }
 

@@ -32,6 +32,8 @@ namespace TR.Battle
         [SerializeField] private ArenaDefinition overrideArena; 
 
         private ArenaDefinition _arena;
+        
+        public static ArenaDefinition CurrentArena { get; private set; }
         private int _wavesCleared;
         private bool _running;
         private bool _ended;
@@ -41,6 +43,9 @@ namespace TR.Battle
         private Color _enemiesDefaultColor = Color.white;
         private bool _started = false;       
         private bool _skipRequested = false; 
+        
+        private TR.Net.DuoBattleCoordinator _coordinator;
+        private bool _isDuoClient; 
         [Header("Skip Settings")]
         [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
@@ -50,7 +55,7 @@ namespace TR.Battle
             
             if (MatchContext.IsDuo)
             {
-                Debug.Log("[BattleSceneController] Duo mode selected. Networking lands in Phase 1; running single-player-style for now.");
+                SetupDuoCoordinator();
             }
             SetupArenaFromContext();
             UpdateTopBar();
@@ -82,6 +87,7 @@ namespace TR.Battle
                 var list = GameDB.GetArenasSortedByRequirement();
                 if (list != null && list.Count > 0) _arena = list[0];
             }
+            CurrentArena = _arena;
             if (arenaNameText) arenaNameText.text = _arena != null ? _arena.DisplayName : "Arena -";
             if (waveSpawner != null) waveSpawner.Configure(_arena);
         }
@@ -158,6 +164,8 @@ namespace TR.Battle
                     
                     if (timerText) timerText.text = string.Empty;
                     if (startSkipButton != null) startSkipButton.gameObject.SetActive(false);
+                    
+                    BroadcastWaveState(i + 1, total, 0f, TR.Net.DuoBattleCoordinator.PHASE_FINAL);
                     yield return StartCoroutine(WaitForAllEnemiesCleared());
                 }
             }
@@ -166,7 +174,18 @@ namespace TR.Battle
             if (!_ended)
             {
                 _running = false;
+                
+                if (MatchContext.IsDuo && _coordinator != null) _coordinator.BroadcastVictory();
                 ShowResultsVictory();
+            }
+        }
+
+        
+        private void BroadcastWaveState(int wave, int total, float timer, int phase)
+        {
+            if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                _coordinator.BroadcastWaveState(wave, total, timer, phase);
             }
         }
 
@@ -188,11 +207,15 @@ namespace TR.Battle
                     _skipRequested = false;
                 }
                 if (timerText) timerText.text = $"Next wave in {Mathf.CeilToInt(t)}s";
+                
+                BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, t, TR.Net.DuoBattleCoordinator.PHASE_COUNTDOWN);
                 UpdateEnemiesRemainingText();
                 yield return null;
                 t -= Time.deltaTime;
             }
             if (timerText) timerText.text = "Spawning...";
+            
+            BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, 0f, TR.Net.DuoBattleCoordinator.PHASE_SPAWNING);
             _skipRequested = false;
             
             UpdateEnemiesRemainingText();
@@ -245,6 +268,109 @@ namespace TR.Battle
             StartCoroutine(FadeInResultsPanelSimple());
         }
 
+        
+        private void SetupDuoCoordinator()
+        {
+            _coordinator = TR.Net.DuoBattleCoordinator.Instance;
+            if (_coordinator == null)
+            {
+                _coordinator = FindFirstObjectByType<TR.Net.DuoBattleCoordinator>(FindObjectsInactive.Include);
+            }
+            if (_coordinator == null)
+            {
+                Debug.LogError("[BattleSceneController] Duo mode but no DuoBattleCoordinator found in scene. Add one with a scene PhotonView.");
+                return;
+            }
+            _isDuoClient = !Photon.Pun.PhotonNetwork.IsMasterClient;
+            _coordinator.OnMatchStarted += OnDuoMatchStarted;
+            _coordinator.OnWaveStateReceived += OnDuoWaveStateReceived;
+            _coordinator.OnVictoryReceived += OnDuoVictoryReceived;
+            _coordinator.OnDefeatReceived += OnDuoDefeatReceived;
+            _coordinator.OnSkipRequested += OnDuoSkipRequested;
+        }
+
+        private void OnDestroy()
+        {
+            if (_coordinator != null)
+            {
+                _coordinator.OnMatchStarted -= OnDuoMatchStarted;
+                _coordinator.OnWaveStateReceived -= OnDuoWaveStateReceived;
+                _coordinator.OnVictoryReceived -= OnDuoVictoryReceived;
+                _coordinator.OnDefeatReceived -= OnDuoDefeatReceived;
+                _coordinator.OnSkipRequested -= OnDuoSkipRequested;
+            }
+        }
+
+        
+        private void OnDuoMatchStarted()
+        {
+            if (_ended) return;
+            _started = true;
+            if (startSkipButtonText != null) startSkipButtonText.text = "Skip Wait";
+            if (Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                
+                StartCoroutine(RunMatch());
+            }
+            else
+            {
+                
+                _running = true;
+                if (resultsPanel) resultsPanel.SetActive(false);
+            }
+        }
+
+        
+        private void OnDuoWaveStateReceived(int wave, int total, float timer, int phase)
+        {
+            if (!_isDuoClient || _ended) return;
+            _wavesCleared = Mathf.Clamp(wave - 1, 0, Mathf.Max(0, total));
+            if (waveText) waveText.text = $"Wave {Mathf.Clamp(wave, 1, total)}/{total}";
+            bool isFinal = phase == TR.Net.DuoBattleCoordinator.PHASE_FINAL;
+            if (timerText)
+            {
+                timerText.gameObject.SetActive(!isFinal);
+                if (phase == TR.Net.DuoBattleCoordinator.PHASE_COUNTDOWN)
+                    timerText.text = $"Next wave in {Mathf.CeilToInt(timer)}s";
+                else if (phase == TR.Net.DuoBattleCoordinator.PHASE_SPAWNING)
+                    timerText.text = "Spawning...";
+                else
+                    timerText.text = string.Empty;
+            }
+            
+            if (startSkipButton != null)
+            {
+                bool showSkip = !isFinal;
+                startSkipButton.gameObject.SetActive(showSkip);
+                if (showSkip && startSkipButtonText != null) startSkipButtonText.text = "Skip Wait";
+            }
+        }
+
+        private void OnDuoVictoryReceived()
+        {
+            if (_ended) return;
+            _ended = true;
+            _running = false;
+            ShowResultsVictory();
+        }
+
+        
+        private void OnDuoDefeatReceived()
+        {
+            if (_ended) return;
+            _ended = true;
+            _running = false;
+            StopAllCoroutines();
+            StartCoroutine(DefeatCleanup());
+            ShowResultsDefeat();
+        }
+
+        private void OnDuoSkipRequested()
+        {
+            
+            if (Photon.Pun.PhotonNetwork.IsMasterClient) _skipRequested = true;
+        }
+
         private void HookCastle()
         {
             var castle = FindFirstObjectByType<BaseCastle>(FindObjectsInactive.Include);
@@ -259,6 +385,11 @@ namespace TR.Battle
             if (_ended) return;
             _ended = true;
             _running = false;
+            
+            if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                _coordinator.BroadcastDefeat();
+            }
             StopAllCoroutines();
             StartCoroutine(DefeatCleanup());
             ShowResultsDefeat();
@@ -276,6 +407,26 @@ namespace TR.Battle
         private void OnClickStartOrSkip()
         {
             if (_ended) return;
+
+            
+            if (MatchContext.IsDuo && _coordinator != null)
+            {
+                if (!_started)
+                {
+                    
+                    _coordinator.LocalReadyUp();
+                    if (startSkipButtonText != null) startSkipButtonText.text = "Waiting for partner...";
+                    if (startSkipButton != null) startSkipButton.interactable = false;
+                }
+                else
+                {
+                    
+                    if (Photon.Pun.PhotonNetwork.IsMasterClient) _skipRequested = true;
+                    else _coordinator.RequestSkip();
+                }
+                return;
+            }
+
             if (!_started)
             {
                 

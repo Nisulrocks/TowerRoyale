@@ -39,6 +39,18 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - RpcMatchStarted
+  - RpcReadyUp
+  - RpcRequestSkip
+  - RpcVictory
+  - RpcWaveState
+  - RpcApplyBurn
+  - RpcApplyDamage
+  - RpcApplyFrostbite
+  - RpcApplyPoison
+  - RpcApplySlow
+  - RpcApplyStun
+  - RpcDefeat
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

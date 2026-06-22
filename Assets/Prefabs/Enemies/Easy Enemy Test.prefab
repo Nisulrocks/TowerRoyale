@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 4737690221485096579}
   - component: {fileID: 7161584062247979926}
   - component: {fileID: -9147176943419690883}
+  - component: {fileID: -414788723417171680}
+  - component: {fileID: 1441826355939471513}
   m_Layer: 0
   m_Name: Easy Enemy Test
   m_TagString: Untagged
@@ -106,6 +108,9 @@ MonoBehaviour:
   waypointIndex: 0
   path: {fileID: 0}
   reachThreshold: 0.02
+  _runtimeMaxHealth: 0
+  _bossDamageMult: 1
+  defaultFacingRight: 1
   autoFindPath: 1
   healthBarUIPrefab: {fileID: 2184231122396617306, guid: c4b4c0ffe1955974db9633ba4e47af73, type: 3}
   healthBarCanvas: {fileID: 3643839534106175484, guid: 1e35bd258646ebb4495fa5570f33140d, type: 3}
@@ -129,3 +134,39 @@ MonoBehaviour:
   attackInterval: 1
   stunTickVfxKey: 
   stunTickVfxInterval: 0.35
+--- !u!114 &-414788723417171680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7063429890210703705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 0
+  ObservedComponents:
+  - {fileID: 1441826355939471513}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &1441826355939471513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7063429890210703705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db69547458b698c41b79752c8fe1447c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interpolateSpeed: 12

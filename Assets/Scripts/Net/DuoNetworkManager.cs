@@ -48,6 +48,12 @@ namespace TR.Net
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            
+            if (!(PhotonNetwork.PrefabPool is DuoEnemyPrefabPool))
+            {
+                PhotonNetwork.PrefabPool = new DuoEnemyPrefabPool();
+            }
         }
 
         

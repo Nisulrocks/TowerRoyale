@@ -1,8 +1,10 @@
 using UnityEngine;
+using Photon.Pun;
 using TR.Data;
 using TR.UI;
 using TR.VFX;
 using TR.Audio;
+using TR.Net;
 
 namespace TR.Battle
 {
@@ -92,9 +94,12 @@ namespace TR.Battle
         public float MaxHealth => _runtimeMaxHealth > 0f ? _runtimeMaxHealth : (definition != null ? definition.MaxHealth : Mathf.Max(currentHealth, 1f));
         public System.Action<float, float> OnHealthChanged; 
 
+        private TR.Net.EnemyNetSync _netSync;
+
         private void Awake()
         {
             
+            _netSync = GetComponent<TR.Net.EnemyNetSync>();
             
             if (path == null && autoFindPath)
             {
@@ -504,6 +509,10 @@ namespace TR.Battle
 
         private void Update()
         {
+            
+            
+            if (!DuoRuntime.IsSimulationAuthority) return;
+
             TickStatusEffects();
             
             TryTickPulseNuke(Time.deltaTime);
@@ -748,6 +757,7 @@ namespace TR.Battle
         public void ApplyBurn(float dps, float duration)
         {
             if (dps <= 0f || duration <= 0f) return;
+            if (DuoRuntime.IsRemoteClient) { _netSync?.ForwardBurn(dps, duration); return; }
             _burnDps += Mathf.Max(0f, dps);
             _burnTime = Mathf.Max(_burnTime, duration);
         }
@@ -755,6 +765,7 @@ namespace TR.Battle
         public void ApplyPoison(float dps, float duration)
         {
             if (dps <= 0f || duration <= 0f) return;
+            if (DuoRuntime.IsRemoteClient) { _netSync?.ForwardPoison(dps, duration); return; }
             _poisonDps += Mathf.Max(0f, dps);
             _poisonTime = Mathf.Max(_poisonTime, duration);
         }
@@ -763,6 +774,7 @@ namespace TR.Battle
         {
             percent = Mathf.Clamp(percent, 0f, 0.95f);
             if (percent <= 0f || duration <= 0f) return;
+            if (DuoRuntime.IsRemoteClient) { _netSync?.ForwardSlow(percent, duration); return; }
             _slowPercent = Mathf.Max(_slowPercent, percent);
             
             _slowTime += duration;
@@ -784,6 +796,14 @@ namespace TR.Battle
 
         public void TakeDamage(float amount, DamageType type)
         {
+            
+            
+            if (DuoRuntime.IsRemoteClient)
+            {
+                _netSync?.ForwardDamage(Mathf.Max(0f, amount));
+                return;
+            }
+            if (!DuoRuntime.IsSimulationAuthority) return;
             amount = Mathf.Max(0f, amount);
             
             float effective = Mathf.Min(amount, Mathf.Max(0f, currentHealth));
@@ -816,6 +836,8 @@ namespace TR.Battle
         
         public void TakeDamageFromStatus(float amount, DamageType type)
         {
+            
+            if (!DuoRuntime.IsSimulationAuthority) return;
             amount = Mathf.Max(0f, amount);
             float effective = Mathf.Min(amount, Mathf.Max(0f, currentHealth));
             currentHealth -= effective;
@@ -841,6 +863,15 @@ namespace TR.Battle
             }
         }
 
+        
+        public void SetNetworkedHealth(float value)
+        {
+            value = Mathf.Clamp(value, 0f, MaxHealth);
+            if (Mathf.Approximately(value, currentHealth)) return;
+            currentHealth = value;
+            OnHealthChanged?.Invoke(Mathf.Max(0f, currentHealth), MaxHealth);
+        }
+
         private void Die()
         {
             
@@ -860,6 +891,16 @@ namespace TR.Battle
             if (_animator != null && !string.IsNullOrEmpty(_dieTriggerParam))
             {
                 _animator.SetTrigger(_dieTriggerParam);
+            }
+            
+            if (DuoRuntime.IsDuo)
+            {
+                var pv = GetComponent<PhotonView>();
+                if (pv != null && PhotonNetwork.IsMasterClient)
+                {
+                    PhotonNetwork.Destroy(gameObject);
+                    return;
+                }
             }
             Destroy(gameObject);
         }
@@ -977,6 +1018,7 @@ namespace TR.Battle
         {
             dps = Mathf.Max(0f, dps);
             duration = Mathf.Max(0f, duration);
+            if (DuoRuntime.IsRemoteClient) { if (dps > 0f && duration > 0f) _netSync?.ForwardFrostbite(dps, duration); return; }
             if (dps <= 0f || duration <= 0f) return;
             _frostbiteDps += dps;
             _frostbiteTime = Mathf.Max(_frostbiteTime, duration);
@@ -985,6 +1027,7 @@ namespace TR.Battle
         {
             duration = Mathf.Max(0f, duration);
             if (duration <= 0f) return;
+            if (DuoRuntime.IsRemoteClient) { _netSync?.ForwardStun(duration); return; }
             
             _stunTime = Mathf.Max(_stunTime, duration);
             
