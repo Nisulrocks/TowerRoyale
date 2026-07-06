@@ -33,6 +33,8 @@ namespace TR.UI
 
         private Coroutine _fadeCo;
         private Coroutine _popCo;
+        
+        private DuoNetworkManager _subscribedMgr;
 
         private void Awake()
         {
@@ -70,6 +72,9 @@ namespace TR.UI
         
         public void Show(Sprite arenaSprite = null)
         {
+            
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
+            CancelInvoke(nameof(Hide));
             EnsureCanvasGroup();
             if (panelRoot != null) panelRoot.SetActive(true);
             Subscribe();
@@ -189,10 +194,18 @@ namespace TR.UI
             return 1f + (s + 1f) * inv * inv * inv + s * inv * inv;
         }
 
+        private void OnDestroy()
+        {
+            Unsubscribe();
+        }
+
         private void Subscribe()
         {
+            
+            Unsubscribe();
             var mgr = DuoNetworkManager.Instance;
             if (mgr == null) return;
+            _subscribedMgr = mgr;
             mgr.OnStatusChanged += HandleStatus;
             mgr.OnCancelled += HandleCancelled;
             mgr.OnFailed += HandleFailed;
@@ -200,11 +213,13 @@ namespace TR.UI
 
         private void Unsubscribe()
         {
-            var mgr = DuoNetworkManager.Instance;
+            
+            var mgr = _subscribedMgr;
             if (mgr == null) return;
             mgr.OnStatusChanged -= HandleStatus;
             mgr.OnCancelled -= HandleCancelled;
             mgr.OnFailed -= HandleFailed;
+            _subscribedMgr = null;
         }
 
         private void HandleStatus(string msg)

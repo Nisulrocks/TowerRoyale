@@ -44,6 +44,12 @@ namespace TR.Battle
         private bool _started = false;       
         private bool _skipRequested = false; 
         
+        private bool _localVotedSkip = false;
+        private int _skipVotes = 0;
+        private int _skipNeeded = 2;
+        
+        private bool _remoteAllowSkip = false;
+        
         private TR.Net.DuoBattleCoordinator _coordinator;
         private bool _isDuoClient; 
         [Header("Skip Settings")]
@@ -165,7 +171,7 @@ namespace TR.Battle
                     if (timerText) timerText.text = string.Empty;
                     if (startSkipButton != null) startSkipButton.gameObject.SetActive(false);
                     
-                    BroadcastWaveState(i + 1, total, 0f, TR.Net.DuoBattleCoordinator.PHASE_FINAL);
+                    BroadcastWaveState(i + 1, total, 0f, TR.Net.DuoBattleCoordinator.PHASE_FINAL, false);
                     yield return StartCoroutine(WaitForAllEnemiesCleared());
                 }
             }
@@ -181,41 +187,48 @@ namespace TR.Battle
         }
 
         
-        private void BroadcastWaveState(int wave, int total, float timer, int phase)
+        private void BroadcastWaveState(int wave, int total, float timer, int phase, bool allowSkip)
         {
             if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
             {
-                _coordinator.BroadcastWaveState(wave, total, timer, phase);
+                _coordinator.BroadcastWaveState(wave, total, timer, phase, allowSkip);
             }
         }
 
         private IEnumerator Countdown(float seconds)
         {
+            
+            ResetSkipVotesForNewWave();
+
             float t = Mathf.Max(0f, seconds);
             while (t > 0f)
             {
                 
+                bool allowSkip = CanSkipNow();
                 if (startSkipButton != null)
                 {
-                    startSkipButton.interactable = CanSkipNow();
+                    startSkipButton.interactable = !_localVotedSkip && allowSkip;
                 }
                 if (_skipRequested)
                 {
                     
-                    if (CanSkipNow()) break;
+                    if (allowSkip) break;
                     
                     _skipRequested = false;
+                    
+                    if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
+                        _coordinator.ResetSkipVotes();
                 }
                 if (timerText) timerText.text = $"Next wave in {Mathf.CeilToInt(t)}s";
                 
-                BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, t, TR.Net.DuoBattleCoordinator.PHASE_COUNTDOWN);
+                BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, t, TR.Net.DuoBattleCoordinator.PHASE_COUNTDOWN, allowSkip);
                 UpdateEnemiesRemainingText();
                 yield return null;
                 t -= Time.deltaTime;
             }
             if (timerText) timerText.text = "Spawning...";
             
-            BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, 0f, TR.Net.DuoBattleCoordinator.PHASE_SPAWNING);
+            BroadcastWaveState(_wavesCleared + 1, _arena != null ? _arena.WaveCount : 1, 0f, TR.Net.DuoBattleCoordinator.PHASE_SPAWNING, false);
             _skipRequested = false;
             
             UpdateEnemiesRemainingText();
@@ -286,7 +299,9 @@ namespace TR.Battle
             _coordinator.OnWaveStateReceived += OnDuoWaveStateReceived;
             _coordinator.OnVictoryReceived += OnDuoVictoryReceived;
             _coordinator.OnDefeatReceived += OnDuoDefeatReceived;
-            _coordinator.OnSkipRequested += OnDuoSkipRequested;
+            _coordinator.OnSkipVoteChanged += OnDuoSkipVoteChanged;
+            _coordinator.OnSkipConfirmed += OnDuoSkipConfirmed;
+            _coordinator.OnSpawnPortalsChanged += OnDuoSpawnPortalsChanged;
         }
 
         private void OnDestroy()
@@ -297,7 +312,9 @@ namespace TR.Battle
                 _coordinator.OnWaveStateReceived -= OnDuoWaveStateReceived;
                 _coordinator.OnVictoryReceived -= OnDuoVictoryReceived;
                 _coordinator.OnDefeatReceived -= OnDuoDefeatReceived;
-                _coordinator.OnSkipRequested -= OnDuoSkipRequested;
+                _coordinator.OnSkipVoteChanged -= OnDuoSkipVoteChanged;
+                _coordinator.OnSkipConfirmed -= OnDuoSkipConfirmed;
+                _coordinator.OnSpawnPortalsChanged -= OnDuoSpawnPortalsChanged;
             }
         }
 
@@ -321,9 +338,10 @@ namespace TR.Battle
         }
 
         
-        private void OnDuoWaveStateReceived(int wave, int total, float timer, int phase)
+        private void OnDuoWaveStateReceived(int wave, int total, float timer, int phase, bool allowSkip)
         {
             if (!_isDuoClient || _ended) return;
+            _remoteAllowSkip = allowSkip;
             _wavesCleared = Mathf.Clamp(wave - 1, 0, Mathf.Max(0, total));
             if (waveText) waveText.text = $"Wave {Mathf.Clamp(wave, 1, total)}/{total}";
             bool isFinal = phase == TR.Net.DuoBattleCoordinator.PHASE_FINAL;
@@ -342,8 +360,18 @@ namespace TR.Battle
             {
                 bool showSkip = !isFinal;
                 startSkipButton.gameObject.SetActive(showSkip);
-                if (showSkip && startSkipButtonText != null) startSkipButtonText.text = "Skip Wait";
+                
+                if (showSkip) UpdateSkipButtonLabel();
             }
+        }
+
+        
+        
+        private void OnDuoSpawnPortalsChanged(bool open)
+        {
+            if (!_isDuoClient || waveSpawner == null) return;
+            if (open) waveSpawner.OpenSpawnPortals();
+            else waveSpawner.CloseAllPortals();
         }
 
         private void OnDuoVictoryReceived()
@@ -365,10 +393,55 @@ namespace TR.Battle
             ShowResultsDefeat();
         }
 
-        private void OnDuoSkipRequested()
+        
+        private void OnDuoSkipVoteChanged(int votes, int needed)
         {
+            _skipVotes = votes;
+            _skipNeeded = Mathf.Max(1, needed);
+            
+            if (votes <= 0) _localVotedSkip = false;
+            UpdateSkipButtonLabel();
+        }
+
+        
+        private void OnDuoSkipConfirmed()
+        {
+            _localVotedSkip = false;
             
             if (Photon.Pun.PhotonNetwork.IsMasterClient) _skipRequested = true;
+        }
+
+        
+        private void UpdateSkipButtonLabel()
+        {
+            if (!_started || _ended) return;
+            if (startSkipButtonText == null) return;
+            if (_skipVotes > 0 && _skipVotes < _skipNeeded)
+                startSkipButtonText.text = $"Skip vote ({_skipVotes}/{_skipNeeded})";
+            else
+                startSkipButtonText.text = "Skip Wait";
+            if (startSkipButton != null)
+                startSkipButton.interactable = !_localVotedSkip && CanSkipNowEffective();
+        }
+
+        
+        
+        private bool CanSkipNowEffective()
+        {
+            
+            if (MatchContext.IsDuo && _isDuoClient) return _remoteAllowSkip;
+            return CanSkipNow();
+        }
+
+        
+        private void ResetSkipVotesForNewWave()
+        {
+            _localVotedSkip = false;
+            _skipVotes = 0;
+            if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                _coordinator.ResetSkipVotes();
+            }
         }
 
         private void HookCastle()
@@ -421,8 +494,11 @@ namespace TR.Battle
                 else
                 {
                     
-                    if (Photon.Pun.PhotonNetwork.IsMasterClient) _skipRequested = true;
-                    else _coordinator.RequestSkip();
+                    if (_localVotedSkip) return;
+                    if (!CanSkipNowEffective()) return;
+                    _localVotedSkip = true;
+                    if (startSkipButton != null) startSkipButton.interactable = false;
+                    _coordinator.CastSkipVote();
                 }
                 return;
             }
@@ -463,7 +539,7 @@ namespace TR.Battle
             
             if (startSkipButton != null)
             {
-                startSkipButton.interactable = CanSkipNow();
+                startSkipButton.interactable = !_localVotedSkip && CanSkipNowEffective();
             }
         }
 

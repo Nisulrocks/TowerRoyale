@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: enchanting_shrine
   displayName: Enchanting Shrine
-  icon: {fileID: 0}
+  icon: {fileID: 1956171629040921569, guid: 904dd0a3711f1ca4e8c964e1380db274, type: 3}
   rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}

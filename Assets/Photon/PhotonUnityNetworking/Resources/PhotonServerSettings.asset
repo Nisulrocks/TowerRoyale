@@ -51,6 +51,14 @@ MonoBehaviour:
   - RpcApplySlow
   - RpcApplyStun
   - RpcDefeat
+  - RpcTowerPlaced
+  - RpcTowerRemoved
+  - RpcCastSkipVote
+  - RpcSkipConfirmed
+  - RpcSkipVoteState
+  - RpcPlayDeath
+  - RpcAwardMoney
+  - RpcSpawnPortals
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

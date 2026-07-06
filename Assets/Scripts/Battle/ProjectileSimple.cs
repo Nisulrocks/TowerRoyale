@@ -17,9 +17,11 @@ namespace TR.Battle
         private int _level;
         private string _impactVfxKey;
         private bool _isCritShot;
+        private bool _visualOnly;
 
         public void Init(EnemyBase2D target, float speed, float damage, float splashRadius,
-                         TowerBase owner, CardDefinition def, int level, string impactVfxKey = null, bool isCritShot = false)
+                         TowerBase owner, CardDefinition def, int level, string impactVfxKey = null, bool isCritShot = false,
+                         bool visualOnly = false)
         {
             _target = target;
             _speed = Mathf.Max(0.1f, speed);
@@ -30,6 +32,7 @@ namespace TR.Battle
             _level = Mathf.Max(1, level);
             _impactVfxKey = impactVfxKey ?? string.Empty;
             _isCritShot = isCritShot;
+            _visualOnly = visualOnly;
         }
 
         private void Update()
@@ -59,6 +62,8 @@ namespace TR.Battle
             {
                 TR.VFX.ParticleManager.SpawnOneShot(_impactVfxKey, hitPos);
             }
+            
+            if (_visualOnly) return;
             if (_owner == null || _def == null)
             {
                 return;

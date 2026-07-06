@@ -8,18 +8,22 @@ namespace TR.Battle
     {
         private Transform _snap;
         private TowerPlacementController _controller;
+        private int _snapIndex = -1;
+        private bool _isMirror;
 
-        public void Bind(Transform snap, TowerPlacementController controller)
+        public void Bind(Transform snap, TowerPlacementController controller, int snapIndex = -1, bool isMirror = false)
         {
             _snap = snap;
             _controller = controller;
+            _snapIndex = snapIndex;
+            _isMirror = isMirror;
         }
 
         private void OnDestroy()
         {
             if (_controller != null && _snap != null)
             {
-                _controller.FreeSnap(_snap);
+                _controller.NotifyTowerDestroyed(_snap, _snapIndex, _isMirror);
             }
         }
     }

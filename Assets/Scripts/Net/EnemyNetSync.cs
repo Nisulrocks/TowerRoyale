@@ -84,10 +84,20 @@ namespace TR.Net
             _flushTimer -= Time.deltaTime;
             if (_pendingDamage > 0f && _flushTimer <= 0f)
             {
-                photonView.RPC(nameof(RpcApplyDamage), RpcTarget.MasterClient, _pendingDamage);
+                
+                if (photonView != null && _enemy != null && _enemy.CurrentHealth > 0f)
+                {
+                    photonView.RPC(nameof(RpcApplyDamage), RpcTarget.MasterClient, _pendingDamage);
+                }
                 _pendingDamage = 0f;
                 _flushTimer = DamageFlushInterval;
             }
+        }
+
+        private void OnDisable()
+        {
+            
+            _pendingDamage = 0f;
         }
 
         
@@ -106,9 +116,11 @@ namespace TR.Net
         public void ForwardStun(float duration) => photonView.RPC(nameof(RpcApplyStun), RpcTarget.MasterClient, duration);
 
         [PunRPC]
-        private void RpcApplyDamage(float amount)
+        private void RpcApplyDamage(float amount, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient || _enemy == null) return;
+            
+            if (info.Sender != null) _enemy.SetIncomingDamager(info.Sender.ActorNumber);
             _enemy.TakeDamage(amount, DamageType.Normal);
         }
 
@@ -145,6 +157,21 @@ namespace TR.Net
         {
             if (!PhotonNetwork.IsMasterClient || _enemy == null) return;
             _enemy.ApplyStun(duration);
+        }
+
+        
+        
+        public void BroadcastDeath()
+        {
+            if (!PhotonNetwork.IsMasterClient || photonView == null) return;
+            photonView.RPC(nameof(RpcPlayDeath), RpcTarget.Others);
+        }
+
+        [PunRPC]
+        private void RpcPlayDeath()
+        {
+            
+            if (_enemy != null) _enemy.PlayRemoteDeathFeedback();
         }
 
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

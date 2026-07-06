@@ -35,7 +35,19 @@ namespace TR.Battle
             _arena = arena;
         }
 
-        private void CloseAllPortals()
+        public void CloseAllPortals()
+        {
+            
+            if (TR.Net.DuoRuntime.IsSimulationAuthority && _activePortals.Count > 0)
+            {
+                TR.Net.DuoBattleCoordinator.Instance?.BroadcastSpawnPortals(false);
+            }
+            CloseAllPortalsLocal();
+        }
+
+        
+        
+        private void CloseAllPortalsLocal()
         {
             if (_activePortals.Count == 0) return;
             foreach (var kv in _activePortals)
@@ -46,6 +58,34 @@ namespace TR.Battle
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
             _activePortals.Clear();
+        }
+
+        
+        
+        public void OpenSpawnPortals()
+        {
+            
+            if (TR.Net.DuoRuntime.IsSimulationAuthority)
+            {
+                TR.Net.DuoBattleCoordinator.Instance?.BroadcastSpawnPortals(true);
+            }
+            OpenSpawnPortalsLocal();
+        }
+
+        private void OpenSpawnPortalsLocal()
+        {
+            if (string.IsNullOrEmpty(spawnPortalVfxKey)) return;
+            if (spawnPoints == null || spawnPoints.Length == 0) return;
+            CloseAllPortalsLocal();
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                var sp = spawnPoints[i];
+                if (sp != null)
+                {
+                    var ps = ParticleManager.Spawn(spawnPortalVfxKey, sp.position, Quaternion.identity, sp, true);
+                    if (ps != null) _activePortals[sp] = ps;
+                }
+            }
         }
 
         public void SpawnWave(int waveNumber)
@@ -85,20 +125,7 @@ namespace TR.Battle
                 yield break;
             }
             
-            CloseAllPortals();
-            
-            if (!string.IsNullOrEmpty(spawnPortalVfxKey))
-            {
-                for (int i = 0; i < spawnPoints.Length; i++)
-                {
-                    var sp = spawnPoints[i];
-                    if (sp != null)
-                    {
-                        var ps = ParticleManager.Spawn(spawnPortalVfxKey, sp.position, Quaternion.identity, sp, true);
-                        if (ps != null) _activePortals[sp] = ps;
-                    }
-                }
-            }
+            OpenSpawnPortals();
             
             
             float coop = TR.Net.DuoRuntime.IsDuo ? CoopEnemyStatMultiplier : 1f;
@@ -108,7 +135,8 @@ namespace TR.Battle
                 var sp = GetSpawnPoint(Random.Range(0, Mathf.Max(1, spawnPoints.Length)));
                 _arena.GetBossScalingForWave(waveNumber, out float hMul, out float dMul, out float sMul);
                 
-                SpawnEnemyScaled(boss, sp, hMul * coop, dMul * coop, sMul);
+                var bossDef = ResolveDuoSpawnable(boss);
+                if (bossDef != null) SpawnEnemyScaled(bossDef, sp, hMul * coop, dMul * coop, sMul);
                 _spawnedThisWave++;
                 
                 count = Mathf.Max(0, count - 1);
@@ -117,10 +145,10 @@ namespace TR.Battle
 
             for (int i = 0; i < count; i++)
             {
-                var def = GetWeightedEnemyForWave(waveNumber);
+                var def = ResolveDuoSpawnable(GetWeightedEnemyForWave(waveNumber));
                 var sp = GetSpawnPoint(i % spawnPoints.Length);
                 
-                SpawnEnemyScaled(def, sp, coop, coop, 1f);
+                if (def != null) SpawnEnemyScaled(def, sp, coop, coop, 1f);
                 _spawnedThisWave++;
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
@@ -230,6 +258,32 @@ namespace TR.Battle
         }
 
         
+        
+        
+        
+        private EnemyDefinition ResolveDuoSpawnable(EnemyDefinition def)
+        {
+            
+            if (!TR.Net.DuoRuntime.IsDuo) return def;
+            if (def != null && def.Prefab != null) return def;
+
+            
+            var all = _arena != null ? _arena.Enemies : null;
+            if (all != null)
+            {
+                
+                int startIdx = Random.Range(0, all.Length);
+                for (int k = 0; k < all.Length; k++)
+                {
+                    var candidate = all[(startIdx + k) % all.Length];
+                    if (candidate != null && candidate.Prefab != null) return candidate;
+                }
+            }
+            
+            Debug.LogWarning($"[WaveSpawner] No prefab-backed enemy available to substitute for '{(def != null ? def.name : "null")}' in duo mode; skipping this spawn.");
+            return null;
+        }
+
         private EnemyDefinition GetWeightedEnemyForWave(int waveNumber)
         {
             var easy = _arena.EasyEnemies;

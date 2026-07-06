@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: astral_obelisk
   displayName: Astral Obelisk
-  icon: {fileID: 0}
+  icon: {fileID: 1017707620169915274, guid: 495b03146d549e2479b074300f6ce6f1, type: 3}
   rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}

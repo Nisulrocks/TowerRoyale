@@ -96,6 +96,18 @@ namespace TR.Battle
 
         private TR.Net.EnemyNetSync _netSync;
 
+        
+        
+        private int _pendingDamagerActor = 0;
+        private int _lastDamagerActor = 0;
+
+        
+        
+        public void SetIncomingDamager(int actorNumber)
+        {
+            _pendingDamagerActor = actorNumber;
+        }
+
         private void Awake()
         {
             
@@ -806,11 +818,22 @@ namespace TR.Battle
             if (!DuoRuntime.IsSimulationAuthority) return;
             amount = Mathf.Max(0f, amount);
             
+            
+            int damager = _pendingDamagerActor;
+            _pendingDamagerActor = 0;
+            
             float effective = Mathf.Min(amount, Mathf.Max(0f, currentHealth));
             currentHealth -= effective;
             OnHealthChanged?.Invoke(Mathf.Max(0f, currentHealth), MaxHealth);
             
-            if (effective > 0f) _lastDamageTime = Time.time;
+            if (effective > 0f)
+            {
+                _lastDamageTime = Time.time;
+                
+                _lastDamagerActor = damager != 0
+                    ? damager
+                    : (Photon.Pun.PhotonNetwork.InRoom ? Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber : 0);
+            }
             
             float display = TR.UI.DamageNumbers.ClampDisplayed ? effective : amount;
             if (display > 0)
@@ -868,8 +891,55 @@ namespace TR.Battle
         {
             value = Mathf.Clamp(value, 0f, MaxHealth);
             if (Mathf.Approximately(value, currentHealth)) return;
+            
+            float delta = currentHealth - value;
             currentHealth = value;
             OnHealthChanged?.Invoke(Mathf.Max(0f, currentHealth), MaxHealth);
+            
+            
+            if (delta > 0f) ShowRemoteDamageFeedback(delta);
+            
+            if (currentHealth <= 0f)
+            {
+                PlayRemoteDeathFeedback();
+            }
+        }
+
+        private bool _remoteDeathPlayed = false;
+
+        
+        
+        public void PlayRemoteDeathFeedback()
+        {
+            if (_remoteDeathPlayed) return;
+            _remoteDeathPlayed = true;
+            if (!string.IsNullOrEmpty(deathVfxKey))
+            {
+                var pos = deathVfxAnchor != null ? deathVfxAnchor.position : transform.position;
+                ParticleManager.SpawnOneShot(deathVfxKey, pos);
+            }
+            if (!string.IsNullOrEmpty(deathSfxKey) && SFXManager.Instance != null)
+            {
+                SFXManager.Instance.Play(deathSfxKey);
+            }
+        }
+
+        
+        
+        
+        private void ShowRemoteDamageFeedback(float amount)
+        {
+            if (amount <= 0f) return;
+            _lastDamageTime = Time.time;
+            
+            TR.UI.DamageNumbers.ShowFloat(transform, amount, DamageType.Normal);
+            
+            if (!string.IsNullOrEmpty(hitVfxKey) && Time.time >= _nextHitVfxTime)
+            {
+                var pos = hitVfxAnchor != null ? hitVfxAnchor.position : transform.position;
+                ParticleManager.SpawnOneShot(hitVfxKey, pos);
+                _nextHitVfxTime = Time.time + Mathf.Max(0.01f, hitVfxInterval);
+            }
         }
 
         private void Die()
@@ -898,6 +968,8 @@ namespace TR.Battle
                 var pv = GetComponent<PhotonView>();
                 if (pv != null && PhotonNetwork.IsMasterClient)
                 {
+                    
+                    if (_netSync != null) _netSync.BroadcastDeath();
                     PhotonNetwork.Destroy(gameObject);
                     return;
                 }
@@ -926,6 +998,20 @@ namespace TR.Battle
             if (max < min) { var t = min; min = max; max = t; }
             int amount = Random.Range(min, max + 1);
             if (amount <= 0) return;
+
+            
+            
+            if (DuoRuntime.IsDuo)
+            {
+                var coord = TR.Net.DuoBattleCoordinator.Instance;
+                if (coord != null)
+                {
+                    coord.AwardKillMoney(_lastDamagerActor, amount);
+                    return;
+                }
+            }
+
+            
             var econ = FindFirstObjectByType<MatchEconomy>(FindObjectsInactive.Include);
             if (econ != null)
             {

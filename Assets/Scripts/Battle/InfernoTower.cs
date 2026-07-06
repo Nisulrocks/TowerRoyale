@@ -30,6 +30,10 @@ namespace TR.Battle
         private readonly Dictionary<EnemyBase2D, float> _poisonCooldown = new();
         private readonly Dictionary<EnemyBase2D, float> _stunCooldown = new();
 
+        
+        private bool _visualOnly = false;
+        public void SetVisualOnly(bool visualOnly) => _visualOnly = visualOnly;
+
         public void Initialize(InfernoCardDefinition def, int level)
         {
             _def = def;
@@ -244,7 +248,7 @@ namespace TR.Battle
             }
 
             
-            for (int i = 0; i < _enemySnapshot.Count; i++)
+            for (int i = 0; i < _enemySnapshot.Count && !_visualOnly; i++)
             {
                 var e = _enemySnapshot[i];
                 if (!_ramp.TryGetValue(e, out float f)) f = 1f;

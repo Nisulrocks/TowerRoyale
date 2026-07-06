@@ -17,10 +17,116 @@ namespace TR.Battle
         private readonly System.Collections.Generic.HashSet<Transform> _occupied = new();
         private bool _snapVisible = false;
 
+        
+        private readonly System.Collections.Generic.List<Transform> _snapList = new();
+        
+        private readonly System.Collections.Generic.Dictionary<int, GameObject> _towerBySnapIndex = new();
+        private TR.Net.DuoBattleCoordinator _coordinator;
+
         public void Configure(MatchEconomy economy)
         {
             _economy = economy;
             _occupied.Clear();
+            BuildSnapList();
+
+            
+            if (TR.Net.DuoRuntime.IsDuo)
+            {
+                _coordinator = TR.Net.DuoBattleCoordinator.Instance;
+                if (_coordinator != null)
+                {
+                    _coordinator.OnTowerPlacedReceived -= OnRemoteTowerPlaced;
+                    _coordinator.OnTowerPlacedReceived += OnRemoteTowerPlaced;
+                    _coordinator.OnTowerRemovedReceived -= OnRemoteTowerRemoved;
+                    _coordinator.OnTowerRemovedReceived += OnRemoteTowerRemoved;
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_coordinator != null)
+            {
+                _coordinator.OnTowerPlacedReceived -= OnRemoteTowerPlaced;
+                _coordinator.OnTowerRemovedReceived -= OnRemoteTowerRemoved;
+            }
+        }
+
+        private void BuildSnapList()
+        {
+            _snapList.Clear();
+            if (snapPointsRoot == null) return;
+            foreach (Transform child in snapPointsRoot) _snapList.Add(child);
+        }
+
+        
+        
+        private void OnRemoteTowerPlaced(string cardId, int level, int snapIndex)
+        {
+            var card = GameDB.GetCardById(cardId);
+            if (card == null) return;
+            if (snapIndex < 0 || snapIndex >= _snapList.Count) return;
+            var snap = _snapList[snapIndex];
+            if (snap == null || _occupied.Contains(snap)) return;
+
+            int lv = Mathf.Max(1, level);
+            var pos = new Vector3(snap.position.x, snap.position.y, 0f);
+            var go = TowerFactory.CreateTower(card, lv, pos, Quaternion.identity);
+            if (go == null) return;
+            go.name = $"Tower_{card.DisplayName}_L{lv}_Mirror";
+            MakeVisualOnly(go);
+            _occupied.Add(snap);
+            _towerBySnapIndex[snapIndex] = go;
+
+            var bind = go.GetComponent<TowerSnapBinding>();
+            if (bind == null) bind = go.AddComponent<TowerSnapBinding>();
+            bind.Bind(snap, this, snapIndex, true);
+            RefreshSnapPointColors(pos);
+            Debug.Log($"[Placement] Mirrored remote tower {card.DisplayName} L{lv} at snap {snapIndex}.");
+        }
+
+        
+        
+        private void OnRemoteTowerRemoved(int snapIndex)
+        {
+            if (_towerBySnapIndex.TryGetValue(snapIndex, out var go))
+            {
+                _towerBySnapIndex.Remove(snapIndex);
+                if (go != null) Destroy(go); 
+            }
+            else if (snapIndex >= 0 && snapIndex < _snapList.Count)
+            {
+                FreeSnap(_snapList[snapIndex]);
+            }
+            Debug.Log($"[Placement] Removed mirrored tower at snap {snapIndex} (remote).");
+        }
+
+        
+        
+        public void NotifyTowerDestroyed(Transform snap, int snapIndex, bool isMirror)
+        {
+            FreeSnap(snap);
+            if (snapIndex >= 0) _towerBySnapIndex.Remove(snapIndex);
+            
+            if (!isMirror && TR.Net.DuoRuntime.IsDuo && _coordinator != null && snapIndex >= 0)
+            {
+                _coordinator.BroadcastTowerRemoved(snapIndex);
+            }
+        }
+
+        
+        private static void MakeVisualOnly(GameObject go)
+        {
+            
+            
+            var tb = go.GetComponent<TowerBase>();
+            if (tb != null) tb.SetVisualOnly(true);
+            
+            var inf = go.GetComponent<InfernoTower>(); if (inf != null) inf.SetVisualOnly(true);
+            var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.enabled = false;
+            var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.enabled = false;
+            
+            var sel = go.GetComponent<TowerSelectable>(); if (sel != null) sel.enabled = false;
         }
 
         
@@ -122,16 +228,24 @@ namespace TR.Battle
                 binder.SetCardId(card.CardId);
             }
             _occupied.Add(snap);
+            int snapIndex = _snapList.IndexOf(snap);
             
             if (towerGO != null)
             {
+                if (snapIndex >= 0) _towerBySnapIndex[snapIndex] = towerGO;
                 var bind = towerGO.GetComponent<TowerSnapBinding>();
                 if (bind == null) bind = towerGO.AddComponent<TowerSnapBinding>();
-                bind.Bind(snap, this);
+                bind.Bind(snap, this, snapIndex, false);
             }
             
             RefreshSnapPointColors(worldPos);
             Debug.Log($"[Placement] Placed {card.DisplayName} L{level} at {pos} for cost {cost}.");
+
+            
+            if (TR.Net.DuoRuntime.IsDuo && _coordinator != null && snapIndex >= 0)
+            {
+                _coordinator.BroadcastTowerPlaced(card.CardId, level, snapIndex);
+            }
             return true;
         }
 

@@ -38,6 +38,8 @@ namespace TR.Net
         private bool _cancelRequested;
         private bool _matchmakingActive;
         private bool _loadStarted;
+        
+        private bool _pendingStart;
 
         private void Awake()
         {
@@ -76,7 +78,14 @@ namespace TR.Net
 
             if (PhotonNetwork.IsConnectedAndReady)
             {
-                if (PhotonNetwork.InLobby)
+                
+                if (PhotonNetwork.InRoom)
+                {
+                    _pendingStart = true;
+                    SetState(MatchState.JoiningLobby, "Leaving previous match...");
+                    PhotonNetwork.LeaveRoom();
+                }
+                else if (PhotonNetwork.InLobby)
                 {
                     TryJoinRandom();
                 }
@@ -90,6 +99,23 @@ namespace TR.Net
             {
                 SetState(MatchState.Connecting, "Connecting...");
                 PhotonNetwork.ConnectUsingSettings();
+            }
+        }
+
+        public override void OnLeftRoom()
+        {
+            
+            if (!_matchmakingActive || _cancelRequested) return;
+            if (!_pendingStart) return;
+            _pendingStart = false;
+            if (PhotonNetwork.InLobby)
+            {
+                TryJoinRandom();
+            }
+            else
+            {
+                SetState(MatchState.JoiningLobby, "Entering lobby...");
+                PhotonNetwork.JoinLobby(DuoSqlLobby);
             }
         }
 

@@ -99,6 +99,17 @@ namespace TR.Battle
             disableCombat = !enabled;
         }
 
+        
+        
+        private bool _visualOnly = false;
+        public bool IsVisualOnly => _visualOnly;
+        public void SetVisualOnly(bool visualOnly)
+        {
+            _visualOnly = visualOnly;
+            
+            if (visualOnly) disableCombat = false;
+        }
+
         public bool ApplyOnHitEffects(EnemyBase2D enemy)
         {
             if (definition == null || enemy == null) return false;
@@ -490,6 +501,13 @@ namespace TR.Battle
         private void FireAt(EnemyBase2D target)
         {
             if (target == null) return;
+
+            
+            if (_visualOnly)
+            {
+                FireVisualOnly(target);
+                return;
+            }
             
             float effectiveDps = Mathf.Max(0f, _stats.dps * _dpsMul);
             float effectiveFireRate = Mathf.Max(0.01f, _stats.fireRate * _fireRateMul);
@@ -668,6 +686,50 @@ namespace TR.Battle
 
                 
                 Debug.DrawLine(transform.position, hitPos, Color.yellow, 0.1f);
+            }
+        }
+
+        
+        
+        private void FireVisualOnly(EnemyBase2D target)
+        {
+            if (target == null || definition == null) return;
+
+            TryMuzzleFlash();
+            var fireKey = definition.GetSfxFireKey(); if (!string.IsNullOrEmpty(fireKey)) SFXManager.Instance?.Play(fireKey);
+
+            bool useZap = definition.UseLightningZapOnHit();
+            var projPrefab = definition.GetProjectilePrefab();
+            float projSpeed = definition.GetProjectileSpeed();
+
+            if (!useZap && projPrefab != null)
+            {
+                var spawnPos = muzzleFlashAnchor != null ? muzzleFlashAnchor.position : transform.position;
+                var go = Instantiate(projPrefab, spawnPos, Quaternion.identity);
+                var proj = go.GetComponent<ProjectileSimple>();
+                if (proj == null) proj = go.AddComponent<ProjectileSimple>();
+                string impactKey = !string.IsNullOrEmpty(projectileImpactVfxKey) ? projectileImpactVfxKey : definition.GetProjectileImpactVfxKey();
+                
+                proj.Init(target, projSpeed, 0f, 0f, this, definition, level, impactKey, false, true);
+            }
+            else if (useZap)
+            {
+                var mat = definition.GetForceDefaultZapMaterial() ? null : definition.GetZapMaterial();
+                bool glowOn = definition.GetZapGlowEnabled();
+                float glow = definition.GetZapGlowBoost();
+                if (mat != null)
+                {
+                    TR.Battle.LightningZap.Spawn(transform.position, target.transform.position,
+                        definition.GetZapDuration(), definition.GetZapWidth(), definition.GetZapJitter(),
+                        definition.GetZapSegments(), definition.GetZapColor(), mat, glowOn, glow);
+                }
+                else
+                {
+                    TR.Battle.LightningZap.Spawn(transform.position, target.transform.position,
+                        definition.GetZapDuration(), definition.GetZapWidth(), definition.GetZapJitter(),
+                        definition.GetZapSegments(), definition.GetZapColor(), glowOn, glow);
+                }
+                var zapFireKey = definition.GetSfxZapFireKey(); if (!string.IsNullOrEmpty(zapFireKey)) SFXManager.Instance?.Play(zapFireKey);
             }
         }
 
