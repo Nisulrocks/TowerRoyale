@@ -3,9 +3,60 @@ using TR.Systems;
 
 namespace TR.Dev
 {
-    
     public class DeveloperTools : MonoBehaviour
     {
+        [Header("Dev Build Panel")]
+        public KeyCode togglePanelKey = KeyCode.D;
+
+        private bool _showPanel = false;
+        private Rect _panelRect = new Rect(10, 10, 220, 260);
+
+        private void Update()
+        {
+            if (!Debug.isDebugBuild) return;
+            if (Input.GetKeyDown(togglePanelKey))
+                _showPanel = !_showPanel;
+        }
+
+        private void OnGUI()
+        {
+            if (!Debug.isDebugBuild) return;
+            if (!_showPanel) return;
+
+            _panelRect = GUILayout.Window(9999, _panelRect, DrawDevWindow, "Dev Tools");
+        }
+
+        private void DrawDevWindow(int id)
+        {
+            GUILayout.Label($"Soft: {PlayerProfile.GetSoftCurrency()}  Trophies: {PlayerProfile.GetTrophies()}");
+            GUILayout.Space(4);
+
+            if (GUILayout.Button("Give +1000 Money"))
+                GiveMoney();
+
+            if (GUILayout.Button("Give +100 Trophies"))
+                GiveTrophies();
+
+            if (GUILayout.Button("Remove -50 Trophies"))
+                RemoveTrophies();
+
+            GUILayout.Space(4);
+
+            if (GUILayout.Button("Ban (60 min)"))
+                BanPlayer();
+
+            if (GUILayout.Button("Unban"))
+                UnbanPlayer();
+
+            GUILayout.Space(4);
+            GUI.color = Color.red;
+            if (GUILayout.Button("WIPE PROFILE"))
+                WipeProfile();
+            GUI.color = Color.white;
+
+            GUI.DragWindow();
+        }
+
         [ContextMenu("Wipe Player Profile (ALL DATA)")]
         public void WipeProfile()
         {

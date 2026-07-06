@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 8000bf6d9cff9d74c9b453241e9dc589
+guid: 02e5342d71032d840bec472f52781872
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 334057161851880703
-    second: Toxic Fortress Tower_0
+      213: 4824881041025157507
+    second: hellfire monolith_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Toxic Fortress Tower_0
+      name: hellfire monolith_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1254
-        height: 1254
+        x: 235
+        y: 57
+        width: 610
+        height: 957
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ff44bd2083fc2a400800000000000000
-      internalID: 334057161851880703
+      spriteID: 38942d55ebb65f240800000000000000
+      internalID: 4824881041025157507
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Toxic Fortress Tower_0: 334057161851880703
+      hellfire monolith_0: 4824881041025157507
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

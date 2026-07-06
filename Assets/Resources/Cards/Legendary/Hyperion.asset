@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: hyperion
   displayName: Hyperion
-  icon: {fileID: -8823798574679076631, guid: d3ea63a662112d64089733565e8896b6, type: 3}
+  icon: {fileID: 21300000, guid: d3ea63a662112d64089733565e8896b6, type: 3}
   rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}

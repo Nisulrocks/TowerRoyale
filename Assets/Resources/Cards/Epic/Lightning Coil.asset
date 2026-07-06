@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: lightning_coil
   displayName: Lightning Coil
-  icon: {fileID: 783615046032992882, guid: 76d4b5dae42f16d458b9c77a1cfa5dfb, type: 3}
+  icon: {fileID: 21300000, guid: 76d4b5dae42f16d458b9c77a1cfa5dfb, type: 3}
   rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 0}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
