@@ -26,6 +26,7 @@ namespace TR.Battle
         [Header("Refs")]
         [SerializeField] private WaveSpawner waveSpawner;
         [SerializeField] private BattleDeckBarUI deckBar;
+        [SerializeField] private PartnerDeckBarUI partnerDeckBar;
         [SerializeField] private TowerPlacementController placement;
         [SerializeField] private MatchEconomy economy;
         [Header("Arena Override (Optional)")]
@@ -302,6 +303,13 @@ namespace TR.Battle
             _coordinator.OnSkipVoteChanged += OnDuoSkipVoteChanged;
             _coordinator.OnSkipConfirmed += OnDuoSkipConfirmed;
             _coordinator.OnSpawnPortalsChanged += OnDuoSpawnPortalsChanged;
+            _coordinator.OnPartnerDeckReceived += OnDuoPartnerDeckReceived;
+
+            
+            BroadcastLocalDeck();
+            
+            if (_coordinator.HasPartnerDeck)
+                OnDuoPartnerDeckReceived(_coordinator.PartnerDeckIds, _coordinator.PartnerDeckLevels);
         }
 
         private void OnDestroy()
@@ -315,6 +323,7 @@ namespace TR.Battle
                 _coordinator.OnSkipVoteChanged -= OnDuoSkipVoteChanged;
                 _coordinator.OnSkipConfirmed -= OnDuoSkipConfirmed;
                 _coordinator.OnSpawnPortalsChanged -= OnDuoSpawnPortalsChanged;
+                _coordinator.OnPartnerDeckReceived -= OnDuoPartnerDeckReceived;
             }
         }
 
@@ -367,6 +376,29 @@ namespace TR.Battle
 
         
         
+        private void BroadcastLocalDeck()
+        {
+            if (_coordinator == null) return;
+            var deck = TR.Systems.PlayerProfile.Data.deck;
+            if (deck == null || deck.Count == 0) return;
+            var ids = new string[deck.Count];
+            var levels = new int[deck.Count];
+            for (int i = 0; i < deck.Count; i++)
+            {
+                ids[i] = deck[i];
+                var cp = TR.Systems.PlayerProfile.GetOrCreateCard(deck[i]);
+                levels[i] = Mathf.Max(1, cp != null ? cp.level : 1);
+            }
+            Debug.Log($"[BattleSceneController] Broadcasting local deck ({ids.Length} cards) to partner.");
+            _coordinator.BroadcastLocalDeck(ids, levels);
+        }
+
+        private void OnDuoPartnerDeckReceived(string[] cardIds, int[] levels)
+        {
+            Debug.Log($"[BattleSceneController] Received partner deck ({(cardIds != null ? cardIds.Length : 0)} cards). partnerDeckBar assigned: {partnerDeckBar != null}");
+            if (partnerDeckBar != null) partnerDeckBar.BindFromPartnerDeck(cardIds, levels);
+        }
+
         private void OnDuoSpawnPortalsChanged(bool open)
         {
             if (!_isDuoClient || waveSpawner == null) return;

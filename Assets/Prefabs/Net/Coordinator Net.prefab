@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7548561638174537685}
   - component: {fileID: 7506617605196503666}
   - component: {fileID: 5282414568048281836}
+  - component: {fileID: 5840903551173141742}
   m_Layer: 0
   m_Name: Coordinator Net
   m_TagString: Untagged
@@ -67,3 +68,18 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &5840903551173141742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3546342191309279112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9dad396406f8204a9724fa2282e43fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  alpha: 0.4
+  tint: {r: 0.6, g: 0.8, b: 1, a: 1}
+  followLerp: 18

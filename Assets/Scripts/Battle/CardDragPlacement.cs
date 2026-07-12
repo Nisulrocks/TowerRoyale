@@ -17,6 +17,11 @@ namespace TR.Battle
         private float _cachedRange;
         private bool _dragActive;
 
+        
+        private const float DragStreamInterval = 0.08f; 
+        private float _nextDragStreamTime;
+        private bool _dragStreamStarted;
+
         public void Init(CardDefinition def, TowerPlacementController placementController)
         {
             card = def;
@@ -52,6 +57,7 @@ namespace TR.Battle
             }
             placement.SetSnapPointsVisible(true);
             placement.RefreshSnapPointColors(GetMouseWorld());
+            BeginDragStream();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -68,6 +74,7 @@ namespace TR.Battle
             
             UpdateGhostPosition();
             placement.RefreshSnapPointColors(GetMouseWorld());
+            StreamDragState(false);
         }
 
         public void OnEndDrag(PointerEventData eventData)
@@ -98,6 +105,47 @@ namespace TR.Battle
                 placement.SetSnapPointsVisible(false);
             }
             InputLocks.SetPlacementDragging(false);
+            EndDragStream();
+        }
+
+        
+        private void BeginDragStream()
+        {
+            if (!TR.Net.DuoRuntime.IsDuo) return;
+            _dragStreamStarted = true;
+            _nextDragStreamTime = 0f;
+            StreamDragState(true);
+        }
+
+        private void StreamDragState(bool force)
+        {
+            if (!_dragStreamStarted || !TR.Net.DuoRuntime.IsDuo || card == null) return;
+            if (!force && Time.unscaledTime < _nextDragStreamTime) return;
+            _nextDragStreamTime = Time.unscaledTime + DragStreamInterval;
+            var coord = TR.Net.DuoBattleCoordinator.Instance;
+            if (coord == null) return;
+            Vector3 world = GetMouseWorld();
+            coord.SendDragState(true, card.CardId, GetCardLevel(), world.x, world.y);
+        }
+
+        private void EndDragStream()
+        {
+            if (!_dragStreamStarted) return;
+            _dragStreamStarted = false;
+            if (!TR.Net.DuoRuntime.IsDuo) return;
+            var coord = TR.Net.DuoBattleCoordinator.Instance;
+            if (coord != null) coord.SendDragState(false, card != null ? card.CardId : string.Empty, 0, 0f, 0f);
+        }
+
+        private int GetCardLevel()
+        {
+            if (card == null) return 1;
+            try
+            {
+                var cp = PlayerProfile.GetOrCreateCard(card.CardId);
+                return Mathf.Max(1, cp != null ? cp.level : 1);
+            }
+            catch { return 1; }
         }
 
         private void CreateGhost()

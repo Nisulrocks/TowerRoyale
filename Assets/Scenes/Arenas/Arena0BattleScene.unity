@@ -3662,6 +3662,7 @@ MonoBehaviour:
   startSkipButtonText: {fileID: 554002449}
   waveSpawner: {fileID: 49186723}
   deckBar: {fileID: 1471065025}
+  partnerDeckBar: {fileID: 469379787}
   placement: {fileID: 455910166}
   economy: {fileID: 455910167}
   overrideArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
@@ -3902,6 +3903,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 725847291857265344, guid: 6acf6f740f54a8b4385d56b9fae87913, type: 3}
   m_PrefabInstance: {fileID: 469379785}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &469379787 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6815713407561477683, guid: 6acf6f740f54a8b4385d56b9fae87913, type: 3}
+  m_PrefabInstance: {fileID: 469379785}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 415b8481612a9094d90013a18deaa40c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &554002449 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 60859708811843498, guid: 03a8b7a1fd7ed1e4d86ccc2cd4ef873f, type: 3}

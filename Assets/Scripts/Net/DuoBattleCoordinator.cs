@@ -190,6 +190,70 @@ namespace TR.Net
         }
 
         
+        
+        public event Action<string[], int[]> OnPartnerDeckReceived;
+
+        
+        private string[] _partnerDeckIds;
+        private int[] _partnerDeckLevels;
+        public bool HasPartnerDeck => _partnerDeckIds != null;
+        public string[] PartnerDeckIds => _partnerDeckIds;
+        public int[] PartnerDeckLevels => _partnerDeckLevels;
+
+        public void BroadcastLocalDeck(string[] cardIds, int[] levels)
+        {
+            if (cardIds == null || levels == null || photonView == null) return;
+            
+            photonView.RPC(nameof(RpcPartnerDeck), RpcTarget.OthersBuffered, cardIds, levels);
+        }
+
+        [PunRPC]
+        private void RpcPartnerDeck(string[] cardIds, int[] levels)
+        {
+            _partnerDeckIds = cardIds;
+            _partnerDeckLevels = levels;
+            OnPartnerDeckReceived?.Invoke(cardIds, levels);
+        }
+
+        
+        
+        public event Action<string, string, bool> OnChatMessageReceived;
+
+        public void SendChat(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message) || photonView == null) return;
+            string sender = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.NickName : "Player";
+            
+            OnChatMessageReceived?.Invoke(sender, message, true);
+            photonView.RPC(nameof(RpcChat), RpcTarget.Others, sender, message);
+        }
+
+        [PunRPC]
+        private void RpcChat(string sender, string message)
+        {
+            OnChatMessageReceived?.Invoke(sender, message, false);
+        }
+
+        
+        
+        
+        
+        public event Action<bool, string, int, float, float, int> OnPartnerDragChanged;
+
+        public void SendDragState(bool active, string cardId, int level, float worldX, float worldY)
+        {
+            if (photonView == null) return;
+            photonView.RPC(nameof(RpcPartnerDrag), RpcTarget.Others, active, cardId ?? string.Empty, level, worldX, worldY);
+        }
+
+        [PunRPC]
+        private void RpcPartnerDrag(bool active, string cardId, int level, float worldX, float worldY, PhotonMessageInfo info)
+        {
+            int actor = info.Sender != null ? info.Sender.ActorNumber : 0;
+            OnPartnerDragChanged?.Invoke(active, cardId, level, worldX, worldY, actor);
+        }
+
+        
         public void BroadcastVictory()
         {
             if (!PhotonNetwork.IsMasterClient) return;

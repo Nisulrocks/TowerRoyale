@@ -174,6 +174,20 @@ namespace TR.Net
             if (_enemy != null) _enemy.PlayRemoteDeathFeedback();
         }
 
+        
+        
+        public void BroadcastStatusVfx(string key)
+        {
+            if (!PhotonNetwork.IsMasterClient || photonView == null || string.IsNullOrEmpty(key)) return;
+            photonView.RPC(nameof(RpcStatusVfx), RpcTarget.Others, key);
+        }
+
+        [PunRPC]
+        private void RpcStatusVfx(string key)
+        {
+            if (_enemy != null) _enemy.PlayStatusVfxLocal(key);
+        }
+
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
             if (stream.IsWriting)

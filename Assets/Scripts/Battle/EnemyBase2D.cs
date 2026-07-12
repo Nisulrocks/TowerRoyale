@@ -639,8 +639,7 @@ namespace TR.Battle
                 {
                     if (!string.IsNullOrEmpty(stunTickVfxKey) && _stunVfxTimer <= 0f)
                     {
-                        var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                        TR.VFX.ParticleManager.SpawnOneShot(stunTickVfxKey, pos);
+                        SpawnStatusVfx(stunTickVfxKey);
                         _stunVfxTimer = Mathf.Max(0.05f, stunTickVfxInterval);
                     }
                 }
@@ -659,8 +658,7 @@ namespace TR.Battle
                     
                     if (!string.IsNullOrEmpty(slowTickVfxKey) && _slowVfxTimer <= 0f)
                     {
-                        var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                        TR.VFX.ParticleManager.SpawnOneShot(slowTickVfxKey, pos);
+                        SpawnStatusVfx(slowTickVfxKey);
                         _slowVfxTimer = Mathf.Max(0.05f, slowTickVfxInterval);
                     }
                 }
@@ -675,8 +673,7 @@ namespace TR.Battle
                 
                 if (!string.IsNullOrEmpty(burnTickVfxKey) && _burnVfxTimer <= 0f)
                 {
-                    var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                    TR.VFX.ParticleManager.SpawnOneShot(burnTickVfxKey, pos);
+                    SpawnStatusVfx(burnTickVfxKey);
                     _burnVfxTimer = Mathf.Max(0.05f, burnTickVfxInterval);
                 }
             }
@@ -690,8 +687,7 @@ namespace TR.Battle
                 
                 if (!string.IsNullOrEmpty(poisonTickVfxKey) && _poisonVfxTimer <= 0f)
                 {
-                    var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                    TR.VFX.ParticleManager.SpawnOneShot(poisonTickVfxKey, pos);
+                    SpawnStatusVfx(poisonTickVfxKey);
                     _poisonVfxTimer = Mathf.Max(0.05f, poisonTickVfxInterval);
                 }
             }
@@ -705,8 +701,7 @@ namespace TR.Battle
                 
                 if (!string.IsNullOrEmpty(slowTickVfxKey) && _frostbiteVfxTimer <= 0f)
                 {
-                    var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                    TR.VFX.ParticleManager.SpawnOneShot(slowTickVfxKey, pos);
+                    SpawnStatusVfx(slowTickVfxKey);
                     _frostbiteVfxTimer = Mathf.Max(0.05f, slowTickVfxInterval);
                 }
             }
@@ -761,9 +756,31 @@ namespace TR.Battle
             string key = definition.RegenVfxKey;
             if (!string.IsNullOrEmpty(key))
             {
-                var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                TR.VFX.ParticleManager.SpawnOneShot(key, pos);
+                SpawnStatusVfx(key);
             }
+        }
+
+        
+        
+        
+        private void SpawnStatusVfx(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return;
+            PlayStatusVfxLocal(key);
+            
+            if (DuoRuntime.IsDuo && DuoRuntime.IsSimulationAuthority)
+            {
+                _netSync?.BroadcastStatusVfx(key);
+            }
+        }
+
+        
+        
+        public void PlayStatusVfxLocal(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return;
+            var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
+            TR.VFX.ParticleManager.SpawnOneShot(key, pos);
         }
 
         public void ApplyBurn(float dps, float duration)
@@ -793,8 +810,7 @@ namespace TR.Battle
             
             if (!string.IsNullOrEmpty(slowTickVfxKey))
             {
-                var pos = statusVfxAnchor != null ? statusVfxAnchor.position : transform.position;
-                TR.VFX.ParticleManager.SpawnOneShot(slowTickVfxKey, pos);
+                SpawnStatusVfx(slowTickVfxKey);
                 _slowVfxTimer = Mathf.Max(0.05f, slowTickVfxInterval);
             }
         }
