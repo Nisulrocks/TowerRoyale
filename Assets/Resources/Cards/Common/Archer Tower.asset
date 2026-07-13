@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: 'Archer Tower '
   icon: {fileID: 21300000, guid: 07c00dc9ebe493340a9b5c8adba775cc, type: 3}
   rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
-  towerPrefab: {fileID: 0}
+  towerPrefab: {fileID: 1212263692359996816, guid: c39a1bf0ead08244e8885fc4f08bab78, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 8
   dpsPerLevel: 1
