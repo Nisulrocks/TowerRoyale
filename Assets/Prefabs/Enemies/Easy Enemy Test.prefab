@@ -170,3 +170,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interpolateSpeed: 12
+  snapDistance: 2.5
