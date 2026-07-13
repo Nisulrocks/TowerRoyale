@@ -38,6 +38,8 @@ namespace TR.Battle
         private ScrollRect _scrollRect;
         private TMP_InputField _inputField;
         private bool _visible;
+        
+        private GameObject _createdCanvas;
 
         private void Start()
         {
@@ -69,6 +71,10 @@ namespace TR.Battle
         private void OnDestroy()
         {
             if (_coordinator != null) _coordinator.OnChatMessageReceived -= OnChatMessageReceived;
+            
+            
+            if (_panel != null) Destroy(_panel);
+            if (_createdCanvas != null) Destroy(_createdCanvas);
         }
 
         
@@ -201,6 +207,7 @@ namespace TR.Battle
 
             
             var go = new GameObject("DuoChatCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            _createdCanvas = go;
             var canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = go.GetComponent<CanvasScaler>();

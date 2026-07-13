@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7506617605196503666}
   - component: {fileID: 5282414568048281836}
   - component: {fileID: 5840903551173141742}
+  - component: {fileID: 2053087403074181372}
   m_Layer: 0
   m_Name: Coordinator Net
   m_TagString: Untagged
@@ -81,5 +82,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   alpha: 0.4
-  tint: {r: 0.6, g: 0.8, b: 1, a: 1}
   followLerp: 18
+  labelHeight: 1.2
+  labelFontSize: 3
+--- !u!114 &2053087403074181372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3546342191309279112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d2dd027eaa7e99438785af6f5f5c24e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetCanvas: {fileID: 0}
+  topLeftOffset: {x: 16, y: 16}
+  fontSize: 20
+  localWeakMessage: Connection weak
+  partnerWeakMessage: Partner's connection weak

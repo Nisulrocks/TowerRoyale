@@ -13,6 +13,8 @@ namespace TR.Net
     {
         [Tooltip("How quickly remote clients interpolate toward the networked position.")]
         [SerializeField] private float interpolateSpeed = 12f;
+        [Tooltip("If the remote enemy is further than this (world units) from the networked position, snap instead of lerp. Prevents rubber-banding/drift after lag spikes.")]
+        [SerializeField] private float snapDistance = 2.5f;
 
         private EnemyBase2D _enemy;
         private Vector3 _netPosition;
@@ -78,7 +80,16 @@ namespace TR.Net
             
             if (_hasNetState)
             {
-                transform.position = Vector3.Lerp(transform.position, _netPosition, Mathf.Clamp01(interpolateSpeed * Time.deltaTime));
+                
+                float dist = Vector3.Distance(transform.position, _netPosition);
+                if (snapDistance > 0f && dist > snapDistance)
+                {
+                    transform.position = _netPosition;
+                }
+                else
+                {
+                    transform.position = Vector3.Lerp(transform.position, _netPosition, Mathf.Clamp01(interpolateSpeed * Time.deltaTime));
+                }
             }
             
             _flushTimer -= Time.deltaTime;

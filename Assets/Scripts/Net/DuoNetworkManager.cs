@@ -40,6 +40,12 @@ namespace TR.Net
         private bool _loadStarted;
         
         private bool _pendingStart;
+        
+        private bool _rejoiningToSearch;
+        private Coroutine _rejoinCo;
+        
+        [SerializeField] private float rejoinMinDelay = 1.5f;
+        [SerializeField] private float rejoinMaxDelay = 3.5f;
 
         private void Awake()
         {
@@ -55,6 +61,16 @@ namespace TR.Net
             if (!(PhotonNetwork.PrefabPool is DuoEnemyPrefabPool))
             {
                 PhotonNetwork.PrefabPool = new DuoEnemyPrefabPool();
+            }
+
+            
+            
+            var peer = PhotonNetwork.NetworkingClient?.LoadBalancingPeer;
+            if (peer != null)
+            {
+                
+                peer.DisconnectTimeout = 15000;   // ms without ACK before disconnect (default 10000)
+                peer.SentCountAllowance = 10;     // resend attempts before considering the peer lost (default 7)
             }
         }
 
@@ -106,8 +122,10 @@ namespace TR.Net
         {
             
             if (!_matchmakingActive || _cancelRequested) return;
-            if (!_pendingStart) return;
+            
+            if (!_pendingStart && !_rejoiningToSearch) return;
             _pendingStart = false;
+            _rejoiningToSearch = false;
             if (PhotonNetwork.InLobby)
             {
                 TryJoinRandom();
@@ -124,6 +142,7 @@ namespace TR.Net
         {
             _cancelRequested = true;
             _matchmakingActive = false;
+            StopRejoinTimer();
             SetState(MatchState.Idle, "Cancelled");
 
             if (PhotonNetwork.InRoom)
@@ -206,15 +225,65 @@ namespace TR.Net
 
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
             SetState(MatchState.WaitingForPartner, $"In room ({count}/2)...");
+            
+            
+            if (count < 2) StartRejoinTimer();
             TryStartIfRoomFull();
         }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
             if (_cancelRequested) return;
+            
+            StopRejoinTimer();
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
             SetState(MatchState.PartnerFound, $"Partner found ({count}/2)!");
             TryStartIfRoomFull();
+        }
+
+        
+        
+        
+        
+        private void StartRejoinTimer()
+        {
+            StopRejoinTimer();
+            if (!_matchmakingActive || _cancelRequested) return;
+            _rejoinCo = StartCoroutine(RejoinAfterDelay());
+        }
+
+        private void StopRejoinTimer()
+        {
+            if (_rejoinCo != null)
+            {
+                StopCoroutine(_rejoinCo);
+                _rejoinCo = null;
+            }
+        }
+
+        private System.Collections.IEnumerator RejoinAfterDelay()
+        {
+            
+            float delay = Random.Range(rejoinMinDelay, rejoinMaxDelay);
+            float t = 0f;
+            while (t < delay)
+            {
+                t += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            _rejoinCo = null;
+
+            
+            if (!_matchmakingActive || _cancelRequested || _loadStarted) yield break;
+            if (PhotonNetwork.CurrentRoom == null) yield break;
+            
+            if (PhotonNetwork.CurrentRoom.PlayerCount >= 2) yield break;
+
+            
+            
+            _rejoiningToSearch = true;
+            SetState(MatchState.Searching, "Searching for a partner...");
+            PhotonNetwork.LeaveRoom();
         }
 
         private void TryStartIfRoomFull()
