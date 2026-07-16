@@ -1209,6 +1209,14 @@ MonoBehaviour:
   companyVideoFadeOut: 1
   gameSplashFadeIn: 0.4
   minTotalSplashTime: 5
+  checkInternetBeforeLoad: 1
+  internetCheckTimeout: 8
+  noInternetPopupPrefab: {fileID: 2740594853205626804, guid: d91521f2c6cddc647815f6da5adebd20, type: 3}
+  noInternetPopupParent: {fileID: 977818634}
+  noInternetMessage: 'No internet connection detected.
+
+    Please check your network
+    and try again.'
 --- !u!4 &1967015107
 Transform:
   m_ObjectHideFlags: 0
