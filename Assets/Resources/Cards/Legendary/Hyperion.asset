@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Hyperion
   icon: {fileID: 21300000, guid: d3ea63a662112d64089733565e8896b6, type: 3}
   rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
-  towerPrefab: {fileID: 0}
+  towerPrefab: {fileID: 1212263692359996816, guid: c5fe8ef168db2f14290294bc9e076268, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 50
   dpsPerLevel: 10

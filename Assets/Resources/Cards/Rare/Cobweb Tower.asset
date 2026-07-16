@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Cobweb Tower
   icon: {fileID: 21300000, guid: a7059bbf83ac3b44ebbd9f6f9fb31f64, type: 3}
   rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
-  towerPrefab: {fileID: 0}
+  towerPrefab: {fileID: 1212263692359996816, guid: 4a5298ffec9b1474fbf5a2489b6ab926, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 5
   dpsPerLevel: 0

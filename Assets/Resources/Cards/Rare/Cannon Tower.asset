@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Cannon Tower
   icon: {fileID: 21300000, guid: e52d32a81eefced4e8f9f98973be5e11, type: 3}
   rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
-  towerPrefab: {fileID: 0}
+  towerPrefab: {fileID: 1212263692359996816, guid: cb01805943ec0fd49bd21c1d8e07e051, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 30
   dpsPerLevel: 5
