@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 94a6f901e766ced4889a55d72f6e5861
+guid: b066bf7792b92984ea35b43e3a14a2e8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1194507062272315086
-    second: button wider idle_0
+      213: -5154268015821040554
+    second: Pro_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,23 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: button wider idle_0
+      name: Pro_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 640
-        height: 120
+        x: 24
+        y: 35
+        width: 152
+        height: 226
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 40, y: 40, z: 40, w: 40}
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ececf6828ddb39010800000000000000
-      internalID: 1194507062272315086
+      spriteID: 65454df4c8c5878b0800000000000000
+      internalID: -5154268015821040554
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 58889a96c60328248afa76c4e3ffa4d7
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      button wider idle_0: 1194507062272315086
+      Pro_0: -5154268015821040554
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

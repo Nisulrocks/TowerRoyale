@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Video;
 using TR.Systems;
 
 namespace TR.Data
@@ -42,6 +43,14 @@ namespace TR.Data
 
         [SerializeField] private Sprite packArtSprite;
 
+        [Header("Shop Pack Art (optional)")]
+        [Tooltip("Sprite shown on the shop pack item. If empty, the Pack Art Sprite above is used.")]
+        [SerializeField] private Sprite shopPackArtSprite;
+
+        [Header("Pack Opening Cutscene (optional)")]
+        [Tooltip("Video clip played before the pack opening begins. If empty, the pack opens immediately.")]
+        [SerializeField] private VideoClip openingVideoClip;
+
         [Header("Pack Opening SFX (optional)")]
         [Tooltip("SFX key played when the pack seal cracks (start of pop phase)")]
         [SerializeField] private string sealCrackKey;
@@ -67,6 +76,8 @@ namespace TR.Data
         public CardDefinition SpecificCard => specificCard;
         public GameObject PackArtPrefab => packArtPrefab;
         public Sprite PackArtSprite => packArtSprite;
+        public Sprite ShopPackArt => shopPackArtSprite != null ? shopPackArtSprite : packArtSprite;
+        public VideoClip OpeningVideoClip => openingVideoClip;
         public string SealCrackKey => sealCrackKey;
         public string OpenWhooshKey => openWhooshKey;
         public ArenaDefinition UnlockArena => unlockArena;

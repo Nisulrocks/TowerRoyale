@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 using TR.Infrastructure;
 using UnityEngine.UI;
 using TMPro;
@@ -46,6 +47,12 @@ namespace TR.UI
         [SerializeField] private Button continueButton;
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private bool allowKeyboardContinue = true;
+
+        [Header("Cutscene Video (optional)")]
+        [Tooltip("VideoPlayer used to play the per-pack cutscene before opening. If null or no clip is assigned, the pack opens immediately.")]
+        [SerializeField] private VideoPlayer videoPlayer;
+        [Tooltip("Optional root object to show/hide while the video plays. If null, videoPlayer.gameObject is used.")]
+        [SerializeField] private GameObject videoRoot;
 
         [Header("Result Label (NEW!/points)")]
         [Tooltip("Offset applied to the result label under each card (x,y) in anchored pixels")]
@@ -182,17 +189,97 @@ namespace TR.UI
                 _results = CollectionService.AwardCardsDetailed(rolled);
             }
 
+            StartCoroutine(PlayCutsceneThenOpen());
+        }
+
+        private IEnumerator PlayCutsceneThenOpen()
+        {
+            bool hasCutscene = _currentPack != null && _currentPack.OpeningVideoClip != null && videoPlayer != null;
+            if (hasCutscene)
+            {
+                GameObject root = videoRoot != null ? videoRoot : videoPlayer.gameObject;
+                if (root != null) root.SetActive(true);
+
+                if (packRect != null)
+                    packRect.gameObject.SetActive(false);
+                if (continueButton != null)
+                    continueButton.gameObject.SetActive(false);
+
+                videoPlayer.clip = _currentPack.OpeningVideoClip;
+                videoPlayer.Stop();
+                videoPlayer.Play();
+
+                bool finished = false;
+                videoPlayer.loopPointReached += vp => finished = true;
+                videoPlayer.errorReceived += (vp, msg) =>
+                {
+                    Debug.LogError($"[PackOpeningSceneController] Video error: {msg}");
+                    finished = true;
+                };
+
+                float timeout = Mathf.Max(5f, (float)_currentPack.OpeningVideoClip.length + 1f);
+                float timer = 0f;
+                while (!finished && timer < timeout)
+                {
+                    timer += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+
+                if (root != null) root.SetActive(false);
+                if (packRect != null)
+                    packRect.gameObject.SetActive(true);
+                if (continueButton != null)
+                    continueButton.gameObject.SetActive(true);
+            }
+
             StartCoroutine(RunSequence());
         }
 
         private void Update()
         {
-            if (!allowKeyboardContinue) return;
-            if (continueButton && continueButton.interactable)
+            if (allowKeyboardContinue && continueButton && continueButton.interactable)
             {
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape))
                 {
                     OnContinue();
+                }
+            }
+
+            if (_spawned.Count > 0 && _finalPositions != null)
+            {
+                Vector2 pointer = Input.mousePosition;
+                int best = -1;
+                float bestDistSq = float.MaxValue;
+                for (int i = 0; i < _spawned.Count; i++)
+                {
+                    var rt = _spawned[i];
+                    if (rt == null) continue;
+                    if (RectTransformUtility.RectangleContainsScreenPoint(rt, pointer, null))
+                    {
+                        Vector2 center = RectTransformUtility.WorldToScreenPoint(null, rt.position);
+                        float distSq = (center - pointer).sqrMagnitude;
+                        if (distSq < bestDistSq)
+                        {
+                            bestDistSq = distSq;
+                            best = i;
+                        }
+                    }
+                }
+
+                if (best != _currentHover)
+                {
+                    if (_currentHover >= 0)
+                        EndHover(_currentHover);
+                    if (best >= 0)
+                    {
+                        StartHover(best);
+                        if (_results != null && best < _results.Count && _results[best].card != null)
+                            HoverCardDetailsUI.Show(_results[best].card, 0);
+                    }
+                    else
+                    {
+                        HoverCardDetailsUI.Hide();
+                    }
                 }
             }
         }
@@ -335,8 +422,10 @@ namespace TR.UI
                 }
 
                 
-                var hover = ui.gameObject.AddComponent<PackOpenedCardHover>();
-                hover.Init(this, i);
+                if (!ui.gameObject.TryGetComponent<CanvasGroup>(out var rootCg))
+                    rootCg = ui.gameObject.AddComponent<CanvasGroup>();
+                if (rootCg != null)
+                    rootCg.blocksRaycasts = false;
 
                 _spawned.Add(rt);
                 yield return new WaitForSeconds(cardInterval);

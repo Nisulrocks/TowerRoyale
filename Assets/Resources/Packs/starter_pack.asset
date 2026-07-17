@@ -22,7 +22,10 @@ MonoBehaviour:
   giveSpecificCardOnly: 1
   specificCard: {fileID: 11400000, guid: be7b2c75253d7544da1682323b3c0c4b, type: 2}
   packArtPrefab: {fileID: 7600798260355237007, guid: 06e33fb3f08a015468ff0fcfca9ced68, type: 3}
-  packArtSprite: {fileID: 0}
+  packArtSprite: {fileID: 21300000, guid: d7cfa1db1d447b642b63aa56c5ec14b2, type: 3}
+  shopPackArtSprite: {fileID: 0}
+  openingVideoClip: {fileID: 32900000, guid: 598766f870ab785429afe2dd172ea4c4, type: 3}
   sealCrackKey: 
   openWhooshKey: 
   unlockArena: {fileID: 11400000, guid: 4b4d6227a0382b84397531ecec70f1de, type: 2}
+  shopOrder: 0

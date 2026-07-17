@@ -30,8 +30,10 @@ MonoBehaviour:
   usePercentages: 1
   giveSpecificCardOnly: 0
   specificCard: {fileID: 0}
-  packArtPrefab: {fileID: 0}
-  packArtSprite: {fileID: 0}
+  packArtPrefab: {fileID: 7600798260355237007, guid: 427f929e0ed71b3468e582f5d2cd9159, type: 3}
+  packArtSprite: {fileID: 274504397090474155, guid: 261547f737a1d64448aaaef5f6008ea1, type: 3}
+  shopPackArtSprite: {fileID: 0}
+  openingVideoClip: {fileID: 32900000, guid: eb68aea16c277154eb921c7101e3e8ff, type: 3}
   sealCrackKey: 
   openWhooshKey: 
   unlockArena: {fileID: 0}

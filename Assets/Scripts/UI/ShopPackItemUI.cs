@@ -11,6 +11,7 @@ namespace TR.UI
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text descText;
         [SerializeField] private TMP_Text costText; 
+        [SerializeField] private Image packArtImage;
         [SerializeField] private Button openButton;
 
         private PackDefinition _pack;
@@ -24,6 +25,11 @@ namespace TR.UI
             _onOpen = onOpen;
             if (nameText) nameText.text = pack != null ? pack.DisplayName : "(null)";
             if (descText) descText.text = pack != null ? $"Cards: {pack.CardsPerPack}" : "";
+            if (packArtImage && pack != null)
+            {
+                Sprite art = pack.ShopPackArt;
+                if (art != null) packArtImage.sprite = art;
+            }
             int cost = GetEffectiveCost(overrideCost);
             if (costText)
             {
