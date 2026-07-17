@@ -90,7 +90,7 @@ MonoBehaviour:
     typewriterCharDelay: 0.04
     waitMode: 2
     waitSeconds: 0
-    blockOutside: 0
+    blockOutside: 1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
