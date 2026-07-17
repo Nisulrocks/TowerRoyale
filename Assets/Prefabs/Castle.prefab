@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 47166503a5bb07d4eb7d4085776f0832, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b2eac1276b63dd942af105188acc47c1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -133,7 +133,8 @@ MonoBehaviour:
   Synchronization: 3
   OwnershipTransfer: 0
   observableSearch: 2
-  ObservedComponents: []
+  ObservedComponents:
+  - {fileID: 1846972086328279535}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
