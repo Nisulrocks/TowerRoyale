@@ -11,10 +11,13 @@ namespace TR.Tutorial
     {
         [Header("Refs")]
         [SerializeField] private RectTransform panel;
+        [SerializeField] private RectTransform inputPanel;
         [SerializeField] private TMP_Text promptLabel;
         [SerializeField] private TMP_InputField inputField;
         [SerializeField] private Button confirmButton;
         [SerializeField] private TMP_Text errorLabel;
+
+        public RectTransform InputPanel => inputPanel != null ? inputPanel : panel;
 
         private Action<string> _onConfirmed;
         private bool _initialized;
@@ -29,6 +32,12 @@ namespace TR.Tutorial
         {
             if (_initialized) return;
             _initialized = true;
+
+            if (inputPanel == null)
+            {
+                var found = transform.Find("Panel");
+                if (found != null) inputPanel = found as RectTransform;
+            }
 
             if (inputField != null)
             {

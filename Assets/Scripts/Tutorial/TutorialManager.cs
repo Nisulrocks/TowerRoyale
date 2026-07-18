@@ -403,15 +403,22 @@ namespace TR.Tutorial
                 else if (step.waitMode == StepWaitMode.WaitForNameInput)
                 {
                     EnsureUI();
-                    
-                    if (_blocker != null) _blocker.Disable();
+
                     bool done = false;
                     string enteredName = null;
                     if (_nameInput != null)
                     {
                         _nameInput.Show(step.namePromptText, step.namePlaceholderText, n => { enteredName = n; done = true; });
-                        
+                        _nameInput.transform.SetAsLastSibling();
+
+                        if (_blocker != null)
+                        {
+                            _blocker.Enable(_nameInput.InputPanel);
+                            _blocker.transform.SetAsLastSibling();
+                        }
+
                         if (_dialogue != null) _dialogue.transform.SetAsLastSibling();
+                        if (_blocker != null) _blocker.transform.SetAsLastSibling();
                     }
                     else
                     {
@@ -424,6 +431,9 @@ namespace TR.Tutorial
                     
                     if (!string.IsNullOrEmpty(step.nameGreetingFormat))
                     {
+                        if (_blocker != null) _blocker.Enable(null);
+                        if (_blocker != null) _blocker.transform.SetAsLastSibling();
+
                         string nameForGreeting = !string.IsNullOrEmpty(enteredName) ? enteredName : PlayerProfile.GetPlayerName();
                         string greeting;
                         try { greeting = string.Format(step.nameGreetingFormat, nameForGreeting); }
@@ -432,6 +442,8 @@ namespace TR.Tutorial
                         float g = Mathf.Max(0f, step.nameGreetingSeconds);
                         while (g > 0f) { g -= Time.unscaledDeltaTime; yield return null; }
                     }
+
+                    if (_blocker != null) _blocker.Disable();
                 }
                 else
                 {

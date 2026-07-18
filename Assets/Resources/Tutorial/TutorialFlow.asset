@@ -26,7 +26,7 @@ MonoBehaviour:
     typewriterCharDelay: 0.04
     waitMode: 4
     waitSeconds: 0
-    blockOutside: 0
+    blockOutside: 1
     namePromptText: Enter your Name
     namePlaceholderText: Your name...
     nameGreetingFormat: Highest of Greetings, Commander {0}!
