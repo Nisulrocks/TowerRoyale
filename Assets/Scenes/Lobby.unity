@@ -1647,6 +1647,7 @@ GameObject:
   - component: {fileID: 1370279223}
   - component: {fileID: 1370279222}
   - component: {fileID: 1370279221}
+  - component: {fileID: 1370279224}
   m_Layer: 5
   m_Name: Collections Tab
   m_TagString: Untagged
@@ -1756,6 +1757,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1370279219}
   m_CullTransparentMesh: 1
+--- !u!114 &1370279224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1370279219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d837e85679a99f747865d5726f51e677, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetButton: {fileID: 1370279221}
+  fallbackTabName: Collections Tab
+  refreshInterval: 0.5
+  badgeSize: {x: 28, y: 28}
+  badgeOffset: {x: -8, y: -8}
+  badgeColor: {r: 0.9019608, g: 0.8375604, b: 0.19999999, a: 1}
+  badgeTextColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!224 &1474454103 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1936304698475870787, guid: 7f1d8c53e2585144eb67b3af50763f37, type: 3}
