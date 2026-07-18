@@ -108,82 +108,89 @@ namespace TR.Battle
             _lr.receiveShadows = false;
             _lr.useWorldSpace = true;
             _lr.sortingOrder = 5000;
-            if (glowEnabled)
+
+            Material mat = CreateZapMaterial();
+            if (mat != null)
             {
-                
-                var add = Shader.Find("Particles/Additive");
-                if (add == null) add = Shader.Find("Legacy Shaders/Particles/Additive");
-                if (add != null)
-                {
-                    var addMat = new Material(add);
-                    _lr.material = addMat;
-                    float boost = Mathf.Max(1f, glowEnabled ? glowBoost : 1f);
-                    if (addMat.HasProperty("_TintColor")) addMat.SetColor("_TintColor", color * boost);
-                    if (addMat.HasProperty("_Color")) addMat.SetColor("_Color", color * boost);
-                }
+                _lr.material = mat;
+                ApplyMaterialColor(mat);
             }
-            else
-            {
-                
-                var def = Shader.Find("Sprites/Default");
-                if (def != null)
-                {
-                    var mat = new Material(def);
-                    mat.color = color; 
-                    _lr.material = mat;
-                }
-            }
-            _lr.startColor = color;
-            _lr.endColor = color;
+
+            _lr.startColor = Color.white;
+            _lr.endColor = Color.white;
             
             var grad = new Gradient();
             grad.mode = GradientMode.Blend;
             grad.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(color.a, 0f), new GradientAlphaKey(color.a, 1f) }
+                new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) }
             );
             _lr.colorGradient = grad;
             _lr.textureMode = LineTextureMode.Stretch;
+        }
 
-            
-            var pb = new MaterialPropertyBlock();
-            _lr.GetPropertyBlock(pb);
-            var matNow = _lr.sharedMaterial;
-            if (matNow != null)
+        private Material CreateZapMaterial()
+        {
+            if (materialOverride != null)
             {
-                if (matNow.HasProperty("_BaseColor")) pb.SetColor("_BaseColor", color);
-                if (matNow.HasProperty("_Color")) pb.SetColor("_Color", color);
-                if (matNow.HasProperty("_Tint")) pb.SetColor("_Tint", color);
-                if (matNow.HasProperty("_EmissionColor"))
-                {
-                    pb.SetColor("_EmissionColor", color);
-                    matNow.EnableKeyword("_EMISSION");
-                }
+                Material m = new Material(materialOverride);
+                MakeAdditiveIfURP(m);
+                return m;
             }
-            _lr.SetPropertyBlock(pb);
 
-            
-            
-            if (glowEnabled)
+            Shader shader = FindZapShader();
+            if (shader == null)
             {
-                var instMat = _lr.material; 
-                if (instMat != null)
-                {
-                    
-                    if (instMat.HasProperty("_EmissionColor"))
-                    {
-                        float boost = Mathf.Max(0f, glowBoost);
-                        instMat.SetColor("_EmissionColor", color * boost);
-                        instMat.EnableKeyword("_EMISSION");
-                    }
-                    else if (instMat.HasProperty("_Color"))
-                    {
-                        
-                        float boost = Mathf.Max(1f, glowBoost);
-                        instMat.SetColor("_Color", color * boost);
-                    }
-                }
+                Debug.LogWarning("[LightningZap] No additive shader found. Lightning may not render.");
+                return null;
             }
+
+            Material mat = new Material(shader);
+            MakeAdditiveIfURP(mat);
+            return mat;
+        }
+
+        private Shader FindZapShader()
+        {
+            return Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                ?? Shader.Find("Universal Render Pipeline/Particles/SimpleLit")
+                ?? Shader.Find("Universal Render Pipeline/Particles/Lit")
+                ?? Shader.Find("Particles/Additive")
+                ?? Shader.Find("Legacy Shaders/Particles/Additive")
+                ?? Shader.Find("Mobile/Particles/Additive")
+                ?? Shader.Find("Sprites/Default");
+        }
+
+        private void MakeAdditiveIfURP(Material mat)
+        {
+            if (mat == null || mat.shader == null) return;
+            if (!mat.shader.name.Contains("Universal Render Pipeline/Particles")) return;
+
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", 1f);
+            mat.SetFloat("_SrcBlend", 1f);
+            mat.SetFloat("_DstBlend", 1f);
+            mat.SetFloat("_SrcBlendAlpha", 1f);
+            mat.SetFloat("_DstBlendAlpha", 1f);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.SetFloat("_AlphaClip", 0f);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.DisableKeyword("_ALPHAMODULATE_ON");
+            mat.renderQueue = 3000;
+        }
+
+        private void ApplyMaterialColor(Material mat)
+        {
+            if (mat == null) return;
+
+            float boost = glowEnabled ? Mathf.Max(1f, glowBoost) : 1f;
+            Color final = color * boost;
+
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", final);
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", final);
+            if (mat.HasProperty("_TintColor")) mat.SetColor("_TintColor", final);
+            if (mat.HasProperty("_Tint")) mat.SetColor("_Tint", final);
         }
 
         private void Update()
