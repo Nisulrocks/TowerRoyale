@@ -287,6 +287,7 @@ namespace TR.UI
                 deckWarningText.text = "Build a deck to play";
             }
             if (playButton) playButton.interactable = false;
+            if (duoButton) duoButton.interactable = false;
             StopDeckFlash();
             _deckFlashCo = StartCoroutine(DeckFlashCo());
         }
@@ -593,9 +594,14 @@ namespace TR.UI
         {
             bool hasDeck = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
             bool banned = PlayerProfile.IsBanned(out var remaining);
+            bool tutorialActive = PlayerProfile.GetTutorialActive();
             if (playButton)
             {
                 playButton.interactable = hasDeck && !banned;
+            }
+            if (duoButton)
+            {
+                duoButton.interactable = hasDeck && !banned && !tutorialActive;
             }
             if (deckWarningText)
             {

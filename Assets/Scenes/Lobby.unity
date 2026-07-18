@@ -1618,6 +1618,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8dca9a5ac0f217428476f506cf8619a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rejoinMinDelay: 1.5
+  rejoinMaxDelay: 3.5
 --- !u!4 &1207823685
 Transform:
   m_ObjectHideFlags: 0
@@ -2455,6 +2457,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f1dc87e658f99c4ba8cd0c1eaa550ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  togglePanelKey: 100
 --- !u!114 &1945811970
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3510,6 +3513,14 @@ PrefabInstance:
       propertyPath: matchmakingUI
       value: 
       objectReference: {fileID: 2103243600}
+    - target: {fileID: 4813140808994699743, guid: 921576c6bdb64454abf660d64ecac2a6, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
+    - target: {fileID: 4813140808994699743, guid: 921576c6bdb64454abf660d64ecac2a6, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4984854221176794262, guid: 921576c6bdb64454abf660d64ecac2a6, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
