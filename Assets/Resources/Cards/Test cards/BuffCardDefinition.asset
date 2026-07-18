@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: 5
   displayName: Buff Tower
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 487c4bfb3981e1a409d32082b1a71f06, type: 3}
   rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
   towerPrefab: {fileID: 1212263692359996816, guid: 16ed924953f973f4fb7fdcb035aed786, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
@@ -72,6 +72,7 @@ MonoBehaviour:
   tornadoFalloffPower: 1
   moveOnAfterEffect: 0
   moveOnIgnoreSeconds: 0.6
+  focusOnHighestHp: 0
   slowOnHit: 0
   slowPercentBase: 0
   slowPercentPerLevel: 0
@@ -106,6 +107,8 @@ MonoBehaviour:
   projectileSpeed: 10
   projectileImpactVfxKey: 
   idleVfxKey: BuffAura
+  defeatDestroyVfxKey: 
+  defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0
   chainMaxJumpsPerLevel: 0

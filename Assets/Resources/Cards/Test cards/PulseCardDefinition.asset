@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardId: 6
   displayName: Pulse Tower
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 487c4bfb3981e1a409d32082b1a71f06, type: 3}
   rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
   towerPrefab: {fileID: 1212263692359996816, guid: 8b882e7053e610e46948ad66f45cb9ab, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
@@ -49,6 +49,11 @@ MonoBehaviour:
   zapColor: {r: 0.7, g: 0.9, b: 1, a: 1}
   zapHitVfxKey: 
   forceDefaultZapMaterial: 0
+  zapMaterial: {fileID: 0}
+  zapGlowEnabled: 1
+  zapGlowBoost: 2
+  chainGlowEnabled: 1
+  chainGlowBoost: 2
   tornadoOnHit: 0
   tornadoRadiusBase: 0
   tornadoRadiusPerLevel: 0
@@ -67,6 +72,7 @@ MonoBehaviour:
   tornadoFalloffPower: 0
   moveOnAfterEffect: 0
   moveOnIgnoreSeconds: 0.6
+  focusOnHighestHp: 0
   slowOnHit: 1
   slowPercentBase: 0.6
   slowPercentPerLevel: 0
@@ -77,6 +83,11 @@ MonoBehaviour:
   stunChancePerLevel: 0
   stunDurationBase: 3
   stunDurationPerLevel: 0
+  frostbiteOnHit: 0
+  frostbiteDpsBase: 0
+  frostbiteDpsPerLevel: 0
+  frostbiteDurBase: 0
+  frostbiteDurPerLevel: 0
   sfxFireKey: 
   sfxHitKey: 
   sfxSplashKey: 
@@ -96,6 +107,8 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
+  defeatDestroyVfxKey: 
+  defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 2
   chainMaxJumpsPerLevel: 0
