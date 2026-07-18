@@ -12,6 +12,7 @@ namespace TR.UI
     public class PlayPanelUI : MonoBehaviour
     {
         [Header("Texts")]
+        [SerializeField] private TMP_Text accountNameText;
         [SerializeField] private TMP_Text trophiesText;
         [SerializeField] private TMP_Text arenaNameText;
         [SerializeField] private TMP_Text nextArenaText;
@@ -137,6 +138,10 @@ namespace TR.UI
             var castleCfg = GameDB.GetCastleProgression();
             int castleLevel = PlayerProfile.GetCastleLevel();
             int castleXP = PlayerProfile.GetCastleXP();
+
+            string playerName = PlayerProfile.GetPlayerName();
+            if (accountNameText)
+                accountNameText.text = $"Greetings, Commander {playerName}";
 
             if (trophiesText)
                 trophiesText.text = $"Trophies: {trophies}";

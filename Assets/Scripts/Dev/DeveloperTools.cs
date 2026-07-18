@@ -9,7 +9,8 @@ namespace TR.Dev
         public KeyCode togglePanelKey = KeyCode.D;
 
         private bool _showPanel = false;
-        private Rect _panelRect = new Rect(10, 10, 220, 260);
+        private Rect _panelRect = new Rect(10, 10, 220, 290);
+        private string _trophyInput = "0";
 
         private void Update()
         {
@@ -39,6 +40,13 @@ namespace TR.Dev
 
             if (GUILayout.Button("Remove -50 Trophies"))
                 RemoveTrophies();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Set Trophies:", GUILayout.Width(90));
+            _trophyInput = GUILayout.TextField(_trophyInput, GUILayout.Width(90));
+            if (GUILayout.Button("Set", GUILayout.Width(40)))
+                SetTrophiesExact();
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(4);
 
@@ -83,6 +91,32 @@ namespace TR.Dev
         {
             PlayerProfile.RemoveTrophies(50);
             Debug.Log("[Dev] Removed 50 trophies from player.");
+        }
+
+        public void SetTrophiesExact()
+        {
+            if (!int.TryParse(_trophyInput, out int target))
+            {
+                Debug.LogWarning("[Dev] Invalid trophy input.");
+                return;
+            }
+
+            GameDB.EnsureLoaded();
+            int current = PlayerProfile.GetTrophies();
+            int floor = PlayerProfile.GetTrophyFloor();
+            int clamped = Mathf.Max(floor, target);
+
+            var road = GameDB.GetTrophyRoad();
+            if (road != null)
+                clamped = Mathf.Min(clamped, road.MaxTrophies);
+
+            if (clamped > current)
+                PlayerProfile.AddTrophies(clamped - current);
+            else if (clamped < current)
+                PlayerProfile.RemoveTrophies(current - clamped);
+
+            _trophyInput = PlayerProfile.GetTrophies().ToString();
+            Debug.Log($"[Dev] Set trophies to {PlayerProfile.GetTrophies()}.");
         }
 
         [ContextMenu("Ban Player (60 min)")]

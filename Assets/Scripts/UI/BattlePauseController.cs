@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using TMPro;
 using TR.Audio;
 using TR.Net;
 
@@ -43,9 +45,23 @@ namespace TR.UI
         private void Update()
         {
             if (!enableHotkey) return;
-            
+            if (IsInputFieldFocused()) return;
+
             var key = GetConfiguredPauseKey();
             if (Input.GetKeyDown(key)) TogglePause();
+        }
+
+        private bool IsInputFieldFocused()
+        {
+            if (EventSystem.current == null) return false;
+            GameObject selected = EventSystem.current.currentSelectedGameObject;
+            if (selected == null) return false;
+
+            var tmpInput = selected.GetComponent<TMP_InputField>();
+            if (tmpInput != null && tmpInput.isFocused) return true;
+
+            var legacyInput = selected.GetComponent<InputField>();
+            return legacyInput != null && legacyInput.isFocused;
         }
 
         private static KeyCode GetConfiguredPauseKey()
