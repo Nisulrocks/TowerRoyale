@@ -88,7 +88,10 @@ namespace TR.UI
             }
             int placementCost = _current.GetPlacementCost();
             int refundAmount = Mathf.RoundToInt(placementCost * Mathf.Clamp01(refundPercent));
-            if (refundText) refundText.text = $"Refund: {refundAmount}";
+            if (refundText) refundText.text = _current.IsLocalOwner ? $"Refund: {refundAmount}" : "Partner's Tower";
+
+            bool canDestroy = _current.IsLocalOwner;
+            if (destroyButton != null) destroyButton.interactable = canDestroy;
 
             if (showDetails)
             {
@@ -111,7 +114,7 @@ namespace TR.UI
 
         private void OnClickDestroy()
         {
-            if (_current == null) return;
+            if (_current == null || !_current.IsLocalOwner) return;
             float pct = Mathf.Clamp01(refundPercent);
             if (requireConfirm)
             {
@@ -141,7 +144,7 @@ namespace TR.UI
 
         private void OnClickConfirm()
         {
-            if (_current == null) return;
+            if (_current == null || !_current.IsLocalOwner) return;
             float pct = Mathf.Clamp01(refundPercent);
             var tower = _current;
             _current = null;

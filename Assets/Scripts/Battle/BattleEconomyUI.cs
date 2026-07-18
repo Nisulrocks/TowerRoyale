@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using TMPro;
 using TR.Audio;
+using TR.Systems;
 
 namespace TR.Battle
 {
@@ -245,6 +246,8 @@ namespace TR.Battle
             float t = 0f;
             while (t < shakeDuration)
             {
+                if (!ShakeSettings.ScreenShakeEnabled)
+                    break;
                 t += Time.unscaledDeltaTime;
                 float k = Mathf.Clamp01(t / Mathf.Max(0.001f, shakeDuration));
                 

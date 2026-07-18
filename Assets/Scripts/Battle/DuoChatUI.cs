@@ -29,6 +29,13 @@ namespace TR.Battle
         [Tooltip("The chat toggle button GameObject. Hidden automatically in single player.")]
         [SerializeField] private GameObject toggleButton;
 
+        [Header("Notification Badge")]
+        [SerializeField] private float badgeSize = 28f;
+        [Tooltip("Anchored position of the badge relative to the toggle button's top-right corner.")]
+        [SerializeField] private Vector2 badgeOffset = new Vector2(-4f, -4f);
+        [SerializeField] private Color badgeColor = new Color(1f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color badgeTextColor = Color.white;
+
         private DuoBattleCoordinator _coordinator;
         private readonly List<TMP_Text> _lines = new();
 
@@ -40,6 +47,10 @@ namespace TR.Battle
         private bool _visible;
         
         private GameObject _createdCanvas;
+
+        private GameObject _badgeRoot;
+        private TMP_Text _badgeText;
+        private int _unreadCount;
 
         private void Start()
         {
@@ -64,15 +75,25 @@ namespace TR.Battle
             }
             _coordinator.OnChatMessageReceived += OnChatMessageReceived;
 
+            var canvas = ResolveCanvas();
+            EnsureToggleButton(canvas);
             BuildUI();
+            CreateBadge();
+            WireToggleButton();
             SetVisible(startVisible);
         }
 
         private void OnDestroy()
         {
             if (_coordinator != null) _coordinator.OnChatMessageReceived -= OnChatMessageReceived;
-            
-            
+
+            if (toggleButton != null)
+            {
+                var btn = toggleButton.GetComponent<Button>();
+                if (btn != null) btn.onClick.RemoveListener(ToggleChat);
+            }
+
+            if (_badgeRoot != null) Destroy(_badgeRoot);
             if (_panel != null) Destroy(_panel);
             if (_createdCanvas != null) Destroy(_createdCanvas);
         }
@@ -88,10 +109,18 @@ namespace TR.Battle
         {
             _visible = visible;
             if (_panel != null) _panel.SetActive(visible);
-            if (visible && _inputField != null)
+            if (visible)
             {
-                _inputField.ActivateInputField();
-                StartCoroutine(ScrollToBottomNextFrame());
+                ClearUnread();
+                if (_inputField != null)
+                {
+                    _inputField.ActivateInputField();
+                    StartCoroutine(ScrollToBottomNextFrame());
+                }
+            }
+            else
+            {
+                UpdateBadge();
             }
         }
 
@@ -239,6 +268,8 @@ namespace TR.Battle
         private void OnChatMessageReceived(string sender, string message, bool isOwn)
         {
             AppendLine(sender, message, isOwn);
+            if (!_visible && !isOwn)
+                IncrementUnread();
         }
 
         private void AppendLine(string sender, string message, bool isOwn)
@@ -281,6 +312,141 @@ namespace TR.Battle
         {
             foreach (var p in PhotonNetwork.PlayerListOthers) return p.ActorNumber;
             return 2;
+        }
+
+        private void EnsureToggleButton(Canvas canvas)
+        {
+            if (toggleButton != null || canvas == null) return;
+
+            toggleButton = new GameObject("DuoChatToggleButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            toggleButton.transform.SetParent(canvas.transform, false);
+            var rt = toggleButton.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.zero;
+            rt.pivot = Vector2.zero;
+            rt.sizeDelta = new Vector2(Mathf.Max(80f, panelSize.x * 0.4f), 40f);
+            rt.anchoredPosition = new Vector2(bottomLeftOffset.x, bottomLeftOffset.y + panelSize.y + 10f);
+
+            var img = toggleButton.GetComponent<Image>();
+            img.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+            var btn = toggleButton.GetComponent<Button>();
+            btn.targetGraphic = img;
+
+            var labelGO = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            labelGO.transform.SetParent(toggleButton.transform, false);
+            StretchFull((RectTransform)labelGO.transform);
+            var label = labelGO.GetComponent<TextMeshProUGUI>();
+            label.text = "Chat";
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 18;
+            label.color = Color.white;
+        }
+
+        private void WireToggleButton()
+        {
+            if (toggleButton == null) return;
+            var btn = toggleButton.GetComponent<Button>();
+            if (btn == null)
+            {
+                var img = toggleButton.GetComponent<Image>();
+                btn = toggleButton.AddComponent<Button>();
+                if (img != null) btn.targetGraphic = img;
+            }
+
+            btn.onClick.RemoveListener(ToggleChat);
+
+            if (HasPersistentListener(btn, nameof(ToggleChat))) return;
+
+            btn.onClick.AddListener(ToggleChat);
+        }
+
+        private bool HasPersistentListener(Button btn, string methodName)
+        {
+            if (btn == null) return false;
+            var e = btn.onClick;
+            int count = e.GetPersistentEventCount();
+            for (int i = 0; i < count; i++)
+            {
+                if (e.GetPersistentTarget(i) == this && e.GetPersistentMethodName(i) == methodName)
+                    return true;
+            }
+            return false;
+        }
+
+        private void CreateBadge()
+        {
+            if (toggleButton == null) return;
+            var toggleRt = toggleButton.GetComponent<RectTransform>();
+            if (toggleRt == null) return;
+
+            _badgeRoot = new GameObject("ChatNotificationBadge", typeof(RectTransform), typeof(Image));
+            _badgeRoot.transform.SetParent(toggleButton.transform, false);
+            _badgeRoot.transform.SetAsLastSibling();
+            var badgeRt = (RectTransform)_badgeRoot.transform;
+            badgeRt.anchorMin = Vector2.one;
+            badgeRt.anchorMax = Vector2.one;
+            badgeRt.pivot = Vector2.one;
+            badgeRt.sizeDelta = new Vector2(badgeSize, badgeSize);
+            badgeRt.anchoredPosition = badgeOffset;
+
+            var badgeImg = _badgeRoot.GetComponent<Image>();
+            badgeImg.sprite = CreateCircleSprite(Color.white);
+            badgeImg.color = badgeColor;
+            badgeImg.raycastTarget = false;
+
+            var textGO = new GameObject("BadgeText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGO.transform.SetParent(_badgeRoot.transform, false);
+            var textRt = (RectTransform)textGO.transform;
+            StretchFull(textRt);
+            _badgeText = textGO.GetComponent<TextMeshProUGUI>();
+            _badgeText.alignment = TextAlignmentOptions.Center;
+            _badgeText.fontSize = 14;
+            _badgeText.color = badgeTextColor;
+            _badgeText.raycastTarget = false;
+            _badgeText.text = "0";
+
+            UpdateBadge();
+        }
+
+        private Sprite CreateCircleSprite(Color fill)
+        {
+            int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            Color clear = new Color(0f, 0f, 0f, 0f);
+            Vector2 center = new Vector2(size / 2f, size / 2f);
+            float radius = size / 2f - 1f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), center);
+                    tex.SetPixel(x, y, d <= radius ? fill : clear);
+                }
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+        }
+
+        private void IncrementUnread()
+        {
+            _unreadCount++;
+            UpdateBadge();
+        }
+
+        private void ClearUnread()
+        {
+            _unreadCount = 0;
+            UpdateBadge();
+        }
+
+        private void UpdateBadge()
+        {
+            if (_badgeRoot == null) return;
+            _badgeRoot.SetActive(_unreadCount > 0);
+            if (_badgeText != null)
+                _badgeText.text = _unreadCount > 99 ? "99+" : _unreadCount.ToString();
         }
 
         private IEnumerator ScrollToBottomNextFrame()

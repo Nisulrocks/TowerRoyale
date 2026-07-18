@@ -30,7 +30,7 @@ namespace TR.Net
         public event Action OnDefeatReceived;
         
         
-        public event Action<string, int, int> OnTowerPlacedReceived;
+        public event Action<string, int, int, int> OnTowerPlacedReceived;
         
         
         public event Action<int> OnTowerRemovedReceived;
@@ -287,9 +287,9 @@ namespace TR.Net
         }
 
         [PunRPC]
-        private void RpcTowerPlaced(string cardId, int level, int snapIndex)
+        private void RpcTowerPlaced(string cardId, int level, int snapIndex, PhotonMessageInfo info)
         {
-            OnTowerPlacedReceived?.Invoke(cardId, level, snapIndex);
+            OnTowerPlacedReceived?.Invoke(cardId, level, snapIndex, info.Sender != null ? info.Sender.ActorNumber : 0);
         }
 
         

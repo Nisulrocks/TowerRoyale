@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TR.Data;
 using TR.VFX;
 using TR.Audio;
+using Photon.Pun;
 
 namespace TR.Battle
 {
@@ -82,6 +83,9 @@ namespace TR.Battle
         public CardDefinition Definition => definition;
         public int Level => level;
         public TR.Data.TowerStats Stats => _stats;
+        public int OwnerActorNumber { get; private set; } = -1;
+        public bool IsLocalOwner => !TR.Net.DuoRuntime.IsDuo || OwnerActorNumber < 0 || (PhotonNetwork.LocalPlayer != null && OwnerActorNumber == PhotonNetwork.LocalPlayer.ActorNumber);
+        public void SetOwner(int actorNumber) => OwnerActorNumber = actorNumber;
         private int _placementCost;
 
         public void Initialize(CardDefinition def, int lv)
@@ -392,6 +396,7 @@ namespace TR.Battle
         
         public void DestroyForRefund(float refundPercent)
         {
+            if (!IsLocalOwner) return;
             refundPercent = Mathf.Clamp01(refundPercent);
             int refund = Mathf.RoundToInt(_placementCost * refundPercent);
             var econ = FindFirstObjectByType<MatchEconomy>(FindObjectsInactive.Include);

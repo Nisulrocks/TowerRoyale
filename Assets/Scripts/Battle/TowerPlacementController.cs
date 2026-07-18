@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using TR.Data;
 using TR.Systems;
+using Photon.Pun;
 
 namespace TR.Battle
 {
@@ -61,7 +62,7 @@ namespace TR.Battle
 
         
         
-        private void OnRemoteTowerPlaced(string cardId, int level, int snapIndex)
+        private void OnRemoteTowerPlaced(string cardId, int level, int snapIndex, int ownerActorNumber)
         {
             var card = GameDB.GetCardById(cardId);
             if (card == null) return;
@@ -74,6 +75,8 @@ namespace TR.Battle
             var go = TowerFactory.CreateTower(card, lv, pos, Quaternion.identity);
             if (go == null) return;
             go.name = $"Tower_{card.DisplayName}_L{lv}_Mirror";
+            var towerBase = go.GetComponent<TowerBase>();
+            towerBase?.SetOwner(ownerActorNumber);
             MakeVisualOnly(go);
             _occupied.Add(snap);
             _towerBySnapIndex[snapIndex] = go;
@@ -126,15 +129,18 @@ namespace TR.Battle
             var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.enabled = false;
             var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.enabled = false;
             
-            var sel = go.GetComponent<TowerSelectable>(); if (sel != null) sel.enabled = false;
+            
         }
 
         
 
-        private GameObject PlaceTower(CardDefinition def, int level, Vector3 position)
+        private GameObject PlaceTower(CardDefinition def, int level, Vector3 position, bool isLocalOwner = true)
         {
             var go = TowerFactory.CreateTower(def, level, position, Quaternion.identity);
             go.name = $"Tower_{def.DisplayName}_L{level}";
+            var towerBase = go.GetComponent<TowerBase>();
+            int owner = isLocalOwner && PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : -1;
+            towerBase?.SetOwner(owner);
             return go;
         }
 
@@ -208,7 +214,7 @@ namespace TR.Battle
             }
             if (_economy != null) _economy.Spend(cost);
             var pos = new Vector3(snap.position.x, snap.position.y, 0f);
-            var towerGO = PlaceTower(card, level, pos);
+            var towerGO = PlaceTower(card, level, pos, isLocalOwner: true);
             
             if (towerGO != null && TR.Systems.EffectLimitService.IsEnabled)
             {

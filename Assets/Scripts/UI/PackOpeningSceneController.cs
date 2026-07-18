@@ -738,6 +738,8 @@ namespace TR.UI
             Vector2 basePos = target.anchoredPosition;
             while (t < duration)
             {
+                if (!ShakeSettings.ScreenShakeEnabled)
+                    break;
                 t += Time.deltaTime;
                 float k = 1f - Mathf.Clamp01(t / duration);
                 float dx = (Random.value * 2f - 1f) * amplitude * k;

@@ -59,6 +59,23 @@ namespace TR.Systems
             return -1; 
         }
 
+        public static int GetLatestUnlockedMilestoneIndex()
+        {
+            var road = GetActiveRoad();
+            if (road == null) return -1;
+            int trophies = PlayerProfile.GetTrophies();
+            var milestones = road.Milestones;
+            if (milestones == null || milestones.Count == 0) return -1;
+            int latest = -1;
+            for (int i = 0; i < milestones.Count; i++)
+            {
+                var ms = milestones[i];
+                if (ms != null && trophies >= Mathf.Max(0, ms.trophyRequired))
+                    latest = i;
+            }
+            return latest;
+        }
+
         public static float GetProgress01()
         {
             var road = GetActiveRoad();

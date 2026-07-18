@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using TR.Audio;
+using TR.Systems;
 
 namespace TR.UI
 {
@@ -23,6 +24,9 @@ namespace TR.UI
         [SerializeField] private Toggle vfxEnableToggle;         
         [Header("Keybinds")]
         [SerializeField] private TMP_Dropdown pauseHotkeyDropdown; 
+        [Header("Screen Shake")]
+        [Tooltip("Optional toggle to enable/disable screen shake. If left empty, a toggle is generated automatically.")]
+        [SerializeField] private Toggle screenShakeToggle;
 
         private const string PREF_MUSIC_VOL = "tr_music_volume";
         private const string PREF_MUSIC_MUTE = "tr_music_mute";
@@ -34,6 +38,8 @@ namespace TR.UI
         private const string PREF_FPS_CAP = "tr_fps_cap"; 
         private const string PREF_PAUSE_HOTKEY = "tr_pause_hotkey"; 
         private bool _suppressEvents;
+
+        private Toggle _screenShakeToggle;
 
         private void Awake()
         {
@@ -69,6 +75,8 @@ namespace TR.UI
                 damageNumbersToggle.isOn = show;
                 TR.UI.DamageNumbers.SetEnabled(show);
             }
+
+            EnsureScreenShakeToggle();
             
             bool vfxEnabled = PlayerPrefs.GetInt(PREF_VFX_ENABLE, 1) != 0;
             if (vfxEnableToggle != null) vfxEnableToggle.isOn = vfxEnabled;
@@ -111,6 +119,8 @@ namespace TR.UI
                 fpsCapDropdown.onValueChanged.AddListener(OnFpsCapChanged);
             if (pauseHotkeyDropdown != null)
                 pauseHotkeyDropdown.onValueChanged.AddListener(OnPauseHotkeyChanged);
+            if (_screenShakeToggle != null)
+                _screenShakeToggle.onValueChanged.AddListener(OnScreenShakeChanged);
         }
 
         private void OnDestroy()
@@ -133,6 +143,8 @@ namespace TR.UI
                 fpsCapDropdown.onValueChanged.RemoveListener(OnFpsCapChanged);
             if (pauseHotkeyDropdown != null)
                 pauseHotkeyDropdown.onValueChanged.RemoveListener(OnPauseHotkeyChanged);
+            if (_screenShakeToggle != null)
+                _screenShakeToggle.onValueChanged.RemoveListener(OnScreenShakeChanged);
         }
 
         private void OnSliderChanged(float value)
@@ -289,10 +301,56 @@ namespace TR.UI
             
             if (fpsCapDropdown != null) fpsCapDropdown.value = 3; 
             ApplyFpsCap(3);
+
+            if (_screenShakeToggle != null) _screenShakeToggle.isOn = true;
+            ShakeSettings.SetScreenShakeEnabled(true);
+
             _suppressEvents = false;
         }
 
         
+        private void OnScreenShakeChanged(bool enabled)
+        {
+            if (_suppressEvents) return;
+            ShakeSettings.SetScreenShakeEnabled(enabled);
+        }
+
+        private void EnsureScreenShakeToggle()
+        {
+            if (screenShakeToggle == null)
+            {
+                if (damageNumbersToggle == null) return;
+                var template = damageNumbersToggle.gameObject;
+                if (template == null) return;
+
+                var cloneGO = Instantiate(template, transform, false);
+                cloneGO.name = "ScreenShakeToggle";
+
+                var rt = cloneGO.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.anchorMin = new Vector2(0.5f, 0.5f);
+                    rt.anchorMax = new Vector2(0.5f, 0.5f);
+                    rt.pivot = new Vector2(0.5f, 0.5f);
+                    rt.anchoredPosition = new Vector2(0f, -390f);
+                    rt.sizeDelta = new Vector2(160f, 20f);
+                    rt.localScale = Vector3.one * 2f;
+                }
+
+                var label = cloneGO.GetComponentInChildren<Text>(true);
+                if (label != null) label.text = "Screen Shake";
+
+                screenShakeToggle = cloneGO.GetComponent<Toggle>();
+            }
+
+            _screenShakeToggle = screenShakeToggle;
+            if (_screenShakeToggle != null)
+            {
+                _screenShakeToggle.onValueChanged.RemoveAllListeners();
+                _screenShakeToggle.isOn = ShakeSettings.ScreenShakeEnabled;
+            }
+        }
+
         public void OpenViaPanelSwitcher(PanelSwitcher switcher, string panelName = "Settings")
         {
             if (switcher != null)

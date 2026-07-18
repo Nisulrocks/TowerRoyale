@@ -40,6 +40,21 @@ namespace CartoonFX
 			Vector3 shakeVector;
 			float delaysTimer;
 
+			private const string SCREEN_SHAKE_PREF = "tr_screen_shake";
+			static bool s_ScreenShakeCached = true;
+			static int s_ScreenShakeFrame = -1;
+
+			private static bool IsScreenShakeEnabled()
+			{
+				int frame = Time.frameCount;
+				if (frame != s_ScreenShakeFrame)
+				{
+					s_ScreenShakeFrame = frame;
+					s_ScreenShakeCached = PlayerPrefs.GetInt(SCREEN_SHAKE_PREF, 1) != 0;
+				}
+				return s_ScreenShakeCached;
+			}
+
 			//--------------------------------------------------------------------------------------------------------------------------------
 			// STATIC
 			// Use static methods to dispatch the Camera callbacks, to ensure that ScreenShake components are called in an order in PreRender,
@@ -240,7 +255,14 @@ namespace CartoonFX
 				}
 #endif
 
-				float totalDuration = duration + delay;
+				if (!IsScreenShakeEnabled())
+			{
+				if (isShaking) StopShake();
+				shakeVector = Vector3.zero;
+				return;
+			}
+
+			float totalDuration = duration + delay;
 				if (time < totalDuration)
 				{
 					if (time < delay)

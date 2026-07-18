@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using TR.Audio;
+using TR.Net;
 
 namespace TR.UI
 {
@@ -23,6 +24,7 @@ namespace TR.UI
         private static BattlePauseController _instance;
         private float _prePauseTimeScale = 1f;
         private bool _paused;
+        private bool _pausedTime;
 
         public static bool IsPaused => _instance != null && _instance._paused;
 
@@ -60,8 +62,10 @@ namespace TR.UI
                     default: return KeyCode.Escape;
                 }
             }
-            
-            if (_instance != null) return _instance.toggleHotkey;
+
+            if (_instance != null && _instance.toggleHotkey != KeyCode.None && _instance.toggleHotkey != KeyCode.Pause)
+                return _instance.toggleHotkey;
+
             return KeyCode.Escape;
         }
 
@@ -75,20 +79,26 @@ namespace TR.UI
         {
             if (_paused) return;
             _paused = true;
-            _prePauseTimeScale = Mathf.Approximately(Time.timeScale, 0f) ? 1f : Time.timeScale;
-            Time.timeScale = 0f;
-            AudioListener.pause = true; 
+            _pausedTime = !DuoRuntime.IsDuo;
+            if (_pausedTime)
+            {
+                _prePauseTimeScale = Mathf.Approximately(Time.timeScale, 0f) ? 1f : Time.timeScale;
+                Time.timeScale = 0f;
+                AudioListener.pause = true;
+            }
             if (rootPanel != null) rootPanel.SetActive(true);
-            
-            
         }
 
         public void Resume()
         {
             if (!_paused) return;
             _paused = false;
-            Time.timeScale = Mathf.Clamp(_prePauseTimeScale, 0.01f, 100f);
-            AudioListener.pause = false;
+            if (_pausedTime)
+            {
+                Time.timeScale = Mathf.Clamp(_prePauseTimeScale, 0.01f, 100f);
+                AudioListener.pause = false;
+                _pausedTime = false;
+            }
             if (rootPanel != null) rootPanel.SetActive(false);
         }
 

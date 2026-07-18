@@ -57,7 +57,7 @@ namespace TR.UI.TrophyRoad
             if (root != null && !root.activeSelf) root.SetActive(true);
             EnsureScrollBindings();
             BuildOrRefresh();
-            AutoScrollToNext();
+            AutoScrollToLatest();
         }
 
         public void Hide()
@@ -98,7 +98,9 @@ namespace TR.UI.TrophyRoad
                 var size = content.sizeDelta;
                 size.x = targetWidth;
                 content.sizeDelta = size;
-                
+
+                content.anchorMin = new Vector2(0f, content.anchorMin.y);
+                content.anchorMax = new Vector2(0f, content.anchorMax.y);
                 content.pivot = new Vector2(0f, content.pivot.y);
                 content.anchoredPosition = new Vector2(0f, content.anchoredPosition.y);
             }
@@ -302,12 +304,12 @@ namespace TR.UI.TrophyRoad
             }
         }
 
-        private void AutoScrollToNext()
+        private void AutoScrollToLatest()
         {
             if (scrollRect == null || content == null || _road == null) return;
-            int nextIdx = TrophyRoadService.GetNextMilestoneIndex();
-            if (nextIdx < 0 || nextIdx >= _road.Milestones.Count) return;
-            var ms = _road.Milestones[nextIdx];
+            int latestIdx = TrophyRoadService.GetLatestUnlockedMilestoneIndex();
+            if (latestIdx < 0 || latestIdx >= _road.Milestones.Count) return;
+            var ms = _road.Milestones[latestIdx];
 
             
             float width = content.rect.width;
