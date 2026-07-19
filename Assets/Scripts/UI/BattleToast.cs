@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -13,6 +14,15 @@ namespace TR.UI
         [SerializeField] private Canvas _canvas;
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private CanvasGroup _group;
+
+        private struct ToastEntry
+        {
+            public string message;
+            public float duration;
+        }
+
+        private readonly Queue<ToastEntry> _queue = new();
+        private bool _isProcessing;
 
         private void Awake()
         {
@@ -104,30 +114,43 @@ namespace TR.UI
 
         public static void Show(string message, float duration = 1.25f)
         {
-            if (_instance == null)
+            EnsureInstance();
+            _instance._queue.Enqueue(new ToastEntry { message = message, duration = duration });
+            if (!_instance._isProcessing)
+                _instance.StartCoroutine(_instance.ProcessQueue());
+        }
+
+        private static void EnsureInstance()
+        {
+            if (_instance != null) return;
+
+            if (_prefab != null)
             {
-                if (_prefab != null)
-                {
-                    
-                    var parent = GetOrCreateOverlayCanvas().transform;
-                    var go = Object.Instantiate(_prefab, parent, false);
-                    
-                    go.name = "BattleToast";
-                    _instance = go.GetComponent<BattleToast>();
-                    if (_instance == null) _instance = go.AddComponent<BattleToast>();
-                    _instance.Awake();
-                }
-                else
-                {
-                    var go = new GameObject("BattleToast");
-                    
-                    go.transform.SetParent(GetOrCreateOverlayCanvas().transform, false);
-                    _instance = go.AddComponent<BattleToast>();
-                    _instance.Awake();
-                }
+                var parent = GetOrCreateOverlayCanvas().transform;
+                var go = Object.Instantiate(_prefab, parent, false);
+                go.name = "BattleToast";
+                _instance = go.GetComponent<BattleToast>();
+                if (_instance == null) _instance = go.AddComponent<BattleToast>();
+                _instance.Awake();
             }
-            _instance.StopAllCoroutines();
-            _instance.StartCoroutine(_instance.RunToast(message, duration));
+            else
+            {
+                var go = new GameObject("BattleToast");
+                go.transform.SetParent(GetOrCreateOverlayCanvas().transform, false);
+                _instance = go.AddComponent<BattleToast>();
+                _instance.Awake();
+            }
+        }
+
+        private System.Collections.IEnumerator ProcessQueue()
+        {
+            _isProcessing = true;
+            while (_queue.Count > 0)
+            {
+                var entry = _queue.Dequeue();
+                yield return StartCoroutine(RunToast(entry.message, entry.duration));
+            }
+            _isProcessing = false;
         }
 
         private System.Collections.IEnumerator RunToast(string message, float duration)

@@ -40,6 +40,8 @@ namespace TR.Battle
                     _coordinator.OnTowerPlacedReceived += OnRemoteTowerPlaced;
                     _coordinator.OnTowerRemovedReceived -= OnRemoteTowerRemoved;
                     _coordinator.OnTowerRemovedReceived += OnRemoteTowerRemoved;
+                    _coordinator.OnTowerHpReceived -= OnRemoteTowerHp;
+                    _coordinator.OnTowerHpReceived += OnRemoteTowerHp;
                 }
             }
         }
@@ -50,6 +52,7 @@ namespace TR.Battle
             {
                 _coordinator.OnTowerPlacedReceived -= OnRemoteTowerPlaced;
                 _coordinator.OnTowerRemovedReceived -= OnRemoteTowerRemoved;
+                _coordinator.OnTowerHpReceived -= OnRemoteTowerHp;
             }
         }
 
@@ -104,6 +107,14 @@ namespace TR.Battle
             Debug.Log($"[Placement] Removed mirrored tower at snap {snapIndex} (remote).");
         }
 
+        private void OnRemoteTowerHp(int snapIndex, float hp)
+        {
+            if (!_towerBySnapIndex.TryGetValue(snapIndex, out var go)) return;
+            if (go == null) return;
+            var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.SetRemoteHP(hp);
+            var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.SetRemoteHP(hp);
+        }
+
         
         
         public void NotifyTowerDestroyed(Transform snap, int snapIndex, bool isMirror)
@@ -126,8 +137,8 @@ namespace TR.Battle
             if (tb != null) tb.SetVisualOnly(true);
             
             var inf = go.GetComponent<InfernoTower>(); if (inf != null) inf.SetVisualOnly(true);
-            var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.enabled = false;
-            var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.enabled = false;
+            var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.SetVisualOnly(true);
+            var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.SetVisualOnly(true);
             
             
         }

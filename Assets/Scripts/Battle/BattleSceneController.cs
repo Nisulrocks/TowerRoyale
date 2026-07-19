@@ -57,6 +57,17 @@ namespace TR.Battle
         [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
 
+        public static BattleSceneController Instance { get; private set; }
+
+        private readonly System.Collections.Generic.Dictionary<int, int> _waveRemainingEnemies = new();
+        private readonly System.Collections.Generic.Dictionary<int, int> _waveKillMoney = new();
+        private int _totalWaves;
+
+        private void Awake()
+        {
+            Instance = this;
+        }
+
         private void Start()
         {
             
@@ -136,9 +147,11 @@ namespace TR.Battle
             _running = true;
             _wavesCleared = 0;
             _ended = false;
+            ClearWaveTracking();
+            _totalWaves = _arena != null ? _arena.WaveCount : 10;
             if (resultsPanel) resultsPanel.SetActive(false);
 
-            int total = _arena != null ? _arena.WaveCount : 10;
+            int total = _totalWaves;
             float interval = _arena != null ? _arena.WaveInterval : 60f;
 
             for (int i = 0; i < total; i++)
@@ -314,6 +327,7 @@ namespace TR.Battle
 
         private void OnDestroy()
         {
+            if (Instance == this) Instance = null;
             if (_coordinator != null)
             {
                 _coordinator.OnMatchStarted -= OnDuoMatchStarted;
@@ -711,6 +725,59 @@ namespace TR.Battle
                 yield return null;
             }
             cg.alpha = 1f;
+        }
+
+        private void ClearWaveTracking()
+        {
+            _waveRemainingEnemies.Clear();
+            _waveKillMoney.Clear();
+        }
+
+        public void RegisterWaveEnemy(int wave)
+        {
+            if (wave <= 0) return;
+            if (!TR.Net.DuoRuntime.IsSimulationAuthority) return;
+            _waveRemainingEnemies.TryGetValue(wave, out int remaining);
+            _waveRemainingEnemies[wave] = remaining + 1;
+            if (!_waveKillMoney.ContainsKey(wave)) _waveKillMoney[wave] = 0;
+        }
+
+        public void RecordWaveKill(int wave, int amount)
+        {
+            if (wave <= 0 || amount <= 0) return;
+            if (!TR.Net.DuoRuntime.IsSimulationAuthority) return;
+            if (!_waveRemainingEnemies.ContainsKey(wave)) return;
+
+            _waveKillMoney.TryGetValue(wave, out int earned);
+            _waveKillMoney[wave] = earned + amount;
+
+            _waveRemainingEnemies.TryGetValue(wave, out int remaining);
+            remaining = Mathf.Max(0, remaining - 1);
+            _waveRemainingEnemies[wave] = remaining;
+
+            if (remaining == 0)
+            {
+                int bonus = _waveKillMoney[wave];
+                _waveKillMoney.Remove(wave);
+                _waveRemainingEnemies.Remove(wave);
+                if (bonus > 0) PayWaveBonus(wave, bonus);
+            }
+        }
+
+        private void PayWaveBonus(int wave, int total)
+        {
+            if (total <= 0) return;
+            if (wave >= _totalWaves) return;
+
+            if (!TR.Net.DuoRuntime.IsDuo)
+            {
+                economy?.Earn(total);
+                TR.UI.BattleToast.Show($"Wave {wave} cleared! +${total}");
+            }
+            else
+            {
+                _coordinator?.AwardWaveBonus(wave, total);
+            }
         }
     }
 }

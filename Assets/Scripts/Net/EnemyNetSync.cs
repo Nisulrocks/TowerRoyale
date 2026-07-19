@@ -48,6 +48,7 @@ namespace TR.Net
             float hMul = data.Length > 1 ? System.Convert.ToSingle(data[1]) : 1f;
             float dMul = data.Length > 2 ? System.Convert.ToSingle(data[2]) : 1f;
             float sMul = data.Length > 3 ? System.Convert.ToSingle(data[3]) : 1f;
+            int waveNumber = data.Length > 4 ? System.Convert.ToInt32(data[4]) : 0;
 
             var def = GameDB.GetEnemyById(enemyId);
             if (def == null)
@@ -62,6 +63,8 @@ namespace TR.Net
             var path = Object.FindFirstObjectByType<Path2D>(FindObjectsInactive.Include);
             _enemy.Initialize(def, path);
             if (arena != null) _enemy.SetArena(arena);
+            _enemy.SetWaveNumber(waveNumber);
+            TR.Battle.BattleSceneController.Instance?.RegisterWaveEnemy(waveNumber);
 
             
             

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using TR.UI;
 
 namespace TR.Net
 {
@@ -34,6 +35,8 @@ namespace TR.Net
         
         
         public event Action<int> OnTowerRemovedReceived;
+        
+        public event Action<int, float> OnTowerHpReceived;
 
         private void Awake()
         {
@@ -189,6 +192,34 @@ namespace TR.Net
             if (econ != null) econ.Earn(amount);
         }
 
+        public void AwardWaveBonus(int wave, int total)
+        {
+            if (photonView == null || !PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient) return;
+            if (total <= 0) return;
+
+            var players = PhotonNetwork.CurrentRoom?.Players;
+            int count = players != null ? players.Count : 1;
+            if (count <= 0) count = 1;
+
+            int perPlayer = total / count;
+            int extra = total % count;
+
+            LocalEarn(perPlayer + extra);
+            BattleToast.Show($"Wave {wave} cleared! +${perPlayer + extra}");
+
+            if (perPlayer > 0)
+            {
+                photonView.RPC(nameof(RpcWaveBonus), RpcTarget.Others, wave, perPlayer);
+            }
+        }
+
+        [PunRPC]
+        private void RpcWaveBonus(int wave, int amount)
+        {
+            LocalEarn(amount);
+            BattleToast.Show($"Wave {wave} cleared! +${amount}");
+        }
+
         
         
         public event Action<string[], int[]> OnPartnerDeckReceived;
@@ -302,6 +333,19 @@ namespace TR.Net
         private void RpcTowerRemoved(int snapIndex)
         {
             OnTowerRemovedReceived?.Invoke(snapIndex);
+        }
+
+        
+        public void BroadcastTowerHp(int snapIndex, float hp)
+        {
+            if (snapIndex < 0) return;
+            photonView.RPC(nameof(RpcTowerHp), RpcTarget.Others, snapIndex, hp);
+        }
+
+        [PunRPC]
+        private void RpcTowerHp(int snapIndex, float hp)
+        {
+            OnTowerHpReceived?.Invoke(snapIndex, hp);
         }
     }
 }

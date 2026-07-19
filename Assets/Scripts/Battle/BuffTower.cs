@@ -16,8 +16,30 @@ namespace TR.Battle
         private readonly List<TowerBase> _snapshot = new();
         private readonly HashSet<TowerBase> _buffed = new();
         private bool _dying; 
+        private bool _visualOnly;
+        private TowerBase _towerBase;
+        private int _snapIndex = -1;
+        private float _lastSentHp = float.MaxValue;
+        private float _lastSentTime;
+
+        public void SetVisualOnly(bool visualOnly) => _visualOnly = visualOnly;
+
+        public void SetRemoteHP(float hp)
+        {
+            _hp = Mathf.Clamp(hp, 0f, _maxHp);
+            if (_ring != null)
+            {
+                _ring.SetProgress(_maxHp > 0f ? _hp / _maxHp : 0f);
+            }
+            if (_hp <= 0f && !_dying)
+            {
+                StartCoroutine(DespawnAndDestroy());
+            }
+        }
 
         [Header("HP Ring (World-Space)")]
+
+
         [SerializeField] private float ringRadius = 0.6f;
         [SerializeField] private float ringThickness = 0.06f;
         [SerializeField] private int ringSegments = 64;
@@ -38,6 +60,7 @@ namespace TR.Battle
         {
             _def = def;
             _level = Mathf.Max(1, level);
+            _towerBase = GetComponent<TowerBase>();
             _range = def.GetBuffRange(_level);
             _maxHp = def.GetMaxHealth(_level);
             _hp = _maxHp;
@@ -89,6 +112,12 @@ namespace TR.Battle
             if (_dying) return; 
             float dt = Time.deltaTime;
             
+            if (_snapIndex < 0)
+            {
+                var bind = GetComponent<TowerSnapBinding>();
+                _snapIndex = bind != null ? bind.SnapIndex : -1;
+            }
+
             if (_auraVfx != null && !_auraVfx.isPlaying)
             {
                 _auraVfx.Play(true);
@@ -139,12 +168,6 @@ namespace TR.Battle
                         if (_def.BuffEconomyIncome)
                         {
                             var econ = t.GetComponent<EconomyTower>();
-                            if (econ == null)
-                            {
-                                
-                                var maybe = TR.Battle.EconomyTower.All;
-                                
-                            }
                             if (econ != null)
                             {
                                 econ.AddOrUpdateIncomeBuff(this, econIncomeMul);
@@ -183,16 +206,28 @@ namespace TR.Battle
             foreach (var t in newlyBuffed) _buffed.Add(t);
 
             
-            if (_decayPerSec > 0f)
+            if (!_visualOnly && _decayPerSec > 0f)
             {
                 _hp -= _decayPerSec * dt;
+                _hp = Mathf.Max(0f, _hp);
                 if (_ring != null)
                 {
                     _ring.SetProgress(_maxHp > 0f ? _hp / _maxHp : 0f);
                 }
+
+                if (_snapIndex >= 0 && TR.Net.DuoRuntime.IsDuo)
+                {
+                    float t = Time.time;
+                    if (Mathf.Abs(_hp - _lastSentHp) > 0.01f || t - _lastSentTime > 0.25f)
+                    {
+                        _lastSentHp = _hp;
+                        _lastSentTime = t;
+                        TR.Net.DuoBattleCoordinator.Instance?.BroadcastTowerHp(_snapIndex, _hp);
+                    }
+                }
+
                 if (_hp <= 0f)
                 {
-                    _hp = 0f;
                     if (!_dying) StartCoroutine(DespawnAndDestroy());
                 }
             }

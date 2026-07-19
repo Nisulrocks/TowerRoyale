@@ -18,6 +18,11 @@ namespace TR.Battle
         private MatchEconomy _economy;
         private RadialProgressRing _ring;
         private bool _dying; 
+        private bool _visualOnly;
+        private TowerBase _towerBase;
+        private int _snapIndex = -1;
+        private float _lastSentHp = float.MaxValue;
+        private float _lastSentTime;
         private static readonly System.Collections.Generic.HashSet<EconomyTower> s_all = new();
         public static System.Collections.Generic.IReadOnlyCollection<EconomyTower> All => s_all;
 
@@ -41,6 +46,21 @@ namespace TR.Battle
         public float MaxHP => _maxHp;
         public EconomyCardDefinition Definition => _def;
 
+        public void SetVisualOnly(bool visualOnly) => _visualOnly = visualOnly;
+
+        public void SetRemoteHP(float hp)
+        {
+            _hp = Mathf.Clamp(hp, 0f, _maxHp);
+            if (_ring != null)
+            {
+                _ring.SetProgress(_maxHp > 0f ? _hp / _maxHp : 0f);
+            }
+            if (_hp <= 0f && !_dying)
+            {
+                StartCoroutine(DespawnAndDestroy());
+            }
+        }
+
         public void Initialize(EconomyCardDefinition def, int level)
         {
             _def = def;
@@ -53,6 +73,7 @@ namespace TR.Battle
 
             
             var baseTower = GetComponent<TowerBase>();
+            _towerBase = baseTower;
             if (baseTower != null && baseTower.Stats.dps > 0f)
             {
                 Debug.LogWarning("[EconomyTower] CardDefinition has non-zero DPS; economy towers should have DPS=0 in curves.");
@@ -88,40 +109,61 @@ namespace TR.Battle
             if (_dying) return; 
             float dt = Time.deltaTime;
 
-            
-            if (_economy != null && _incomePerSec > 0f)
+            if (_snapIndex < 0)
             {
-                
-                float gain = GetEffectiveIncomePerSecond() * dt;
-                _incomeAcc += gain;
-                int whole = Mathf.FloorToInt(_incomeAcc);
-                if (whole > 0)
-                {
-                    _incomeAcc -= whole;
-                    _economy.Earn(whole);
-                }
+                var bind = GetComponent<TowerSnapBinding>();
+                _snapIndex = bind != null ? bind.SnapIndex : -1;
+            }
 
-                
-                _incomeVfxAccum += dt;
-                if (!string.IsNullOrEmpty(incomeVfxKey) && _incomeVfxAccum >= Mathf.Max(0.1f, incomeVfxEverySeconds))
+            
+            if (!_visualOnly)
+            {
+                if (_economy != null && _incomePerSec > 0f)
                 {
-                    var pos = incomeVfxAnchor != null ? incomeVfxAnchor.position : transform.position;
-                    ParticleManager.SpawnOneShot(incomeVfxKey, pos);
-                    _incomeVfxAccum = 0f;
+                    
+                    float gain = GetEffectiveIncomePerSecond() * dt;
+                    _incomeAcc += gain;
+                    int whole = Mathf.FloorToInt(_incomeAcc);
+                    if (whole > 0)
+                    {
+                        _incomeAcc -= whole;
+                        _economy.Earn(whole);
+                    }
+
+                    
+                    _incomeVfxAccum += dt;
+                    if (!string.IsNullOrEmpty(incomeVfxKey) && _incomeVfxAccum >= Mathf.Max(0.1f, incomeVfxEverySeconds))
+                    {
+                        var pos = incomeVfxAnchor != null ? incomeVfxAnchor.position : transform.position;
+                        ParticleManager.SpawnOneShot(incomeVfxKey, pos);
+                        _incomeVfxAccum = 0f;
+                    }
                 }
             }
 
             
-            if (_decayPerSec > 0f)
+            if (!_visualOnly && _decayPerSec > 0f)
             {
                 _hp -= _decayPerSec * dt;
+                _hp = Mathf.Max(0f, _hp);
                 if (_ring != null)
                 {
                     _ring.SetProgress(_maxHp > 0f ? _hp / _maxHp : 0f);
                 }
+
+                if (_snapIndex >= 0 && TR.Net.DuoRuntime.IsDuo)
+                {
+                    float t = Time.time;
+                    if (Mathf.Abs(_hp - _lastSentHp) > 0.01f || t - _lastSentTime > 0.25f)
+                    {
+                        _lastSentHp = _hp;
+                        _lastSentTime = t;
+                        TR.Net.DuoBattleCoordinator.Instance?.BroadcastTowerHp(_snapIndex, _hp);
+                    }
+                }
+
                 if (_hp <= 0f)
                 {
-                    _hp = 0f;
                     if (!_dying) StartCoroutine(DespawnAndDestroy());
                 }
             }

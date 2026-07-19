@@ -89,12 +89,16 @@ namespace TR.Battle
         private float _stunPulseNextTime;
         private float _stunPulseCheckTimer;
 
+        private int _waveNumber;
+
         public EnemyDefinition Definition => definition;
         public float CurrentHealth => currentHealth;
         public float MaxHealth => _runtimeMaxHealth > 0f ? _runtimeMaxHealth : (definition != null ? definition.MaxHealth : Mathf.Max(currentHealth, 1f));
         public System.Action<float, float> OnHealthChanged; 
 
         private TR.Net.EnemyNetSync _netSync;
+
+        public void SetWaveNumber(int wave) => _waveNumber = wave;
 
         
         
@@ -1015,8 +1019,8 @@ namespace TR.Battle
             int amount = Random.Range(min, max + 1);
             if (amount <= 0) return;
 
-            
-            
+            BattleSceneController.Instance?.RecordWaveKill(_waveNumber, amount);
+
             if (DuoRuntime.IsDuo)
             {
                 var coord = TR.Net.DuoBattleCoordinator.Instance;

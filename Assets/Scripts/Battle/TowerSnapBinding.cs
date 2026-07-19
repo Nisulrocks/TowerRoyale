@@ -11,6 +11,8 @@ namespace TR.Battle
         private int _snapIndex = -1;
         private bool _isMirror;
 
+        public int SnapIndex => _snapIndex;
+
         public void Bind(Transform snap, TowerPlacementController controller, int snapIndex = -1, bool isMirror = false)
         {
             _snap = snap;

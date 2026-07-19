@@ -136,7 +136,7 @@ namespace TR.Battle
                 _arena.GetBossScalingForWave(waveNumber, out float hMul, out float dMul, out float sMul);
                 
                 var bossDef = ResolveDuoSpawnable(boss);
-                if (bossDef != null) SpawnEnemyScaled(bossDef, sp, hMul * coop, dMul * coop, sMul);
+                if (bossDef != null) SpawnEnemyScaled(bossDef, sp, hMul * coop, dMul * coop, sMul, waveNumber);
                 _spawnedThisWave++;
                 
                 count = Mathf.Max(0, count - 1);
@@ -148,7 +148,7 @@ namespace TR.Battle
                 var def = ResolveDuoSpawnable(GetWeightedEnemyForWave(waveNumber));
                 var sp = GetSpawnPoint(i % spawnPoints.Length);
                 
-                if (def != null) SpawnEnemyScaled(def, sp, coop, coop, 1f);
+                if (def != null) SpawnEnemyScaled(def, sp, coop, coop, 1f, waveNumber);
                 _spawnedThisWave++;
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
@@ -182,7 +182,7 @@ namespace TR.Battle
 
         
         
-        private EnemyBase2D SpawnEnemyScaled(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul)
+        private EnemyBase2D SpawnEnemyScaled(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul, int waveNumber)
         {
             if (def == null)
             {
@@ -194,7 +194,7 @@ namespace TR.Battle
             
             if (TR.Net.DuoRuntime.IsDuo)
             {
-                return SpawnEnemyNetworked(def, point, healthMul, damageMul, speedMul);
+                return SpawnEnemyNetworked(def, point, healthMul, damageMul, speedMul, waveNumber);
             }
 
             GameObject go = null;
@@ -218,6 +218,8 @@ namespace TR.Battle
             if (enemy == null) enemy = go.AddComponent<EnemyBase2D>();
             enemy.Initialize(def, path);
             enemy.SetArena(_arena);
+            enemy.SetWaveNumber(waveNumber);
+            BattleSceneController.Instance?.RegisterWaveEnemy(waveNumber);
             
             if (!(Mathf.Approximately(healthMul, 1f) && Mathf.Approximately(damageMul, 1f) && Mathf.Approximately(speedMul, 1f)))
             {
@@ -228,7 +230,7 @@ namespace TR.Battle
 
         
         
-        private EnemyBase2D SpawnEnemyNetworked(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul)
+        private EnemyBase2D SpawnEnemyNetworked(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul, int waveNumber)
         {
             
             if (!Photon.Pun.PhotonNetwork.IsMasterClient) return null;
@@ -241,7 +243,7 @@ namespace TR.Battle
 
             string prefabId = TR.Net.DuoEnemyPrefabPool.EnemyPrefabId(def);
             Vector3 pos = point != null ? point.position : Vector3.zero;
-            object[] data = new object[] { def.EnemyId, healthMul, damageMul, speedMul };
+            object[] data = new object[] { def.EnemyId, healthMul, damageMul, speedMul, waveNumber };
 
             var go = Photon.Pun.PhotonNetwork.InstantiateRoomObject(prefabId, pos, Quaternion.identity, 0, data);
             if (go == null)
