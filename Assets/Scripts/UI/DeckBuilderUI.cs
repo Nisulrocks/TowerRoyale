@@ -94,7 +94,7 @@ namespace TR.UI
             {
                 var cp = PlayerProfile.GetOrCreateCard(card.CardId);
                 var ui = Instantiate(collectionItemPrefab, collectionListRoot);
-                ui.Bind(card, cp.level);
+                ui.Bind(card, cp.level, true);
                 
                 var button = ui.GetComponent<Button>();
                 if (button == null) button = ui.GetComponentInChildren<Button>();

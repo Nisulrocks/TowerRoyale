@@ -2183,7 +2183,7 @@ MonoBehaviour:
   castleXPGainDelay: 0.5
   castleXpAnimSpeed: 100
   levelUpVfxKey: Fireworks
-  levelUpVfxParent: {fileID: 0}
+  levelUpVfxParent: {fileID: 2853151956299602956}
   debugTriggerLevelUpVfxWithL: 1
   levelUpVfxBurstStagger: 0.08
   levelUpSfxKey: 

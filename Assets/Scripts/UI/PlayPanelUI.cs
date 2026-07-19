@@ -442,7 +442,7 @@ namespace TR.UI
                     curXpF -= needed;
                     curLevel++;
                     
-                    TryPlayLevelUpVfx(0f);
+                    //TryPlayLevelUpVfx(0f);
                     needed = curLevel < castleCfg.MaxLevel ? Mathf.Max(1, castleCfg.GetXPForLevel(curLevel)) : 1;
                 }
                 if (curLevel >= toLevel)

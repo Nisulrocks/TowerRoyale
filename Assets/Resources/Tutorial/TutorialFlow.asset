@@ -177,6 +177,23 @@ MonoBehaviour:
     nameGreetingFormat: Hello, {0}!
     nameGreetingSeconds: 1.5
   - targetMode: 0
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Congadulations Commander! Youve Unlocked the First Arena Stonebrook
+      Village !
+    typewriterCharDelay: 0.04
+    waitMode: 1
+    waitSeconds: 6
+    blockOutside: 1
+    namePromptText: 
+    namePlaceholderText: 
+    nameGreetingFormat: 
+    nameGreetingSeconds: 0
+  - targetMode: 0
     targetObjectName: Arena Icon
     targetPackId: 
     targetScreenOffset: {x: 0, y: -1}

@@ -118,14 +118,10 @@ namespace TR.Systems
             PlayerProfile.AddCastleXP(castleXPGain);
 
             
-            if (afterArena != null && beforeArena != null && afterArena != beforeArena)
-            {
-                
-                int req = Mathf.Max(0, afterArena.TrophyRequirement);
-                TR.Systems.PlayerProfile.SetTrophyFloorAtLeast(req);
-                
-                TR.Systems.PlayerProfile.SetPendingArenaUnlock(afterArena.DisplayName);
-            }
+            
+            
+            
+            
 
 
             return new MatchRewards

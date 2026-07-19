@@ -96,6 +96,7 @@ GameObject:
   - component: {fileID: 3805980290229475831}
   - component: {fileID: -8855373183934679856}
   - component: {fileID: -8194808502798353477}
+  - component: {fileID: 398904389556861135}
   m_Layer: 6
   m_Name: Enchanting Shrine Tower
   m_TagString: Untagged
@@ -246,6 +247,26 @@ MonoBehaviour:
   buffGlowIntensity: 0.35
   buffGlowPulseSpeed: 2.5
   buffGlowPulseAmplitude: 0.25
+--- !u!114 &398904389556861135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1212263692359996816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38432d439f50e4e4dbf9571f727a3c20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ringRadius: 0.6
+  ringThickness: 0.06
+  ringSegments: 64
+  ringLocalOffset: {x: 0, y: 0.35, z: 0}
+  auraVfxKey: 
+  auraAnchor: {fileID: 0}
+  autoScaleAuraToRange: 1
+  auraScaleMultiplier: 1
 --- !u!1 &2305830771801999919
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,8 +9,9 @@ namespace TR.Dev
         public KeyCode togglePanelKey = KeyCode.D;
 
         private bool _showPanel = false;
-        private Rect _panelRect = new Rect(10, 10, 220, 290);
+        private Rect _panelRect = new Rect(10, 10, 220, 370);
         private string _trophyInput = "0";
+        private string _expInput = "0";
 
         private void Update()
         {
@@ -57,6 +58,21 @@ namespace TR.Dev
                 UnbanPlayer();
 
             GUILayout.Space(4);
+
+            if (GUILayout.Button("Unlock All Cards"))
+                UnlockAllCards();
+
+            if (GUILayout.Button("Max Out All Unlocked Cards"))
+                MaxOutAllUnlockedCards();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Add XP:", GUILayout.Width(60));
+            _expInput = GUILayout.TextField(_expInput, GUILayout.Width(90));
+            if (GUILayout.Button("Add", GUILayout.Width(40)))
+                AddCastleXP();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(4);
             GUI.color = Color.red;
             if (GUILayout.Button("WIPE PROFILE"))
                 WipeProfile();
@@ -89,7 +105,7 @@ namespace TR.Dev
         [ContextMenu("Remove Trophies (-50)")]
         public void RemoveTrophies()
         {
-            PlayerProfile.RemoveTrophies(50);
+            PlayerProfile.SetTrophies(PlayerProfile.GetTrophies() - 50, true);
             Debug.Log("[Dev] Removed 50 trophies from player.");
         }
 
@@ -101,20 +117,7 @@ namespace TR.Dev
                 return;
             }
 
-            GameDB.EnsureLoaded();
-            int current = PlayerProfile.GetTrophies();
-            int floor = PlayerProfile.GetTrophyFloor();
-            int clamped = Mathf.Max(floor, target);
-
-            var road = GameDB.GetTrophyRoad();
-            if (road != null)
-                clamped = Mathf.Min(clamped, road.MaxTrophies);
-
-            if (clamped > current)
-                PlayerProfile.AddTrophies(clamped - current);
-            else if (clamped < current)
-                PlayerProfile.RemoveTrophies(current - clamped);
-
+            PlayerProfile.SetTrophies(target, true);
             _trophyInput = PlayerProfile.GetTrophies().ToString();
             Debug.Log($"[Dev] Set trophies to {PlayerProfile.GetTrophies()}.");
         }
@@ -131,6 +134,45 @@ namespace TR.Dev
         {
             PlayerProfile.Unban();
             Debug.Log("[Dev] Unbanned player.");
+        }
+
+        [ContextMenu("Unlock All Cards")]
+        public void UnlockAllCards()
+        {
+            GameDB.EnsureLoaded();
+            foreach (var card in GameDB.Cards)
+            {
+                var cp = PlayerProfile.GetOrCreateCard(card.CardId);
+                if (cp.ownedCount <= 0) cp.ownedCount = 1;
+            }
+            PlayerProfile.Save();
+            Debug.Log("[Dev] Unlocked all cards.");
+        }
+
+        [ContextMenu("Max Out All Unlocked Cards")]
+        public void MaxOutAllUnlockedCards()
+        {
+            GameDB.EnsureLoaded();
+            foreach (var card in GameDB.Cards)
+            {
+                var cp = PlayerProfile.GetOrCreateCard(card.CardId);
+                if (cp.ownedCount <= 0) continue;
+                cp.level = card.Rarity != null ? card.Rarity.MaxLevel : 1;
+            }
+            PlayerProfile.Save();
+            Debug.Log("[Dev] Maxed out all unlocked cards.");
+        }
+
+        [ContextMenu("Add Castle XP")]
+        public void AddCastleXP()
+        {
+            if (!int.TryParse(_expInput, out int amount))
+            {
+                Debug.LogWarning("[Dev] Invalid XP input.");
+                return;
+            }
+            PlayerProfile.AddCastleXP(Mathf.Max(0, amount));
+            _expInput = "0";
         }
     }
 }

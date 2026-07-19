@@ -3,40 +3,28 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using TR.Systems;
-using TR.Data;
 using TR.Audio;
 
 namespace TR.UI
 {
-    
-    
-    
-    public class LobbyArenaUnlockNotifier : MonoBehaviour
+    public class LobbyCastleLevelUpNotifier : MonoBehaviour
     {
         [Header("Prefab & Parent")]
-
         [SerializeField] private GameObject popupPrefab;
-
         [SerializeField] private RectTransform parent;
 
-        [Header("Text Template")]
-
-        [SerializeField] private string headerText = "New Arena Unlocked!";
-
-        [SerializeField] private string encouragingText = "Keep pushing forward, {0}!";
+        [Header("Text")]
+        [SerializeField] private string headerText = "Castle Level UP!";
+        [SerializeField] private string bodyFormat = "Lvl {0} - {1}\nHealth {2} - {3}";
 
         [Header("Animation")]
-        [Tooltip("Seconds to wait after Lobby loads before showing the popup (to avoid competing with screen fade-in)")]
+        [Tooltip("Seconds to wait before showing the popup")]
         [SerializeField] private float initialDelay = 0.75f;
         [SerializeField] private float popInTime = 0.35f;
         [Tooltip("How much the popup overshoots during the pop-in. 0 = default pop, higher = bigger bounce.")]
         [SerializeField] private float popInOvershoot = 0f;
         [SerializeField] private float holdTime = 2.0f;
         [SerializeField] private float fadeOutTime = 0.3f;
-
-        [Header("Popup References")]
-        [Tooltip("Name of the child GameObject that holds the arena icon Image.")]
-        [SerializeField] private string iconChildName = "Icon";
 
         [Header("SFX (Optional)")]
         [SerializeField] private string sfxKey = "";
@@ -54,15 +42,15 @@ namespace TR.UI
 
         private void OnEnable()
         {
-            PlayerProfile.OnTrophiesChanged += HandleTrophiesChanged;
+            PlayerProfile.OnCastleLevelUp += HandleCastleLevelUp;
         }
 
         private void OnDisable()
         {
-            PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
+            PlayerProfile.OnCastleLevelUp -= HandleCastleLevelUp;
         }
 
-        private void HandleTrophiesChanged(int trophies)
+        private void HandleCastleLevelUp(int fromLevel, int toLevel)
         {
             if (autoPlay)
                 TryShowIfPending();
@@ -83,62 +71,32 @@ namespace TR.UI
         {
             if (IsShowing) return;
             if (popupPrefab == null) return;
-            if (!PlayerProfile.TryConsumePendingArenaUnlock(out string arenaName)) return;
+            if (!PlayerProfile.TryConsumePendingCastleLevelUp(out int fromLevel, out int toLevel, out int fromHealth, out int toHealth)) return;
 
             IsShowing = true;
 
-            GameDB.EnsureLoaded();
-            
-            Sprite icon = null;
-            var arenas = GameDB.GetArenasSortedByRequirement();
-            if (arenas != null)
-            {
-                foreach (var a in arenas)
-                {
-                    if (a != null && a.DisplayName == arenaName)
-                    {
-                        icon = a.ArenaImage;
-                        break;
-                    }
-                }
-            }
-
-            
             var parentRt = parent != null ? parent : GetDefaultCanvasParent();
             var go = Instantiate(popupPrefab, parentRt);
             go.SetActive(true);
 
-            
-            Image img = null;
-            if (!string.IsNullOrEmpty(iconChildName))
-            {
-                var iconTrans = go.transform.Find(iconChildName);
-                if (iconTrans != null) img = iconTrans.GetComponent<Image>();
-            }
-            if (img == null) img = go.GetComponentInChildren<Image>(true);
-
             var txt = go.GetComponentInChildren<TMP_Text>(true);
-            if (img != null) img.sprite = icon;
             if (txt != null)
             {
-                if (string.IsNullOrEmpty(encouragingText)) encouragingText = "Keep going!";
-                string line2 = string.Format(encouragingText, arenaName);
-                
+                string body = string.Format(bodyFormat, fromLevel, toLevel, fromHealth, toHealth);
                 txt.text = string.IsNullOrEmpty(headerText)
-                    ? $"{arenaName}\n{line2}"
-                    : $"{headerText}\n{arenaName}\n{line2}";
+                    ? body
+                    : $"{headerText}\n{body}";
             }
 
-            
             if (!string.IsNullOrEmpty(sfxKey) && SFXManager.Instance != null)
             {
                 SFXManager.Instance.Play(sfxKey);
             }
 
-            
             var cg = go.GetComponent<CanvasGroup>();
             if (cg == null) cg = go.AddComponent<CanvasGroup>();
-            StartCoroutine(Animate(cg, go.GetComponent<RectTransform>()));
+            var rt = go.GetComponent<RectTransform>();
+            StartCoroutine(Animate(cg, rt));
         }
 
         private RectTransform GetDefaultCanvasParent()
@@ -151,7 +109,7 @@ namespace TR.UI
                     return c.transform as RectTransform;
                 }
             }
-            
+
             return this.transform as RectTransform;
         }
 
@@ -160,7 +118,6 @@ namespace TR.UI
             cg.alpha = 0f;
             rt.localScale = Vector3.zero;
 
-            
             float t = 0f;
             while (t < 1f)
             {
@@ -173,7 +130,6 @@ namespace TR.UI
             cg.alpha = 1f;
             rt.localScale = Vector3.one;
 
-            
             float wait = Mathf.Max(0f, holdTime);
             while (wait > 0f)
             {
@@ -181,7 +137,6 @@ namespace TR.UI
                 yield return null;
             }
 
-            
             t = 0f;
             while (t < 1f)
             {

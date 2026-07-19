@@ -22,7 +22,7 @@ namespace TR.UI
         private CardDefinition _def;
         private int _level;
 
-        public void Bind(CardDefinition card, int level = 0)
+        public void Bind(CardDefinition card, int level = 0, bool showCost = false)
         {
             _def = card;
             _level = level; 
@@ -36,15 +36,12 @@ namespace TR.UI
             bool inBattle = FindFirstObjectByType<BattleSceneController>(FindObjectsInactive.Include) != null;
             if (costText)
             {
-                if (inBattle && card != null)
+                bool shouldShow = card != null && (inBattle || showCost);
+                costText.gameObject.SetActive(shouldShow);
+                if (shouldShow)
                 {
                     int lvl = Mathf.Max(1, level);
                     costText.text = $"Cost: {card.GetStatsForLevel(lvl).cost}";
-                    costText.gameObject.SetActive(true);
-                }
-                else
-                {
-                    costText.gameObject.SetActive(false);
                 }
             }
         }

@@ -28,6 +28,12 @@ namespace TR.Systems
         public string pendingArenaUnlockName = null; 
 
         
+        public int pendingCastleLevelFrom = 0;
+        public int pendingCastleLevelTo = 0;
+        public int pendingCastleHealthFrom = 0;
+        public int pendingCastleHealthTo = 0;
+
+        
         public int saveVersion = 1;               
         public string integrityHash = "";        
         public int tamperCount = 0;               
@@ -115,6 +121,7 @@ namespace TR.Systems
         
         public static event Action<int> OnSoftCurrencyChanged;
         public static event Action<int> OnTrophiesChanged;
+        public static event Action<int, int> OnCastleLevelUp;
 
         public static PlayerProfileDTO LoadOrCreate()
         {
@@ -322,9 +329,13 @@ namespace TR.Systems
         public static void AddTrophies(int amount)
         {
             int add = Mathf.Max(0, amount);
+            if (add <= 0) return;
+
+            GameDB.EnsureLoaded();
+            var beforeArena = ArenaService.GetCurrentArena();
             int current = Mathf.Max(0, Data.trophies);
             
-            var road = TR.Systems.GameDB.GetTrophyRoad();
+            var road = GameDB.GetTrophyRoad();
             if (road != null)
             {
                 int capped = Mathf.Min(current + add, Mathf.Max(0, road.MaxTrophies));
@@ -334,6 +345,14 @@ namespace TR.Systems
             {
                 Data.trophies = current + add;
             }
+
+            var afterArena = ArenaService.GetCurrentArena();
+            if (afterArena != null && (beforeArena == null || afterArena.TrophyRequirement > beforeArena.TrophyRequirement))
+            {
+                SetTrophyFloorAtLeast(Mathf.Max(0, afterArena.TrophyRequirement));
+                SetPendingArenaUnlock(afterArena.DisplayName);
+            }
+
             Save();
             OnTrophiesChanged?.Invoke(Data.trophies);
         }
@@ -359,6 +378,28 @@ namespace TR.Systems
             Save();
             OnTrophiesChanged?.Invoke(Data.trophies);
         }
+
+        public static void SetTrophies(int target, bool bypassFloor = false)
+        {
+            GameDB.EnsureLoaded();
+            var beforeArena = ArenaService.GetCurrentArena();
+            int floor = bypassFloor ? 0 : Mathf.Max(0, Data.trophiesFloor);
+            int maxTrophies = int.MaxValue;
+            var road = GameDB.GetTrophyRoad();
+            if (road != null) maxTrophies = Mathf.Max(0, road.MaxTrophies);
+
+            Data.trophies = Mathf.Clamp(target, floor, maxTrophies);
+
+            var afterArena = ArenaService.GetCurrentArena();
+            if (afterArena != null && (beforeArena == null || afterArena.TrophyRequirement > beforeArena.TrophyRequirement))
+            {
+                SetTrophyFloorAtLeast(Mathf.Max(0, afterArena.TrophyRequirement));
+                SetPendingArenaUnlock(afterArena.DisplayName);
+            }
+
+            Save();
+            OnTrophiesChanged?.Invoke(Data.trophies);
+        }
         public static int GetSoftCurrency() => Data.softCurrency;
         public static void AddSoftCurrency(int amount)
         {
@@ -381,6 +422,31 @@ namespace TR.Systems
             arenaDisplayName = Data.pendingArenaUnlockName;
             if (string.IsNullOrEmpty(arenaDisplayName)) return false;
             Data.pendingArenaUnlockName = null;
+            Save();
+            return true;
+        }
+
+        public static void SetPendingCastleLevelUp(int fromLevel, int toLevel, int fromHealth, int toHealth)
+        {
+            if (toLevel <= fromLevel) return;
+            Data.pendingCastleLevelFrom = fromLevel;
+            Data.pendingCastleLevelTo = toLevel;
+            Data.pendingCastleHealthFrom = fromHealth;
+            Data.pendingCastleHealthTo = toHealth;
+            Save();
+        }
+
+        public static bool TryConsumePendingCastleLevelUp(out int fromLevel, out int toLevel, out int fromHealth, out int toHealth)
+        {
+            fromLevel = Data.pendingCastleLevelFrom;
+            toLevel = Data.pendingCastleLevelTo;
+            fromHealth = Data.pendingCastleHealthFrom;
+            toHealth = Data.pendingCastleHealthTo;
+            if (toLevel <= fromLevel) return false;
+            Data.pendingCastleLevelFrom = 0;
+            Data.pendingCastleLevelTo = 0;
+            Data.pendingCastleHealthFrom = 0;
+            Data.pendingCastleHealthTo = 0;
             Save();
             return true;
         }
@@ -419,6 +485,10 @@ namespace TR.Systems
             Data.castleXP += amount;
             
             Data.pendingCastleXpDelta = Mathf.Max(0, Data.pendingCastleXpDelta + amount);
+
+            int oldLevel = Data.castleLevel;
+            int oldHealth = cfg != null ? cfg.GetHealthForLevel(oldLevel) : 0;
+
             if (cfg != null)
             {
                 int maxLevel = Mathf.Max(1, cfg.MaxLevel);
@@ -440,6 +510,15 @@ namespace TR.Systems
                     Data.castleXP = Mathf.Min(Data.castleXP, cfg.GetXPForLevel(maxLevel));
                 }
             }
+
+            int newLevel = Data.castleLevel;
+            if (newLevel > oldLevel)
+            {
+                int newHealth = cfg != null ? cfg.GetHealthForLevel(newLevel) : 0;
+                SetPendingCastleLevelUp(oldLevel, newLevel, oldHealth, newHealth);
+                OnCastleLevelUp?.Invoke(oldLevel, newLevel);
+            }
+
             Save();
         }
 
