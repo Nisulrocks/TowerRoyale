@@ -438,7 +438,8 @@ namespace TR.Tutorial
                         string greeting;
                         try { greeting = string.Format(step.nameGreetingFormat, nameForGreeting); }
                         catch { greeting = step.nameGreetingFormat; }
-                        if (_dialogue != null) _dialogue.Show(greeting, step.typewriterCharDelay);
+                        Sprite greetingGuide = step.nameGreetingGuideSprite != null ? step.nameGreetingGuideSprite : step.guideSprite;
+                        if (_dialogue != null) _dialogue.Show(greeting, step.typewriterCharDelay, greetingGuide);
                         float g = Mathf.Max(0f, step.nameGreetingSeconds);
                         while (g > 0f) { g -= Time.unscaledDeltaTime; yield return null; }
                     }
@@ -484,7 +485,7 @@ namespace TR.Tutorial
             
             if (_dialogue != null)
             {
-                _dialogue.Show(step.dialogueText, step.typewriterCharDelay);
+                _dialogue.Show(step.dialogueText, step.typewriterCharDelay, step.guideSprite);
             }
             
             if (_arrow != null)

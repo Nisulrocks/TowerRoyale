@@ -43,6 +43,10 @@ public string targetPackId;
         public string dialogueText;
         [Range(0.01f, 0.1f)] public float typewriterCharDelay = 0.03f;
 
+        [Header("Guide Sprite")]
+        [Tooltip("Optional guide/emotion sprite shown with this dialogue step.")]
+        public Sprite guideSprite;
+
         [Header("Progression")]
         public StepWaitMode waitMode = StepWaitMode.None;
 public float waitSeconds = 0f;
@@ -58,6 +62,8 @@ public float waitSeconds = 0f;
         public string namePlaceholderText = "Your name...";
         [Tooltip("Greeting shown in the dialogue box after the name is confirmed. Use {0} for the name. Leave empty to skip.")]
         public string nameGreetingFormat = "Hello, {0}!";
+        [Tooltip("Optional guide/emotion sprite shown during the name greeting. Falls back to the step's main guideSprite if not set.")]
+        public Sprite nameGreetingGuideSprite;
         [Tooltip("How long (seconds) to show the greeting before moving to the next step.")]
         public float nameGreetingSeconds = 1.5f;
     }
