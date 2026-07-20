@@ -194,7 +194,7 @@ namespace TR.Battle
             
             if (TR.Net.DuoRuntime.IsDuo)
             {
-                return SpawnEnemyNetworked(def, point, healthMul, damageMul, speedMul, waveNumber);
+                return SpawnEnemyNetworked(def, point != null ? point.position : Vector3.zero, healthMul, damageMul, speedMul, waveNumber);
             }
 
             GameObject go = null;
@@ -230,7 +230,7 @@ namespace TR.Battle
 
         
         
-        private EnemyBase2D SpawnEnemyNetworked(EnemyDefinition def, Transform point, float healthMul, float damageMul, float speedMul, int waveNumber)
+        public EnemyBase2D SpawnEnemyNetworked(EnemyDefinition def, Vector3 position, float healthMul, float damageMul, float speedMul, int waveNumber)
         {
             
             if (!Photon.Pun.PhotonNetwork.IsMasterClient) return null;
@@ -242,13 +242,12 @@ namespace TR.Battle
             }
 
             string prefabId = TR.Net.DuoEnemyPrefabPool.EnemyPrefabId(def);
-            Vector3 pos = point != null ? point.position : Vector3.zero;
             object[] data = new object[] { def.EnemyId, healthMul, damageMul, speedMul, waveNumber };
 
-            var go = Photon.Pun.PhotonNetwork.InstantiateRoomObject(prefabId, pos, Quaternion.identity, 0, data);
+            var go = Photon.Pun.PhotonNetwork.Instantiate(prefabId, position, Quaternion.identity, 0, data);
             if (go == null)
             {
-                Debug.LogError($"[WaveSpawner] InstantiateRoomObject failed for '{prefabId}'. Ensure the enemy prefab has a PhotonView + EnemyNetSync.");
+                Debug.LogError($"[WaveSpawner] PhotonNetwork.Instantiate failed for '{prefabId}'. Ensure the enemy prefab has a PhotonView + EnemyNetSync.");
                 return null;
             }
             go.name = $"{def.name}";

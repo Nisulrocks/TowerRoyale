@@ -73,7 +73,8 @@ namespace TR.UI
                 if (def != null)
                 {
                     _dailyItem = Instantiate(itemPrefab, listRoot);
-                    _dailyItem.Bind(def, OnClaimDailyPack, 0);
+                    _dailyItem.Bind(def, OnClaimDailyPack, 0, 1);
+                    _dailyItem.SetButtonLabel("Claim");
                     UpdateDailyItemState(force: true);
                 }
             }
@@ -89,7 +90,7 @@ namespace TR.UI
                 {
                     var item = Instantiate(itemPrefab, listRoot);
                     
-                    item.Bind(starter, OnOpenStarterPack, 0);
+                    item.Bind(starter, OnOpenStarterPack, 0, 1);
                     
                     var tmp = item.GetComponentInChildren<TMP_Text>();
                     
@@ -108,8 +109,8 @@ namespace TR.UI
                     var def = GameDB.GetPackById(ids[i]);
                     if (def == null) continue;
                     var ownedItem = Instantiate(itemPrefab, listRoot);
-                    
-                    ownedItem.Bind(def, OnOpenOwnedPack, 0);
+                    int ownedCount = count;
+                    ownedItem.Bind(def, OnOpenOwnedPack, 0, ownedCount);
                     
                     
                     var texts = ownedItem.GetComponentsInChildren<TMP_Text>();
@@ -138,19 +139,16 @@ namespace TR.UI
                 
                 if (!pack.IsUnlockedForPlayer()) continue;
                 var item = Instantiate(itemPrefab, listRoot);
-                item.Bind(pack, OnOpenPack);
+                item.Bind(pack, OnOpenPack, -1, 0);
             }
 
             
             BuildCardPointsSection();
         }
 
-        private void OnOpenPack(string packId)
+        private void OnOpenPack(string packId, int count)
         {
-            
-            SceneParams.Set("packId", packId);
-            SceneParams.Set("openCount", 1);
-            _ = SceneFader.Instance.LoadSceneWithFade(packOpeningSceneName);
+            PackOpeningService.OpenPackScene(packId, count, packOpeningSceneName);
         }
 
         private void Update()
@@ -353,34 +351,30 @@ namespace TR.UI
             UpdateCardPointsCountdown();
         }
 
-        private void OnOpenOwnedPack(string packId)
+        private void OnOpenOwnedPack(string packId, int count)
         {
-            
-            if (!string.IsNullOrEmpty(packId))
+            if (string.IsNullOrEmpty(packId)) return;
+            int consumed = PlayerProfile.Data.ConsumePacks(packId, count);
+            if (consumed > 0)
             {
-                if (PlayerProfile.Data.ConsumePack(packId))
-                {
-                    PlayerProfile.Save();
-                    OnOpenPack(packId);
-                }
-                else
-                {
-                    Refresh();
-                }
+                PlayerProfile.Save();
+                PackOpeningService.OpenPackScene(packId, consumed, packOpeningSceneName);
+            }
+            else
+            {
+                Refresh();
             }
         }
 
-        private void OnOpenStarterPack(string packId)
+        private void OnOpenStarterPack(string packId, int count)
         {
-            
             PlayerProfile.Data.starterClaimed = true;
             PlayerProfile.Save();
-            OnOpenPack(packId);
+            OnOpenPack(packId, count);
         }
 
-        private void OnClaimDailyPack(string packId)
+        private void OnClaimDailyPack(string packId, int count)
         {
-            
             long last = PlayerProfile.GetLastDailyPackUnix();
             long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             if (now - last < _cooldownSeconds)

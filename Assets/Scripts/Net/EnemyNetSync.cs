@@ -19,6 +19,7 @@ namespace TR.Net
         private EnemyBase2D _enemy;
         private Vector3 _netPosition;
         private float _netHealth = -1f;
+        private int _netWaypointIndex;
         private bool _hasNetState;
 
         
@@ -37,6 +38,12 @@ namespace TR.Net
         
         public void OnPhotonInstantiate(PhotonMessageInfo info)
         {
+            if (_enemy != null && _enemy.Definition != null)
+            {
+                
+                return;
+            }
+
             object[] data = info.photonView != null ? info.photonView.InstantiationData : null;
             if (data == null || data.Length < 4)
             {
@@ -62,6 +69,7 @@ namespace TR.Net
             var arena = BattleSceneController.CurrentArena;
             var path = Object.FindFirstObjectByType<Path2D>(FindObjectsInactive.Include);
             _enemy.Initialize(def, path);
+            _enemy.RecalculateWaypointFromPosition();
             if (arena != null) _enemy.SetArena(arena);
             _enemy.SetWaveNumber(waveNumber);
             TR.Battle.BattleSceneController.Instance?.RegisterWaveEnemy(waveNumber);
@@ -209,16 +217,19 @@ namespace TR.Net
                 
                 stream.SendNext(transform.position);
                 stream.SendNext(_enemy != null ? _enemy.CurrentHealth : 0f);
+                stream.SendNext(_enemy != null ? _enemy.WaypointIndex : 0);
             }
             else
             {
                 
                 _netPosition = (Vector3)stream.ReceiveNext();
                 _netHealth = (float)stream.ReceiveNext();
+                _netWaypointIndex = (int)stream.ReceiveNext();
                 _hasNetState = true;
-                if (_enemy != null && _netHealth >= 0f)
+                if (_enemy != null)
                 {
-                    _enemy.SetNetworkedHealth(_netHealth);
+                    if (_netHealth >= 0f) _enemy.SetNetworkedHealth(_netHealth);
+                    _enemy.SetWaypointIndex(_netWaypointIndex);
                 }
             }
         }

@@ -87,6 +87,15 @@ namespace TR.Systems
             return true;
         }
 
+        public int ConsumePacks(string packId, int count)
+        {
+            int idx = packIds.IndexOf(packId);
+            if (idx < 0 || count <= 0) return 0;
+            int consume = Mathf.Min(count, packCounts[idx]);
+            packCounts[idx] -= consume;
+            return consume;
+        }
+
         
         public int pendingCastleXpDelta = 0; 
     }

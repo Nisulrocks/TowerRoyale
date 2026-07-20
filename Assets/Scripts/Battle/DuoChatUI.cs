@@ -74,6 +74,7 @@ namespace TR.Battle
                 return;
             }
             _coordinator.OnChatMessageReceived += OnChatMessageReceived;
+            _coordinator.OnSystemMessage += OnSystemMessage;
 
             var canvas = ResolveCanvas();
             EnsureToggleButton(canvas);
@@ -85,7 +86,11 @@ namespace TR.Battle
 
         private void OnDestroy()
         {
-            if (_coordinator != null) _coordinator.OnChatMessageReceived -= OnChatMessageReceived;
+            if (_coordinator != null)
+            {
+                _coordinator.OnChatMessageReceived -= OnChatMessageReceived;
+                _coordinator.OnSystemMessage -= OnSystemMessage;
+            }
 
             if (toggleButton != null)
             {
@@ -272,6 +277,13 @@ namespace TR.Battle
                 IncrementUnread();
         }
 
+        private void OnSystemMessage(string message)
+        {
+            AppendSystemLine(message);
+            if (!_visible)
+                IncrementUnread();
+        }
+
         private void AppendLine(string sender, string message, bool isOwn)
         {
             if (_content == null) return;
@@ -296,6 +308,33 @@ namespace TR.Battle
             string safeSender = string.IsNullOrEmpty(sender) ? (isOwn ? "You" : "Partner") : sender;
             string hex = DuoPlayerColors.ToHex(col);
             line.text = $"<b><color=#{hex}>{safeSender}:</color></b> {message}";
+
+            _lines.Add(line);
+            while (_lines.Count > maxLines)
+            {
+                var old = _lines[0];
+                _lines.RemoveAt(0);
+                if (old) Destroy(old.gameObject);
+            }
+
+            if (isActiveAndEnabled) StartCoroutine(ScrollToBottomNextFrame());
+        }
+
+        private void AppendSystemLine(string message)
+        {
+            if (_content == null) return;
+
+            var go = new GameObject("ChatLine", typeof(RectTransform));
+            go.transform.SetParent(_content, false);
+            var line = go.AddComponent<TextMeshProUGUI>();
+            line.fontSize = 20f;
+            line.color = new Color(1f, 0.9f, 0.25f);
+            line.richText = true;
+            line.enableWordWrapping = true;
+            line.alignment = TextAlignmentOptions.TopLeft;
+            line.margin = Vector4.zero;
+            line.overflowMode = TextOverflowModes.Overflow;
+            line.text = $"<b><color=#{DuoPlayerColors.ToHex(line.color)}>System:</color></b> {message}";
 
             _lines.Add(line);
             while (_lines.Count > maxLines)

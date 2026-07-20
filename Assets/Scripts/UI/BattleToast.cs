@@ -87,12 +87,14 @@ namespace TR.UI
 
         private static Canvas GetOrCreateOverlayCanvas()
         {
-            if (_overlayCanvas != null) return _overlayCanvas;
-            
+            if (_overlayCanvas != null && _overlayCanvas.gameObject != null && _overlayCanvas.gameObject.activeInHierarchy)
+                return _overlayCanvas;
+            _overlayCanvas = null;
+
             var canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < canvases.Length; i++)
             {
-                if (canvases[i] != null && canvases[i].isRootCanvas && canvases[i].renderMode == RenderMode.ScreenSpaceOverlay)
+                if (canvases[i] != null && canvases[i].isRootCanvas && canvases[i].renderMode == RenderMode.ScreenSpaceOverlay && canvases[i].gameObject.activeInHierarchy)
                 {
                     _overlayCanvas = canvases[i];
                     break;
@@ -100,11 +102,10 @@ namespace TR.UI
             }
             if (_overlayCanvas == null)
             {
-                
                 var cgo = new GameObject("BattleToastCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
                 _overlayCanvas = cgo.GetComponent<Canvas>();
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                _overlayCanvas.sortingOrder = 5000; 
+                _overlayCanvas.sortingOrder = 5000;
                 var scaler = cgo.GetComponent<CanvasScaler>();
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1920, 1080);
@@ -122,24 +123,32 @@ namespace TR.UI
 
         private static void EnsureInstance()
         {
-            if (_instance != null) return;
+            if (_instance != null && _instance.gameObject != null)
+            {
+                if (_instance.gameObject.activeInHierarchy)
+                    return;
+                Object.Destroy(_instance.gameObject);
+                _instance = null;
+            }
+            _instance = null;
+
+            var parent = GetOrCreateOverlayCanvas().transform;
 
             if (_prefab != null)
             {
-                var parent = GetOrCreateOverlayCanvas().transform;
                 var go = Object.Instantiate(_prefab, parent, false);
                 go.name = "BattleToast";
                 _instance = go.GetComponent<BattleToast>();
                 if (_instance == null) _instance = go.AddComponent<BattleToast>();
-                _instance.Awake();
+                if (!go.activeSelf) go.SetActive(true);
             }
             else
             {
                 var go = new GameObject("BattleToast");
-                go.transform.SetParent(GetOrCreateOverlayCanvas().transform, false);
+                go.transform.SetParent(parent, false);
                 _instance = go.AddComponent<BattleToast>();
-                _instance.Awake();
             }
+            if (_instance != null) _instance.enabled = true;
         }
 
         private System.Collections.IEnumerator ProcessQueue()

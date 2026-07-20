@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
+using TR.Battle;
 using TR.UI;
 
 namespace TR.Net
@@ -38,14 +40,156 @@ namespace TR.Net
         
         public event Action<int, float> OnTowerHpReceived;
 
+        
+        public event Action<int> OnEnemySyncRequested;
+        
+        public event Action<int[], string[], Vector3[], float[], float[], float[], float[], int[], int[]> OnEnemySyncReceived;
+
+        
+        public event Action<int> OnEnemyRespawnRequested;
+
+        
+        
+        public event Action OnMasterClientSwitchedEvent;
+        
+        public event Action<string> OnSystemMessage;
+
+        private readonly HashSet<int> _leftPlayers = new HashSet<int>();
+
         private void Awake()
         {
             Instance = this;
+            DuoEnemyPrefabPool.EnsurePool();
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+        }
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            OnMasterClientSwitchedEvent?.Invoke();
+
+            if (PhotonNetwork.IsMasterClient && newMasterClient != null)
+            {
+                TransferEnemyOwnershipTo(newMasterClient.ActorNumber);
+                TakeOverTowerSimulation();
+                RecalculateEnemyWaypoints();
+            }
+
+            if (newMasterClient != null)
+            {
+                bool isLocal = PhotonNetwork.LocalPlayer != null && newMasterClient.ActorNumber == PhotonNetwork.LocalPlayer.ActorNumber;
+                string name = isLocal ? "You" : (string.IsNullOrEmpty(newMasterClient.NickName) ? "Partner" : newMasterClient.NickName);
+                string suffix = isLocal ? "are" : "is";
+                OnSystemMessage?.Invoke($"{name} {suffix} now the host.");
+            }
+        }
+
+        public void TransferEnemyOwnershipTo(int actorNumber)
+        {
+            if (actorNumber <= 0) return;
+            var syncs = FindObjectsOfType<EnemyNetSync>();
+            int transferred = 0;
+            int fixedCount = 0;
+            foreach (var sync in syncs)
+            {
+                if (sync == null) continue;
+                var pv = sync.photonView;
+                if (pv != null && pv.OwnerActorNr != actorNumber)
+                {
+                    if (pv.OwnershipTransfer == OwnershipOption.Fixed)
+                    {
+                        fixedCount++;
+                        continue;
+                    }
+                    pv.TransferOwnership(actorNumber);
+                    transferred++;
+                }
+            }
+            if (fixedCount > 0)
+            {
+                Debug.LogWarning($"[DuoBattleCoordinator] {fixedCount} enemy PhotonViews have OwnershipTransfer=Fixed; cannot transfer. Set enemy prefab PhotonViews to Takeover or Request. Enemies owned by a leaving master will be destroyed.");
+            }
+            Debug.Log($"[DuoBattleCoordinator] Transferred {transferred} enemy PhotonViews to actor {actorNumber}.");
+        }
+
+        private void TakeOverTowerSimulation()
+        {
+            var towers = TowerBase.All;
+            int enabled = 0;
+            foreach (var tower in towers)
+            {
+                if (tower == null) continue;
+                if (tower.IsVisualOnly)
+                {
+                    tower.SetVisualOnly(false);
+                    var bind = tower.GetComponent<TowerSnapBinding>();
+                    if (bind != null) bind.SetMirror(false);
+                    enabled++;
+                }
+            }
+            Debug.Log($"[DuoBattleCoordinator] Took over simulation for {enabled} tower(s).");
+        }
+
+        private void RecalculateEnemyWaypoints()
+        {
+            var enemies = EnemyBase2D.All;
+            int recalced = 0;
+            foreach (var enemy in enemies)
+            {
+                if (enemy == null) continue;
+                enemy.RecalculateWaypointFromPosition();
+                recalced++;
+            }
+            Debug.Log($"[DuoBattleCoordinator] Recalculated waypoints for {recalced} enemy(s).");
+        }
+
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            if (otherPlayer != null)
+            {
+                _leftPlayers.Add(otherPlayer.ActorNumber);
+                string name = string.IsNullOrEmpty(otherPlayer.NickName) ? "Partner" : otherPlayer.NickName;
+                OnSystemMessage?.Invoke($"{name} has disconnected.");
+            }
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ResetSkipVotes();
+                TakeOverTowerSimulation();
+            }
+        }
+
+        public override void OnPlayerEnteredRoom(Player newPlayer)
+        {
+            if (newPlayer != null)
+            {
+                bool wasLeft = _leftPlayers.Remove(newPlayer.ActorNumber);
+                if (wasLeft)
+                {
+                    string name = string.IsNullOrEmpty(newPlayer.NickName) ? "Partner" : newPlayer.NickName;
+                    OnSystemMessage?.Invoke($"{name} has rejoined the match.");
+                }
+            }
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ResetSkipVotes();
+            }
+        }
+
+        
+        public static int GetActivePlayerCount()
+        {
+            if (PhotonNetwork.CurrentRoom == null) return 1;
+            int active = 0;
+            foreach (var p in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if (p != null && !p.IsInactive) active++;
+            }
+            return Mathf.Max(1, active);
         }
 
         
@@ -105,7 +249,7 @@ namespace TR.Net
         {
             if (!PhotonNetwork.IsMasterClient) return;
             if (!_skipVotes.Add(actorNumber)) return; 
-            int needed = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
+            int needed = GetActivePlayerCount();
             int votes = _skipVotes.Count;
             photonView.RPC(nameof(RpcSkipVoteState), RpcTarget.All, votes, needed);
             if (votes >= needed)
@@ -132,7 +276,7 @@ namespace TR.Net
         {
             if (!PhotonNetwork.IsMasterClient) return;
             _skipVotes.Clear();
-            int needed = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
+            int needed = GetActivePlayerCount();
             photonView.RPC(nameof(RpcSkipVoteState), RpcTarget.All, 0, needed);
         }
 
@@ -346,6 +490,83 @@ namespace TR.Net
         private void RpcTowerHp(int snapIndex, float hp)
         {
             OnTowerHpReceived?.Invoke(snapIndex, hp);
+        }
+
+        
+        
+        public event Action<int> OnTowerSyncRequested;
+        public event Action<string[], int[], int[], int[], float[]> OnTowerSyncReceived;
+
+        public void RequestTowerSync()
+        {
+            if (photonView == null) return;
+            photonView.RPC(nameof(RpcRequestTowerSync), RpcTarget.MasterClient);
+        }
+
+        [PunRPC]
+        private void RpcRequestTowerSync(PhotonMessageInfo info)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            int actor = info.Sender != null ? info.Sender.ActorNumber : 0;
+            OnTowerSyncRequested?.Invoke(actor);
+        }
+
+        public void SendTowerSync(int targetActor, string[] cardIds, int[] levels, int[] snapIndices, int[] owners, float[] hps)
+        {
+            if (!PhotonNetwork.IsMasterClient || photonView == null) return;
+            var target = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.GetPlayer(targetActor) : null;
+            if (target == null) return;
+            photonView.RPC(nameof(RpcTowerSync), target, cardIds, levels, snapIndices, owners, hps);
+        }
+
+        [PunRPC]
+        private void RpcTowerSync(string[] cardIds, int[] levels, int[] snapIndices, int[] owners, float[] hps)
+        {
+            OnTowerSyncReceived?.Invoke(cardIds, levels, snapIndices, owners, hps);
+        }
+
+        
+        public void RequestEnemySync()
+        {
+            if (photonView == null) return;
+            photonView.RPC(nameof(RpcRequestEnemySync), RpcTarget.MasterClient);
+        }
+
+        [PunRPC]
+        private void RpcRequestEnemySync(PhotonMessageInfo info)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            int actor = info.Sender != null ? info.Sender.ActorNumber : 0;
+            OnEnemySyncRequested?.Invoke(actor);
+        }
+
+        public void SendEnemySync(int targetActor, int[] viewIds, string[] enemyIds, Vector3[] positions, float[] hMul, float[] dMul, float[] sMul, float[] health, int[] waveNumbers, int[] waypointIndices)
+        {
+            if (!PhotonNetwork.IsMasterClient || photonView == null) return;
+            var target = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.GetPlayer(targetActor) : null;
+            if (target == null) return;
+            photonView.RPC(nameof(RpcEnemySync), target, viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices);
+        }
+
+        [PunRPC]
+        private void RpcEnemySync(int[] viewIds, string[] enemyIds, Vector3[] positions, float[] hMul, float[] dMul, float[] sMul, float[] health, int[] waveNumbers, int[] waypointIndices)
+        {
+            OnEnemySyncReceived?.Invoke(viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices);
+        }
+
+        
+        public void RequestEnemyRespawn()
+        {
+            if (photonView == null) return;
+            photonView.RPC(nameof(RpcRequestEnemyRespawn), RpcTarget.MasterClient);
+        }
+
+        [PunRPC]
+        private void RpcRequestEnemyRespawn(PhotonMessageInfo info)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            int actor = info.Sender != null ? info.Sender.ActorNumber : 0;
+            OnEnemyRespawnRequested?.Invoke(actor);
         }
     }
 }

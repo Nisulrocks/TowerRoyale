@@ -2192,7 +2192,7 @@ MonoBehaviour:
   playButton: {fileID: 6147144344784399207}
   duoButton: {fileID: 8839531054468741196}
   deckWarningText: {fileID: 4813140808994699743}
-  matchmakingUI: {fileID: 0}
+  matchmakingUI: {fileID: 40772922622713891, guid: 615028010bd09c145a2291807726c1fe, type: 3}
 --- !u!1 &7744077892978906661
 GameObject:
   m_ObjectHideFlags: 0

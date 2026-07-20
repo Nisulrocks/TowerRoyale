@@ -93,6 +93,9 @@ namespace TR.UI
         private int _currentHover = -1;
         private TR.Data.PackDefinition _currentPack;
         private bool _whooshPlayed;
+        private int _openCount = 1;
+        private float _cardWidth = 200f;
+        private float _usedFinalOverlapSpacing = 80f;
 
         private void Start()
         {
@@ -109,10 +112,10 @@ namespace TR.UI
             }
 
             var packId = SceneParams.Get<string>("packId", null);
-            var openCount = Mathf.Max(1, SceneParams.Get("openCount", 1));
+            _openCount = Mathf.Max(1, SceneParams.Get("openCount", 1));
             var pack = GameDB.GetPackById(packId);
             _currentPack = pack;
-            if (headerText) headerText.text = pack != null ? pack.DisplayName : "Pack";
+            if (headerText) headerText.text = pack != null ? (_openCount > 1 ? $"{pack.DisplayName} x{_openCount}" : pack.DisplayName) : "Pack";
 
             
             if (packRect == null)
@@ -182,7 +185,7 @@ namespace TR.UI
             {
                 
                 var rolled = new List<CardDefinition>();
-                for (int i = 0; i < openCount; i++)
+                for (int i = 0; i < _openCount; i++)
                     rolled.AddRange(PackService.OpenPack(pack));
 
                 
@@ -340,13 +343,34 @@ namespace TR.UI
             _backFaces.Clear();
             _resultLabels.Clear();
             _upgradeLabelRects.Clear();
-            float startX = -revealSpacing * (Mathf.Max(0, _results.Count - 1) * 0.5f);
+
+            int totalCards = _results.Count;
+            float rootWidth = cardsRoot != null ? cardsRoot.rect.width : Screen.width;
+            _cardWidth = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.x : 200f;
+            float cardHeight = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.y : 300f;
+            float maxCenterSpan = Mathf.Max(100f, rootWidth - 120f - _cardWidth);
+            float naturalRevealSpan = revealSpacing * Mathf.Max(0, totalCards - 1);
+            float naturalFinalSpan = finalOverlapSpacing * Mathf.Max(0, totalCards - 1);
+            float widestSpan = Mathf.Max(naturalRevealSpan, naturalFinalSpan);
+            float scale = 1f;
+            if (widestSpan > 0f && widestSpan > maxCenterSpan)
+                scale = maxCenterSpan / widestSpan;
+            float usedRevealSpacing = revealSpacing * scale;
+            _usedFinalOverlapSpacing = finalOverlapSpacing * scale;
+
+            float startX = -usedRevealSpacing * (Mathf.Max(0, totalCards - 1) * 0.5f);
             for (int i = 0; i < _results.Count; i++)
             {
                 var res = _results[i];
                 var card = res.card;
                 var ui = Instantiate(cardPrefab, cardsRoot);
                 ui.Bind(card, 0);
+
+                var rt = (RectTransform)ui.transform;
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(_cardWidth, cardHeight);
                 
                 var frontGO = new GameObject("FrontFace", typeof(RectTransform));
                 var frontRT = frontGO.GetComponent<RectTransform>();
@@ -407,8 +431,7 @@ namespace TR.UI
                 backCg.alpha = 1f;
                 _backFaces.Add(backRT);
 
-                var rt = (RectTransform)ui.transform;
-                rt.anchoredPosition = new Vector2(startX + i * revealSpacing, endPos.y);
+                rt.anchoredPosition = new Vector2(startX + i * usedRevealSpacing, endPos.y);
 
                 
                 float t2 = 0f;
@@ -443,14 +466,14 @@ namespace TR.UI
             
             if (_spawned.Count > 0)
             {
-                float startX2 = -finalOverlapSpacing * (Mathf.Max(0, _spawned.Count - 1) * 0.5f);
+                float startX2 = -_usedFinalOverlapSpacing * (Mathf.Max(0, _spawned.Count - 1) * 0.5f);
                 
                 Vector2[] from = new Vector2[_spawned.Count];
                 Vector2[] to = new Vector2[_spawned.Count];
                 for (int i = 0; i < _spawned.Count; i++)
                 {
                     from[i] = _spawned[i].anchoredPosition;
-                    to[i] = new Vector2(startX2 + i * finalOverlapSpacing, from[i].y);
+                    to[i] = new Vector2(startX2 + i * _usedFinalOverlapSpacing, from[i].y);
                 }
                 float t3 = 0f;
                 while (t3 < 1f)
@@ -831,13 +854,16 @@ namespace TR.UI
         {
             if (_spawned.Count == 0 || _finalPositions == null) return;
             _currentHover = index;
-            
+
+            float gap = _cardWidth - _usedFinalOverlapSpacing;
+            float effectiveSpread = Mathf.Max(hoverSpread, gap + 20f);
+
             var targets = new Vector2[_spawned.Count];
             for (int i = 0; i < _spawned.Count; i++)
             {
                 float dir = Mathf.Sign(i - index);
                 float dist = Mathf.Abs(i - index);
-                float offset = (i == index) ? 0f : dir * (hoverSpread / Mathf.Max(1f, dist));
+                float offset = (i == index) ? 0f : dir * (effectiveSpread / Mathf.Max(1f, dist));
                 targets[i] = _finalPositions[i] + new Vector2(offset, 0f);
             }
             if (_hoverTween != null) StopCoroutine(_hoverTween);

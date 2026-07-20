@@ -237,6 +237,7 @@ namespace TR.UI
             GameDB.EnsureLoaded();
             int trophies = PlayerProfile.GetTrophies();
             var currentArena = ArenaService.GetArenaForTrophies(trophies);
+            MatchContext.ArenaId = currentArena != null ? currentArena.ArenaId : null;
             var arenas = GameDB.GetArenasSortedByRequirement();
             if (currentArena == null || arenas == null || arenas.Count == 0)
             {
@@ -277,9 +278,23 @@ namespace TR.UI
                 Debug.LogError("[PlayPanelUI] DuoNetworkManager not found in scene. Add it to the Lobby to enable Duo mode.");
                 return;
             }
+
+            if (matchmakingUI == null || (matchmakingUI.gameObject != null && !matchmakingUI.gameObject.scene.IsValid()))
+            {
+                var all = FindObjectsOfType<DuoMatchmakingUI>(true);
+                matchmakingUI = null;
+                for (int i = 0; i < all.Length; i++)
+                {
+                    var ui = all[i];
+                    if (ui != null && ui.gameObject.scene.IsValid()) { matchmakingUI = ui; break; }
+                }
+            }
+
             int castleLevel = PlayerProfile.GetCastleLevel();
             string nickname = PlayerProfile.HasPlayerName() ? PlayerProfile.GetPlayerName() : null;
             if (matchmakingUI != null) matchmakingUI.Show(arenaSprite);
+            else Debug.LogError("[PlayPanelUI] No DuoMatchmakingUI instance found in scene.");
+
             mgr.StartMatchmaking(arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName, nickname);
         }
 

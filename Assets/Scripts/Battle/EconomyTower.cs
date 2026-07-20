@@ -48,6 +48,8 @@ namespace TR.Battle
 
         public void SetVisualOnly(bool visualOnly) => _visualOnly = visualOnly;
 
+        public float GetCurrentHP() => _hp;
+
         public void SetRemoteHP(float hp)
         {
             _hp = Mathf.Clamp(hp, 0f, _maxHp);

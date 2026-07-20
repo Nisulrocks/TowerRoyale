@@ -94,11 +94,52 @@ namespace TR.Battle
         public EnemyDefinition Definition => definition;
         public float CurrentHealth => currentHealth;
         public float MaxHealth => _runtimeMaxHealth > 0f ? _runtimeMaxHealth : (definition != null ? definition.MaxHealth : Mathf.Max(currentHealth, 1f));
+        public int WaveNumber => _waveNumber;
+        public float HealthMultiplier { get; private set; } = 1f;
+        public float DamageMultiplier { get; private set; } = 1f;
+        public float SpeedMultiplier { get; private set; } = 1f;
         public System.Action<float, float> OnHealthChanged; 
 
         private TR.Net.EnemyNetSync _netSync;
 
         public void SetWaveNumber(int wave) => _waveNumber = wave;
+        public int WaypointIndex => waypointIndex;
+        public void SetWaypointIndex(int index) => waypointIndex = Mathf.Max(0, index);
+
+        public void RecalculateWaypointFromPosition()
+        {
+            if (path == null || path.Waypoints == null || path.Waypoints.Length == 0) return;
+            var wps = path.Waypoints;
+            int count = wps.Length;
+            int best = 0;
+            bool found = false;
+            for (int i = 0; i < count - 1; i++)
+            {
+                if (wps[i] == null || wps[i + 1] == null) continue;
+                Vector3 a = wps[i].position;
+                Vector3 b = wps[i + 1].position;
+                Vector3 ab = b - a;
+                Vector3 ap = transform.position - a;
+                float lenSq = ab.sqrMagnitude;
+                if (lenSq < 1e-10f) continue;
+                float t = Vector3.Dot(ap, ab) / lenSq;
+                if (t < -0.001f)
+                {
+                    best = i;
+                    found = true;
+                    break;
+                }
+                if (t <= 1f)
+                {
+                    best = i + 1;
+                    found = true;
+                    break;
+                }
+                best = i + 2;
+            }
+            if (!found) best = count;
+            waypointIndex = Mathf.Clamp(best, 0, count);
+        }
 
         
         
@@ -426,6 +467,10 @@ namespace TR.Battle
 
         private void ApplyDefinition(EnemyDefinition def)
         {
+            HealthMultiplier = 1f;
+            DamageMultiplier = 1f;
+            SpeedMultiplier = 1f;
+
             _runtimeMaxHealth = def != null ? Mathf.Max(1f, def.MaxHealth) : 10f;
             currentHealth = _runtimeMaxHealth;
             moveSpeed = Mathf.Max(0f, def != null ? def.MovementSpeed : 1.5f);
@@ -926,6 +971,7 @@ namespace TR.Battle
         }
 
         private bool _remoteDeathPlayed = false;
+        private bool _deathProcessed = false;
 
         
         
@@ -964,7 +1010,9 @@ namespace TR.Battle
 
         private void Die()
         {
-            
+            if (_deathProcessed) return;
+            _deathProcessed = true;
+
             TryAwardKillMoney();
             
             if (!string.IsNullOrEmpty(deathVfxKey))
@@ -1064,10 +1112,13 @@ namespace TR.Battle
         
         public void ApplyBossScaling(float healthMult, float damageMult, float speedMult)
         {
-            
-            float h = Mathf.Max(0.01f, healthMult);
-            float d = Mathf.Max(0.01f, damageMult);
-            float s = Mathf.Max(0.01f, speedMult);
+            HealthMultiplier = Mathf.Max(0.01f, healthMult);
+            DamageMultiplier = Mathf.Max(0.01f, damageMult);
+            SpeedMultiplier = Mathf.Max(0.01f, speedMult);
+
+            float h = HealthMultiplier;
+            float d = DamageMultiplier;
+            float s = SpeedMultiplier;
             
             float baseMax = definition != null ? Mathf.Max(1f, definition.MaxHealth) : Mathf.Max(1f, _runtimeMaxHealth);
             _runtimeMaxHealth = Mathf.Max(1f, baseMax * h);

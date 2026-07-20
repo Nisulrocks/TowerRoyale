@@ -35,6 +35,7 @@ namespace TR.UI
         private Coroutine _popCo;
         
         private DuoNetworkManager _subscribedMgr;
+        private System.Action _cancelOverride;
 
         private void Awake()
         {
@@ -72,8 +73,23 @@ namespace TR.UI
         
         public void Show(Sprite arenaSprite = null)
         {
-            
-            if (!gameObject.activeSelf) gameObject.SetActive(true);
+            if (!gameObject.scene.IsValid())
+            {
+                var inst = FindRuntimeInstance();
+                if (inst != null && inst != this) { inst.Show(arenaSprite); return; }
+                Debug.LogError("[DuoMatchmakingUI] Show called on a prefab asset. Please assign a scene instance.");
+                return;
+            }
+
+            if (!gameObject.activeInHierarchy)
+            {
+                var t = transform;
+                while (t != null)
+                {
+                    if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
+                    t = t.parent;
+                }
+            }
             CancelInvoke(nameof(Hide));
             EnsureCanvasGroup();
             if (panelRoot != null) panelRoot.SetActive(true);
@@ -105,6 +121,80 @@ namespace TR.UI
         }
 
         
+        
+        
+        public void ShowForReconnect(Sprite arenaSprite = null, string status = "Reconnecting...")
+        {
+            if (!gameObject.scene.IsValid())
+            {
+                var inst = FindRuntimeInstance();
+                if (inst != null && inst != this) { inst.ShowForReconnect(arenaSprite, status); return; }
+                Debug.LogError("[DuoMatchmakingUI] ShowForReconnect called on a prefab asset. Please assign a scene instance.");
+                return;
+            }
+
+            Unsubscribe();
+            _subscribedMgr = null;
+            Subscribe();
+
+            if (!gameObject.activeInHierarchy)
+            {
+                var t = transform;
+                while (t != null)
+                {
+                    if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
+                    t = t.parent;
+                }
+            }
+            CancelInvoke(nameof(Hide));
+            EnsureCanvasGroup();
+            if (panelRoot != null) panelRoot.SetActive(true);
+            if (statusText != null) statusText.text = status;
+
+            if (arenaIcon != null)
+            {
+                arenaIcon.sprite = arenaSprite;
+                arenaIcon.enabled = arenaSprite != null;
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.blocksRaycasts = true;
+                canvasGroup.interactable = true;
+            }
+            if (_fadeCo != null) StopCoroutine(_fadeCo);
+            _fadeCo = StartCoroutine(FadeRoutine(1f, fadeInDuration, false));
+
+            if (arenaSprite != null && arenaIconRoot != null)
+            {
+                if (_popCo != null) StopCoroutine(_popCo);
+                _popCo = StartCoroutine(ArenaPopRoutine());
+            }
+        }
+
+        
+        public void SetStatus(string status)
+        {
+            if (statusText != null) statusText.text = status;
+        }
+
+        
+        public void SetCancelOverride(System.Action onCancel)
+        {
+            _cancelOverride = onCancel;
+        }
+
+        private static DuoMatchmakingUI FindRuntimeInstance()
+        {
+            var all = FindObjectsOfType<DuoMatchmakingUI>(true);
+            for (int i = 0; i < all.Length; i++)
+            {
+                var ui = all[i];
+                if (ui != null && ui.gameObject.scene.IsValid()) return ui;
+            }
+            return null;
+        }
+
         public void Hide()
         {
             if (!isActiveAndEnabled || panelRoot == null || !panelRoot.activeInHierarchy)
@@ -129,6 +219,7 @@ namespace TR.UI
             if (canvasGroup != null) canvasGroup.alpha = 0f;
             if (panelRoot != null) panelRoot.SetActive(false);
             Unsubscribe();
+            _cancelOverride = null;
         }
 
         private IEnumerator FadeRoutine(float targetAlpha, float duration, bool deactivateOnEnd)
@@ -242,7 +333,11 @@ namespace TR.UI
 
         private void OnClickCancel()
         {
-            if (DuoNetworkManager.Instance != null)
+            if (_cancelOverride != null)
+            {
+                _cancelOverride.Invoke();
+            }
+            else if (DuoNetworkManager.Instance != null)
             {
                 DuoNetworkManager.Instance.CancelMatchmaking();
             }

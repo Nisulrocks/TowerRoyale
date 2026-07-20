@@ -70,7 +70,8 @@ namespace TR.Battle
 
         private void DoPulse()
         {
-            
+            if (IsVisualOnly) return;
+
             float radius = _pulseDef.GetPulseRadius(_cachedLevel) * Mathf.Max(0f, GetRangeMultiplier());
             float baseDamage = _pulseDef.GetPulseDamage(_cachedLevel) * Mathf.Max(0f, GetDpsMultiplier());
             

@@ -2485,15 +2485,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945811966}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67d8bd1b8b4e06f4d8406624cfb229f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableDailyFreePack: 1
+  enableDailyFreePack: 0
   dailyPackId: normal_pack
   dailyPackCount: 1
   dailyCooldownHours: 24
+  rejoinPromptPrefab: {fileID: 8618673377120144632, guid: 148956a358199ab45b496e89aab2e01f, type: 3}
+  rejoinPromptParent: {fileID: 825768650}
 --- !u!4 &1945811968
 Transform:
   m_ObjectHideFlags: 0

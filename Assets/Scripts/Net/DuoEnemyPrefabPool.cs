@@ -28,6 +28,14 @@ namespace TR.Net
             return EnemyPrefix + key;
         }
 
+        public static void EnsurePool()
+        {
+            if (!(PhotonNetwork.PrefabPool is DuoEnemyPrefabPool))
+            {
+                PhotonNetwork.PrefabPool = new DuoEnemyPrefabPool();
+            }
+        }
+
         private void BuildEnemyMap()
         {
             GameDB.EnsureLoaded();

@@ -42,6 +42,10 @@ namespace TR.Battle
                     _coordinator.OnTowerRemovedReceived += OnRemoteTowerRemoved;
                     _coordinator.OnTowerHpReceived -= OnRemoteTowerHp;
                     _coordinator.OnTowerHpReceived += OnRemoteTowerHp;
+                    _coordinator.OnTowerSyncRequested -= OnTowerSyncRequested;
+                    _coordinator.OnTowerSyncRequested += OnTowerSyncRequested;
+                    _coordinator.OnTowerSyncReceived -= OnTowerSyncReceived;
+                    _coordinator.OnTowerSyncReceived += OnTowerSyncReceived;
                 }
             }
         }
@@ -53,6 +57,8 @@ namespace TR.Battle
                 _coordinator.OnTowerPlacedReceived -= OnRemoteTowerPlaced;
                 _coordinator.OnTowerRemovedReceived -= OnRemoteTowerRemoved;
                 _coordinator.OnTowerHpReceived -= OnRemoteTowerHp;
+                _coordinator.OnTowerSyncRequested -= OnTowerSyncRequested;
+                _coordinator.OnTowerSyncReceived -= OnTowerSyncReceived;
             }
         }
 
@@ -111,8 +117,121 @@ namespace TR.Battle
         {
             if (!_towerBySnapIndex.TryGetValue(snapIndex, out var go)) return;
             if (go == null) return;
+            ApplyTowerHp(go, hp);
+        }
+
+        private static void ApplyTowerHp(GameObject go, float hp)
+        {
+            if (go == null) return;
             var buff = go.GetComponent<BuffTower>(); if (buff != null) buff.SetRemoteHP(hp);
             var econ = go.GetComponent<EconomyTower>(); if (econ != null) econ.SetRemoteHP(hp);
+        }
+
+        
+        private void OnTowerSyncRequested(int requesterActor)
+        {
+            if (!TR.Net.DuoRuntime.IsSimulationAuthority) return;
+            var cardIds = new System.Collections.Generic.List<string>();
+            var levels = new System.Collections.Generic.List<int>();
+            var snapIndices = new System.Collections.Generic.List<int>();
+            var owners = new System.Collections.Generic.List<int>();
+            var hps = new System.Collections.Generic.List<float>();
+
+            foreach (var kv in _towerBySnapIndex)
+            {
+                var go = kv.Value;
+                if (go == null) continue;
+                var tb = go.GetComponent<TowerBase>();
+                if (tb == null || tb.Definition == null) continue;
+
+                float hp = 1f;
+                var buff = go.GetComponent<BuffTower>();
+                var econ = go.GetComponent<EconomyTower>();
+                if (buff != null) hp = buff.GetCurrentHP();
+                else if (econ != null) hp = econ.GetCurrentHP();
+
+                cardIds.Add(tb.Definition.CardId);
+                levels.Add(tb.Level);
+                snapIndices.Add(kv.Key);
+                owners.Add(tb.OwnerActorNumber);
+                hps.Add(hp);
+            }
+
+            if (_coordinator != null && cardIds.Count > 0)
+            {
+                _coordinator.SendTowerSync(requesterActor, cardIds.ToArray(), levels.ToArray(), snapIndices.ToArray(), owners.ToArray(), hps.ToArray());
+            }
+        }
+
+        private void OnTowerSyncReceived(string[] cardIds, int[] levels, int[] snapIndices, int[] owners, float[] hps)
+        {
+            if (cardIds == null || snapIndices == null) return;
+            int count = Mathf.Min(cardIds.Length, snapIndices.Length, levels?.Length ?? 0, owners?.Length ?? 0, hps?.Length ?? 0);
+            for (int i = 0; i < count; i++)
+            {
+                PlaceSyncedTower(cardIds[i], levels[i], snapIndices[i], owners[i], hps[i]);
+            }
+        }
+
+        private void PlaceSyncedTower(string cardId, int level, int snapIndex, int ownerActor, float hp)
+        {
+            var card = GameDB.GetCardById(cardId);
+            if (card == null) return;
+            if (snapIndex < 0 || snapIndex >= _snapList.Count) return;
+            var snap = _snapList[snapIndex];
+            if (snap == null || _occupied.Contains(snap)) return;
+
+            int lv = Mathf.Max(1, level);
+            var pos = new Vector3(snap.position.x, snap.position.y, 0f);
+            var go = TowerFactory.CreateTower(card, lv, pos, Quaternion.identity);
+            if (go == null) return;
+
+            var towerBase = go.GetComponent<TowerBase>();
+            towerBase?.SetOwner(ownerActor);
+
+            bool isLocalOwner = ownerActor >= 0 && PhotonNetwork.LocalPlayer != null && ownerActor == PhotonNetwork.LocalPlayer.ActorNumber;
+            bool ownerInactive = ownerActor < 1 || (PhotonNetwork.CurrentRoom != null && (!PhotonNetwork.CurrentRoom.Players.TryGetValue(ownerActor, out var ownerPlayer) || ownerPlayer == null || ownerPlayer.IsInactive));
+            bool shouldSimulate = isLocalOwner || ownerInactive;
+
+            if (isLocalOwner)
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}";
+
+                if (TR.Systems.EffectLimitService.IsEnabled)
+                {
+                    TR.Systems.EffectLimitService.Register(card, lv);
+                    var eff = go.GetComponent<EffectLimitBinding>();
+                    if (eff == null) eff = go.AddComponent<EffectLimitBinding>();
+                    var types = TR.Systems.EffectLimitService.GetEffectTypesForCard(card, lv);
+                    eff.SetTypes(types);
+                }
+                if (TR.Systems.EffectLimitService.CardCapsEnabled)
+                {
+                    TR.Systems.EffectLimitService.RegisterCard(card);
+                    var binder = go.GetComponent<CardLimitBinding>();
+                    if (binder == null) binder = go.AddComponent<CardLimitBinding>();
+                    binder.SetCardId(card.CardId);
+                }
+            }
+            else if (shouldSimulate)
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}";
+            }
+            else
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}_Mirror";
+                MakeVisualOnly(go);
+            }
+
+            _occupied.Add(snap);
+            _towerBySnapIndex[snapIndex] = go;
+
+            var bind = go.GetComponent<TowerSnapBinding>();
+            if (bind == null) bind = go.AddComponent<TowerSnapBinding>();
+            bind.Bind(snap, this, snapIndex, !shouldSimulate);
+
+            ApplyTowerHp(go, hp);
+            RefreshSnapPointColors(pos);
         }
 
         

@@ -52,7 +52,8 @@ namespace TR.Battle
         private bool _remoteAllowSkip = false;
         
         private TR.Net.DuoBattleCoordinator _coordinator;
-        private bool _isDuoClient; 
+        private bool _isDuoClient;
+        private bool _matchEndedReturnToLobby;
         [Header("Skip Settings")]
         [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
@@ -74,6 +75,7 @@ namespace TR.Battle
             if (MatchContext.IsDuo)
             {
                 SetupDuoCoordinator();
+                if (_matchEndedReturnToLobby) return;
             }
             SetupArenaFromContext();
             UpdateTopBar();
@@ -98,7 +100,15 @@ namespace TR.Battle
         private void SetupArenaFromContext()
         {
             GameDB.EnsureLoaded();
-            _arena = overrideArena != null ? overrideArena : ArenaService.GetCurrentArena();
+            
+            
+            ArenaDefinition arenaById = null;
+            if (!string.IsNullOrEmpty(TR.Systems.MatchContext.ArenaId))
+            {
+                arenaById = TR.Systems.GameDB.GetArenaById(TR.Systems.MatchContext.ArenaId);
+            }
+
+            _arena = overrideArena != null ? overrideArena : (arenaById != null ? arenaById : ArenaService.GetCurrentArena());
             if (_arena == null)
             {
                 Debug.LogWarning("[BattleSceneController] No current arena found. Falling back to first available.");
@@ -142,10 +152,10 @@ namespace TR.Battle
             }
         }
 
-        private IEnumerator RunMatch()
+        private IEnumerator RunMatch(int startWave = 0)
         {
             _running = true;
-            _wavesCleared = 0;
+            _wavesCleared = Mathf.Max(0, startWave);
             _ended = false;
             ClearWaveTracking();
             _totalWaves = _arena != null ? _arena.WaveCount : 10;
@@ -154,7 +164,7 @@ namespace TR.Battle
             int total = _totalWaves;
             float interval = _arena != null ? _arena.WaveInterval : 60f;
 
-            for (int i = 0; i < total; i++)
+            for (int i = Mathf.Clamp(startWave, 0, total); i < total; i++)
             {
                 _wavesCleared = i; 
                 UpdateTopBar();
@@ -250,6 +260,9 @@ namespace TR.Battle
 
         private void ShowResultsVictory()
         {
+            
+            TR.Net.DuoRejoinService.EndMatch();
+            MarkRoomMatchEnded();
             var rewards = ArenaService.AwardMatchCompletion(_arena, _arena != null ? _arena.WaveCount : _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
@@ -271,6 +284,9 @@ namespace TR.Battle
 
         private void ShowResultsDefeat()
         {
+            
+            TR.Net.DuoRejoinService.EndMatch();
+            MarkRoomMatchEnded();
             var rewards = ArenaService.AwardMatchDefeat(_arena, _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
@@ -295,9 +311,36 @@ namespace TR.Battle
             StartCoroutine(FadeInResultsPanelSimple());
         }
 
+        private void MarkRoomMatchEnded()
+        {
+            if (MatchContext.IsDuo && Photon.Pun.PhotonNetwork.IsMasterClient && Photon.Pun.PhotonNetwork.CurrentRoom != null)
+            {
+                var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+                room.IsOpen = false;
+                room.IsVisible = false;
+                var props = new ExitGames.Client.Photon.Hashtable();
+                props["DuoMatchEnded"] = true;
+                room.SetCustomProperties(props);
+            }
+        }
+
         
         private void SetupDuoCoordinator()
         {
+            var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+            bool roomEnded = room != null && room.CustomProperties != null && room.CustomProperties.TryGetValue("DuoMatchEnded", out object endedVal) && endedVal is bool endedBool && endedBool;
+            bool ended = TR.Net.DuoRejoinService.IsMatchEnded || roomEnded;
+            if (ended)
+            {
+                Debug.Log("[BattleSceneController] Match has already ended; returning to lobby.");
+                _matchEndedReturnToLobby = true;
+                TR.Net.DuoRejoinService.EndMatch();
+                MatchContext.Reset();
+                if (SceneFader.Instance != null) _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
+                else UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
+                return;
+            }
+
             _coordinator = TR.Net.DuoBattleCoordinator.Instance;
             if (_coordinator == null)
             {
@@ -317,6 +360,22 @@ namespace TR.Battle
             _coordinator.OnSkipConfirmed += OnDuoSkipConfirmed;
             _coordinator.OnSpawnPortalsChanged += OnDuoSpawnPortalsChanged;
             _coordinator.OnPartnerDeckReceived += OnDuoPartnerDeckReceived;
+            _coordinator.OnMasterClientSwitchedEvent += OnDuoMasterSwitched;
+            _coordinator.OnEnemySyncRequested += OnDuoEnemySyncRequested;
+            _coordinator.OnEnemySyncReceived += OnDuoEnemySyncReceived;
+            _coordinator.OnEnemyRespawnRequested += OnDuoEnemyRespawnRequested;
+
+            
+            
+            TR.Net.DuoRejoinService.SaveActiveMatch();
+
+            
+            if (TR.Net.DuoRejoinService.IsRejoinAttempt && _coordinator != null && !Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                _coordinator.RequestTowerSync();
+                _coordinator.RequestEnemySync();
+            }
+            TR.Net.DuoRejoinService.IsRejoinAttempt = false;
 
             
             BroadcastLocalDeck();
@@ -338,7 +397,34 @@ namespace TR.Battle
                 _coordinator.OnSkipConfirmed -= OnDuoSkipConfirmed;
                 _coordinator.OnSpawnPortalsChanged -= OnDuoSpawnPortalsChanged;
                 _coordinator.OnPartnerDeckReceived -= OnDuoPartnerDeckReceived;
+                _coordinator.OnMasterClientSwitchedEvent -= OnDuoMasterSwitched;
+                _coordinator.OnEnemySyncRequested -= OnDuoEnemySyncRequested;
+                _coordinator.OnEnemySyncReceived -= OnDuoEnemySyncReceived;
+                _coordinator.OnEnemyRespawnRequested -= OnDuoEnemyRespawnRequested;
             }
+        }
+
+        
+        
+        
+        private bool _tookOverAsMaster;
+        private void OnDuoMasterSwitched()
+        {
+            if (_ended || _tookOverAsMaster) return;
+            if (!Photon.Pun.PhotonNetwork.IsMasterClient) return;
+
+            
+            _tookOverAsMaster = true;
+            _isDuoClient = false;
+
+            
+            
+            int resumeWave = Mathf.Max(0, _wavesCleared);
+            _started = true;
+            _running = true;
+            if (resultsPanel) resultsPanel.SetActive(false);
+            StartCoroutine(RunMatch(resumeWave));
+            TR.UI.BattleToast.Show("You are now the host \u2014 resuming the match...", 2.5f);
         }
 
         
@@ -364,6 +450,16 @@ namespace TR.Battle
         private void OnDuoWaveStateReceived(int wave, int total, float timer, int phase, bool allowSkip)
         {
             if (!_isDuoClient || _ended) return;
+
+            
+            
+            if (!_started || !_running)
+            {
+                _started = true;
+                _running = true;
+                if (resultsPanel) resultsPanel.SetActive(false);
+            }
+
             _remoteAllowSkip = allowSkip;
             _wavesCleared = Mathf.Clamp(wave - 1, 0, Mathf.Max(0, total));
             if (waveText) waveText.text = $"Wave {Mathf.Clamp(wave, 1, total)}/{total}";
@@ -413,6 +509,190 @@ namespace TR.Battle
             if (partnerDeckBar != null) partnerDeckBar.BindFromPartnerDeck(cardIds, levels);
         }
 
+        private void OnDuoEnemySyncRequested(int targetActor)
+        {
+            if (!Photon.Pun.PhotonNetwork.IsMasterClient) return;
+            var all = new System.Collections.Generic.List<EnemyBase2D>(EnemyBase2D.All);
+            int count = all.Count;
+            int[] viewIds = new int[count];
+            string[] enemyIds = new string[count];
+            Vector3[] positions = new Vector3[count];
+            float[] hMul = new float[count];
+            float[] dMul = new float[count];
+            float[] sMul = new float[count];
+            float[] health = new float[count];
+            int[] waveNumbers = new int[count];
+            int[] waypointIndices = new int[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var e = all[i];
+                if (e == null) continue;
+                var pv = e.GetComponent<Photon.Pun.PhotonView>();
+                viewIds[i] = pv != null ? pv.ViewID : 0;
+                enemyIds[i] = e.Definition != null ? e.Definition.EnemyId : "";
+                positions[i] = e.transform.position;
+                hMul[i] = e.HealthMultiplier;
+                dMul[i] = e.DamageMultiplier;
+                sMul[i] = e.SpeedMultiplier;
+                health[i] = e.CurrentHealth;
+                waveNumbers[i] = e.WaveNumber;
+                waypointIndices[i] = e.WaypointIndex;
+            }
+
+            _coordinator.SendEnemySync(targetActor, viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices);
+            Debug.Log($"[BattleSceneController] Sent enemy sync to actor {targetActor}: {count} enemies.");
+        }
+
+        private bool _enemyRespawnRequested;
+        private Coroutine _pendingEnemySyncRetry;
+
+        private void OnDuoEnemySyncReceived(int[] viewIds, string[] enemyIds, Vector3[] positions, float[] hMul, float[] dMul, float[] sMul, float[] health, int[] waveNumbers, int[] waypointIndices)
+        {
+            if (Photon.Pun.PhotonNetwork.IsMasterClient) return;
+
+            int initialized = ApplyEnemySync(viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices);
+            int count = viewIds != null ? viewIds.Length : 0;
+
+            if (initialized > 0 && _pendingEnemySyncRetry != null)
+            {
+                StopCoroutine(_pendingEnemySyncRetry);
+                _pendingEnemySyncRetry = null;
+            }
+
+            if (count > 0 && initialized == 0 && !_enemyRespawnRequested && _pendingEnemySyncRetry == null)
+            {
+                _pendingEnemySyncRetry = StartCoroutine(TryEnemySyncRetry(viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices));
+            }
+        }
+
+        private int ApplyEnemySync(int[] viewIds, string[] enemyIds, Vector3[] positions, float[] hMul, float[] dMul, float[] sMul, float[] health, int[] waveNumbers, int[] waypointIndices)
+        {
+            if (viewIds == null) return 0;
+            int count = viewIds.Length;
+            var path = FindFirstObjectByType<Path2D>(FindObjectsInactive.Include);
+            int initialized = 0;
+            for (int i = 0; i < count; i++)
+            {
+                if (viewIds[i] == 0) continue;
+                var pv = Photon.Pun.PhotonNetwork.GetPhotonView(viewIds[i]);
+                if (pv == null)
+                {
+                    Debug.LogWarning($"[BattleSceneController] Enemy sync: PhotonView {viewIds[i]} not found.");
+                    continue;
+                }
+                var enemy = pv.GetComponent<EnemyBase2D>();
+                if (enemy == null)
+                {
+                    Debug.LogWarning($"[BattleSceneController] Enemy sync: PhotonView {viewIds[i]} has no EnemyBase2D.");
+                    continue;
+                }
+                var def = GameDB.GetEnemyById(enemyIds[i]);
+                if (def == null)
+                {
+                    Debug.LogWarning($"[BattleSceneController] Enemy sync: unknown enemyId '{enemyIds[i]}'.");
+                    continue;
+                }
+                enemy.Initialize(def, path);
+                enemy.SetWaveNumber(waveNumbers[i]);
+                enemy.SetWaypointIndex(waypointIndices[i]);
+                enemy.transform.position = positions[i];
+                enemy.RecalculateWaypointFromPosition();
+                enemy.ApplyBossScaling(hMul[i], dMul[i], sMul[i]);
+                enemy.SetNetworkedHealth(health[i]);
+                initialized++;
+            }
+            Debug.Log($"[BattleSceneController] Enemy sync applied: {initialized}/{count} enemies.");
+            return initialized;
+        }
+
+        private System.Collections.IEnumerator TryEnemySyncRetry(int[] viewIds, string[] enemyIds, Vector3[] positions, float[] hMul, float[] dMul, float[] sMul, float[] health, int[] waveNumbers, int[] waypointIndices)
+        {
+            float[] delays = { 0.3f, 0.5f, 0.8f };
+            for (int i = 0; i < delays.Length; i++)
+            {
+                if (Photon.Pun.PhotonNetwork.IsMasterClient) yield break;
+                yield return new WaitForSeconds(delays[i]);
+                if (Photon.Pun.PhotonNetwork.IsMasterClient) yield break;
+
+                int initialized = ApplyEnemySync(viewIds, enemyIds, positions, hMul, dMul, sMul, health, waveNumbers, waypointIndices);
+                if (initialized > 0) yield break;
+            }
+
+            if (Photon.Pun.PhotonNetwork.IsMasterClient) yield break;
+
+            if (!_enemyRespawnRequested)
+            {
+                _enemyRespawnRequested = true;
+                Debug.LogWarning("[BattleSceneController] Enemy sync still found no PhotonViews after retries; requesting respawn from master.");
+                _coordinator?.RequestEnemyRespawn();
+            }
+        }
+
+        private struct EnemyRespawnState
+        {
+            public string EnemyId;
+            public Vector3 Position;
+            public float HMul;
+            public float DMul;
+            public float SMul;
+            public float Health;
+            public int WaveNumber;
+            public int WaypointIndex;
+        }
+
+        private void OnDuoEnemyRespawnRequested(int requesterActor)
+        {
+            if (!Photon.Pun.PhotonNetwork.IsMasterClient || waveSpawner == null) return;
+
+            var all = new System.Collections.Generic.List<EnemyBase2D>(EnemyBase2D.All);
+            var states = new System.Collections.Generic.List<EnemyRespawnState>(all.Count);
+            foreach (var e in all)
+            {
+                if (e == null || e.Definition == null) continue;
+                states.Add(new EnemyRespawnState
+                {
+                    EnemyId = e.Definition.EnemyId,
+                    Position = e.transform.position,
+                    HMul = e.HealthMultiplier,
+                    DMul = e.DamageMultiplier,
+                    SMul = e.SpeedMultiplier,
+                    Health = e.CurrentHealth,
+                    WaveNumber = e.WaveNumber,
+                    WaypointIndex = e.WaypointIndex
+                });
+                UnregisterWaveEnemy(e.WaveNumber);
+                Photon.Pun.PhotonNetwork.Destroy(e.gameObject);
+            }
+
+            Debug.Log($"[BattleSceneController] Respawning {states.Count} enemies for rejoiner actor {requesterActor}.");
+            StartCoroutine(RespawnEnemiesCo(states));
+        }
+
+        private System.Collections.IEnumerator RespawnEnemiesCo(System.Collections.Generic.List<EnemyRespawnState> states)
+        {
+            yield return null;
+            if (waveSpawner == null) yield break;
+            var path = FindFirstObjectByType<Path2D>(FindObjectsInactive.Include);
+            foreach (var s in states)
+            {
+                var def = GameDB.GetEnemyById(s.EnemyId);
+                if (def == null) continue;
+                var enemy = waveSpawner.SpawnEnemyNetworked(def, s.Position, s.HMul, s.DMul, s.SMul, s.WaveNumber);
+                if (enemy != null)
+                {
+                    enemy.Initialize(def, path);
+                    enemy.SetWaveNumber(s.WaveNumber);
+                    enemy.SetWaypointIndex(s.WaypointIndex);
+                    enemy.transform.position = s.Position;
+                    enemy.RecalculateWaypointFromPosition();
+                    enemy.ApplyBossScaling(s.HMul, s.DMul, s.SMul);
+                    enemy.SetNetworkedHealth(s.Health);
+                }
+            }
+            Debug.Log($"[BattleSceneController] Respawned {states.Count} enemies.");
+        }
+
         private void OnDuoSpawnPortalsChanged(bool open)
         {
             if (!_isDuoClient || waveSpawner == null) return;
@@ -425,6 +705,8 @@ namespace TR.Battle
             if (_ended) return;
             _ended = true;
             _running = false;
+            MarkRoomMatchEnded();
+            TR.Net.DuoRejoinService.EndMatch();
             ShowResultsVictory();
         }
 
@@ -434,6 +716,8 @@ namespace TR.Battle
             if (_ended) return;
             _ended = true;
             _running = false;
+            MarkRoomMatchEnded();
+            TR.Net.DuoRejoinService.EndMatch();
             StopAllCoroutines();
             StartCoroutine(DefeatCleanup());
             ShowResultsDefeat();
@@ -504,7 +788,9 @@ namespace TR.Battle
             if (_ended) return;
             _ended = true;
             _running = false;
-            
+            MarkRoomMatchEnded();
+            TR.Net.DuoRejoinService.EndMatch();
+
             if (MatchContext.IsDuo && _coordinator != null && Photon.Pun.PhotonNetwork.IsMasterClient)
             {
                 _coordinator.BroadcastDefeat();
@@ -518,6 +804,7 @@ namespace TR.Battle
         public void OnClickReturnToLobby()
         {
             
+            TR.Net.DuoRejoinService.ClearActiveMatch();
             MatchContext.Reset();
             _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
         }
@@ -740,6 +1027,19 @@ namespace TR.Battle
             _waveRemainingEnemies.TryGetValue(wave, out int remaining);
             _waveRemainingEnemies[wave] = remaining + 1;
             if (!_waveKillMoney.ContainsKey(wave)) _waveKillMoney[wave] = 0;
+        }
+
+        public void UnregisterWaveEnemy(int wave)
+        {
+            if (wave <= 0) return;
+            if (!TR.Net.DuoRuntime.IsSimulationAuthority) return;
+            if (!_waveRemainingEnemies.ContainsKey(wave)) return;
+            _waveRemainingEnemies[wave] = Mathf.Max(0, _waveRemainingEnemies[wave] - 1);
+            if (_waveRemainingEnemies[wave] == 0)
+            {
+                _waveRemainingEnemies.Remove(wave);
+                _waveKillMoney.Remove(wave);
+            }
         }
 
         public void RecordWaveKill(int wave, int amount)

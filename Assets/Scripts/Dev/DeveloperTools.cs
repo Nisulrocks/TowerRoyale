@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TR.Systems;
+using TR.Net;
 
 namespace TR.Dev
 {
@@ -9,7 +11,7 @@ namespace TR.Dev
         public KeyCode togglePanelKey = KeyCode.D;
 
         private bool _showPanel = false;
-        private Rect _panelRect = new Rect(10, 10, 220, 370);
+        private Rect _panelRect = new Rect(10, 10, 220, 400);
         private string _trophyInput = "0";
         private string _expInput = "0";
 
@@ -76,6 +78,12 @@ namespace TR.Dev
             GUI.color = Color.red;
             if (GUILayout.Button("WIPE PROFILE"))
                 WipeProfile();
+            GUI.color = Color.white;
+
+            GUILayout.Space(4);
+            GUI.color = new Color(1f, 0.6f, 0.2f);
+            if (GUILayout.Button("DISCONNECT & REBOOT"))
+                DisconnectAndReboot();
             GUI.color = Color.white;
 
             GUI.DragWindow();
@@ -173,6 +181,41 @@ namespace TR.Dev
             }
             PlayerProfile.AddCastleXP(Mathf.Max(0, amount));
             _expInput = "0";
+        }
+
+        [ContextMenu("Disconnect & Reboot (Test Rejoin)")]
+        public void DisconnectAndReboot()
+        {
+            StartCoroutine(DisconnectAndReloadCo());
+        }
+
+        private System.Collections.IEnumerator DisconnectAndReloadCo()
+        {
+            if (MatchContext.IsDuo && Photon.Pun.PhotonNetwork.InRoom)
+            {
+                DuoRejoinService.SaveActiveMatch();
+                Debug.Log("[Dev] Saved active duo match for rejoin test.");
+            }
+
+            MatchContext.Reset();
+            PlayerProfile.Save();
+            PlayerPrefs.Save();
+
+            if (Photon.Pun.PhotonNetwork.IsConnected)
+            {
+                Photon.Pun.PhotonNetwork.Disconnect();
+            }
+
+            Debug.Log("[Dev] Disconnecting and reloading first scene...");
+
+            float timeout = 2.5f;
+            while (Photon.Pun.PhotonNetwork.IsConnected && timeout > 0f)
+            {
+                yield return null;
+                timeout -= Time.unscaledDeltaTime;
+            }
+
+            SceneManager.LoadScene(0);
         }
     }
 }

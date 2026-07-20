@@ -22,9 +22,13 @@ namespace TR.Systems
         public static bool IsDuo => _mode == GameMode.Duo;
 
         
+        public static string ArenaId { get; set; }
+
+        
         public static void Reset()
         {
             _mode = GameMode.Single;
+            ArenaId = null;
         }
     }
 }

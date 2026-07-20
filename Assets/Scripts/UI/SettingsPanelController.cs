@@ -28,6 +28,10 @@ namespace TR.UI
         [Tooltip("Optional toggle to enable/disable screen shake. If left empty, a toggle is generated automatically.")]
         [SerializeField] private Toggle screenShakeToggle;
 
+        [Header("Action Buttons")]
+        [SerializeField] private Button leaveMatchButton;
+        [SerializeField] private Button quitButton;
+
         private const string PREF_MUSIC_VOL = "tr_music_volume";
         private const string PREF_MUSIC_MUTE = "tr_music_mute";
         private const string PREF_SFX_VOL = "tr_sfx_volume";
@@ -121,6 +125,11 @@ namespace TR.UI
                 pauseHotkeyDropdown.onValueChanged.AddListener(OnPauseHotkeyChanged);
             if (_screenShakeToggle != null)
                 _screenShakeToggle.onValueChanged.AddListener(OnScreenShakeChanged);
+            if (leaveMatchButton != null)
+                leaveMatchButton.onClick.AddListener(OnLeaveMatch);
+            if (quitButton != null)
+                quitButton.onClick.AddListener(OnQuit);
+            RefreshActionButtons();
         }
 
         private void OnDestroy()
@@ -145,6 +154,10 @@ namespace TR.UI
                 pauseHotkeyDropdown.onValueChanged.RemoveListener(OnPauseHotkeyChanged);
             if (_screenShakeToggle != null)
                 _screenShakeToggle.onValueChanged.RemoveListener(OnScreenShakeChanged);
+            if (leaveMatchButton != null)
+                leaveMatchButton.onClick.RemoveListener(OnLeaveMatch);
+            if (quitButton != null)
+                quitButton.onClick.RemoveListener(OnQuit);
         }
 
         private void OnSliderChanged(float value)
@@ -349,6 +362,37 @@ namespace TR.UI
                 _screenShakeToggle.onValueChanged.RemoveAllListeners();
                 _screenShakeToggle.isOn = ShakeSettings.ScreenShakeEnabled;
             }
+        }
+
+        private void OnEnable()
+        {
+            RefreshActionButtons();
+        }
+
+        private void RefreshActionButtons()
+        {
+            bool inBattle = TR.Battle.BattleSceneController.Instance != null;
+            bool isDuo = TR.Net.DuoRuntime.IsDuo;
+            if (leaveMatchButton != null)
+                leaveMatchButton.gameObject.SetActive(inBattle && !isDuo);
+        }
+
+        private void OnLeaveMatch()
+        {
+            BattlePauseController.EnsureResumed();
+            if (TR.Battle.BattleSceneController.Instance != null)
+                TR.Battle.BattleSceneController.Instance.OnClickReturnToLobby();
+            else
+                TR.Infrastructure.SceneTransition.GoToScene("Lobby");
+        }
+
+        private void OnQuit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         public void OpenViaPanelSwitcher(PanelSwitcher switcher, string panelName = "Settings")

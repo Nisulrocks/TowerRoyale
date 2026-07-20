@@ -110,8 +110,15 @@ namespace TR.Battle
         public void SetVisualOnly(bool visualOnly)
         {
             _visualOnly = visualOnly;
-            
+
             if (visualOnly) disableCombat = false;
+
+            var inf = GetComponent<InfernoTower>();
+            if (inf != null) inf.SetVisualOnly(visualOnly);
+            var buff = GetComponent<BuffTower>();
+            if (buff != null) buff.SetVisualOnly(visualOnly);
+            var econ = GetComponent<EconomyTower>();
+            if (econ != null) econ.SetVisualOnly(visualOnly);
         }
 
         public bool ApplyOnHitEffects(EnemyBase2D enemy)

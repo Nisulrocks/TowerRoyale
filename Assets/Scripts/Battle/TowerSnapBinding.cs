@@ -21,6 +21,11 @@ namespace TR.Battle
             _isMirror = isMirror;
         }
 
+        public void SetMirror(bool isMirror)
+        {
+            _isMirror = isMirror;
+        }
+
         private void OnDestroy()
         {
             if (_controller != null && _snap != null)

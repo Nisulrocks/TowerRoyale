@@ -20,6 +20,11 @@ namespace TR.Net
         public const string PROP_TROPHIES = "tr";
         public const string PROP_CASTLE = "cl";
 
+        
+        
+        
+        public const int RejoinPlayerTtlMs = 90000;
+
         private static readonly TypedLobby DuoSqlLobby = new TypedLobby("tr_duo_sql", LobbyType.SqlLobby);
 
         public enum MatchState { Idle, Connecting, JoiningLobby, Searching, WaitingForPartner, PartnerFound, Starting, Failed }
@@ -58,10 +63,7 @@ namespace TR.Net
             DontDestroyOnLoad(gameObject);
 
             
-            if (!(PhotonNetwork.PrefabPool is DuoEnemyPrefabPool))
-            {
-                PhotonNetwork.PrefabPool = new DuoEnemyPrefabPool();
-            }
+            DuoEnemyPrefabPool.EnsurePool();
 
             
             
@@ -154,6 +156,8 @@ namespace TR.Net
 
         public override void OnConnectedToMaster()
         {
+            DuoEnemyPrefabPool.EnsurePool();
+
             if (!_matchmakingActive || _cancelRequested) return;
             SetState(MatchState.JoiningLobby, "Entering lobby...");
             PhotonNetwork.JoinLobby(DuoSqlLobby);
@@ -192,7 +196,15 @@ namespace TR.Net
                 MaxPlayers = 2,
                 CustomRoomProperties = roomProps,
                 CustomRoomPropertiesForLobby = new[] { KEY_ARENA, KEY_TROPHIES },
-                CleanupCacheOnLeave = true,
+                
+                
+                
+                CleanupCacheOnLeave = false,
+                
+                
+                PlayerTtl = RejoinPlayerTtlMs,
+                
+                EmptyRoomTtl = 0,
             };
             string roomName = $"duo_{_arenaId}_{System.Guid.NewGuid():N}";
             SetState(MatchState.WaitingForPartner, "Waiting for a partner...");
@@ -215,6 +227,10 @@ namespace TR.Net
             }
 
             
+            
+            if (!_matchmakingActive) return;
+
+            
             var props = new Hashtable
             {
                 { PROP_NICK, PhotonNetwork.NickName },
@@ -234,6 +250,8 @@ namespace TR.Net
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
             if (_cancelRequested) return;
+            
+            if (!_matchmakingActive) return;
             
             StopRejoinTimer();
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
@@ -286,7 +304,7 @@ namespace TR.Net
             PhotonNetwork.LeaveRoom();
         }
 
-        private void TryStartIfRoomFull()
+        private async void TryStartIfRoomFull()
         {
             if (PhotonNetwork.CurrentRoom == null) return;
             if (PhotonNetwork.CurrentRoom.PlayerCount < 2) return;
@@ -296,27 +314,32 @@ namespace TR.Net
             _matchmakingActive = false;
             SetState(MatchState.Starting, "Match found! Loading...");
 
-            
             if (PhotonNetwork.IsMasterClient)
             {
                 PhotonNetwork.CurrentRoom.IsOpen = false;
                 PhotonNetwork.CurrentRoom.IsVisible = false;
             }
 
-            
-            
-            if (!string.IsNullOrEmpty(_arenaDisplayName) && SceneFader.Instance != null)
+            PhotonNetwork.IsMessageQueueRunning = false;
+            try
             {
-                SceneFader.Instance.SetNextTransitionMessage(_arenaDisplayName, 1.0f);
+                if (!string.IsNullOrEmpty(_arenaDisplayName) && SceneFader.Instance != null)
+                {
+                    SceneFader.Instance.SetNextTransitionMessage(_arenaDisplayName, 1.0f);
+                }
+                if (SceneFader.Instance != null)
+                {
+                    await SceneFader.Instance.LoadSceneWithFade(_battleSceneName);
+                }
+                else
+                {
+                    Debug.LogWarning("[DuoNet] SceneFader missing; loading scene without fade.");
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(_battleSceneName);
+                }
             }
-            if (SceneFader.Instance != null)
+            finally
             {
-                _ = SceneFader.Instance.LoadSceneWithFade(_battleSceneName);
-            }
-            else
-            {
-                Debug.LogWarning("[DuoNet] SceneFader missing; loading scene without fade.");
-                UnityEngine.SceneManagement.SceneManager.LoadScene(_battleSceneName);
+                PhotonNetwork.IsMessageQueueRunning = true;
             }
         }
 
