@@ -11,7 +11,8 @@ namespace TR.Systems
         {
             public CardDefinition card;
             public bool isNew;
-            public int pointsAwarded; 
+            public int pointsAwarded;
+            public int softCurrencyAwarded;
             public int levelBefore;
             public int levelAfter;
         }
@@ -40,10 +41,20 @@ namespace TR.Systems
                 {
                     
                     int currentLevel = Mathf.Max(1, progress.level);
-                    int awarded = card.Rarity != null ? card.Rarity.RollDuplicatePoints(currentLevel) : 1;
-                    awarded = Mathf.Max(1, awarded);
-                    progress.points += awarded;
-                    sb.AppendLine($"Duplicate {card.DisplayName} -> +{awarded} pts (L{currentLevel})");
+                    if (card.Rarity != null && currentLevel >= card.Rarity.MaxLevel)
+                    {
+                        int awarded = card.Rarity.RollDuplicateSoftCurrency(currentLevel);
+                        awarded = Mathf.Max(1, awarded);
+                        PlayerProfile.AddSoftCurrency(awarded);
+                        sb.AppendLine($"Duplicate {card.DisplayName} -> +{awarded} gold (L{currentLevel})");
+                    }
+                    else
+                    {
+                        int awarded = card.Rarity != null ? card.Rarity.RollDuplicatePoints(currentLevel) : 1;
+                        awarded = Mathf.Max(1, awarded);
+                        progress.points += awarded;
+                        sb.AppendLine($"Duplicate {card.DisplayName} -> +{awarded} pts (L{currentLevel})");
+                    }
                 }
             }
 
@@ -64,6 +75,7 @@ namespace TR.Systems
                 int levelBefore = Mathf.Max(0, progress.level);
                 bool isNew = progress.ownedCount <= 0;
                 int pointsAwarded = 0;
+                int softCurrencyAwarded = 0;
 
                 progress.ownedCount++;
                 if (isNew)
@@ -74,10 +86,20 @@ namespace TR.Systems
                 else
                 {
                     int currentLevel = Mathf.Max(1, progress.level);
-                    int awarded = card.Rarity != null ? card.Rarity.RollDuplicatePoints(currentLevel) : 1;
-                    awarded = Mathf.Max(1, awarded);
-                    progress.points += awarded;
-                    pointsAwarded = awarded;
+                    if (card.Rarity != null && currentLevel >= card.Rarity.MaxLevel)
+                    {
+                        int awarded = card.Rarity.RollDuplicateSoftCurrency(currentLevel);
+                        awarded = Mathf.Max(1, awarded);
+                        PlayerProfile.AddSoftCurrency(awarded);
+                        softCurrencyAwarded = awarded;
+                    }
+                    else
+                    {
+                        int awarded = card.Rarity != null ? card.Rarity.RollDuplicatePoints(currentLevel) : 1;
+                        awarded = Mathf.Max(1, awarded);
+                        progress.points += awarded;
+                        pointsAwarded = awarded;
+                    }
                 }
 
                 results.Add(new AwardResult
@@ -85,6 +107,7 @@ namespace TR.Systems
                     card = card,
                     isNew = isNew,
                     pointsAwarded = pointsAwarded,
+                    softCurrencyAwarded = softCurrencyAwarded,
                     levelBefore = levelBefore,
                     levelAfter = progress.level
                 });

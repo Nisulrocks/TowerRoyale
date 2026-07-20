@@ -20,6 +20,8 @@ MonoBehaviour:
   pointsPerLevel: 2
   dupPointsMin: 1
   dupPointsMax: 1
+  dupSoftCurrencyMin: 300
+  dupSoftCurrencyMax: 500
   upgradeCostBase: 50
   upgradeCostPerLevel: 75
   castleXpBase: 80

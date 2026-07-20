@@ -20,7 +20,10 @@ MonoBehaviour:
   pointsPerLevel: 25
   dupPointsMin: 5
   dupPointsMax: 8
+  dupSoftCurrencyMin: 50
+  dupSoftCurrencyMax: 100
   upgradeCostBase: 50
   upgradeCostPerLevel: 75
   castleXpBase: 20
   castleXpPerLevel: 20
+  confettiOnReveal: 0

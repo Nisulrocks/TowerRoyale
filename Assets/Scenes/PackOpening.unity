@@ -358,18 +358,27 @@ MonoBehaviour:
   continueButton: {fileID: 1816084719}
   headerText: {fileID: 453030516}
   allowKeyboardContinue: 1
+  continueLabel: Continue
+  skipLabel: Skip
   videoPlayer: {fileID: 2102506214}
   videoRoot: {fileID: 2102506212}
   resultLabelOffset: {x: 0, y: -300}
   resultLabelNewColor: {r: 0, g: 0.8113208, b: 0.05319859, a: 1}
   resultLabelPointsColor: {r: 0.9245283, g: 0.79400665, b: 0, a: 1}
+  resultLabelSoftCurrencyColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   resultLabelFontSizeNew: 20
   resultLabelFontSizePoints: 20
+  resultLabelFontSizeSoftCurrency: 22
+  softCurrencyLabel: gold
   upgradeLabelOffset: {x: 0, y: -380}
   upgradeLabelColor: {r: 0, g: 1, b: 0, a: 1}
   upgradeLabelFontSize: 20
   upgradeAvailableText: Upgrade Available
   upgradeLabelFadeOutDuration: 0.6
+  maxedLabelOffset: {x: 0, y: -380}
+  maxedLabelColor: {r: 1, g: 0.04082808, b: 0, a: 1}
+  maxedLabelFontSize: 20
+  maxedLabelText: Maxed
   hoverSpread: 200
   hoverAnimDuration: 0.2
   hoverScale: 1.1
@@ -408,7 +417,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 400}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 300, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &453030516
 MonoBehaviour:
@@ -432,8 +441,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Header
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
+  m_sharedMaterial: {fileID: -2945076405667729338, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -457,7 +466,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44.75
+  m_fontSize: 72
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1097,8 +1106,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
+  m_sharedMaterial: {fileID: -2945076405667729338, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1122,13 +1131,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
+  m_fontSize: 50
   m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontSizeMax: 50
+  m_fontStyle: 17
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -1277,8 +1286,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 298198673004830636, guid: a649c6fd8ddd8e3499a9c8303abc59cb, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

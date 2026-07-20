@@ -23,6 +23,11 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int dupPointsMin = 1;
         [Min(0)] [SerializeField] private int dupPointsMax = 1;
 
+        [Header("Duplicate -> Soft Currency Range (when max level)")]
+
+        [Min(0)] [SerializeField] private int dupSoftCurrencyMin = 0;
+        [Min(0)] [SerializeField] private int dupSoftCurrencyMax = 0;
+
         [Header("Upgrade Cost Formula (Soft Currency)")]
         [Tooltip("Soft cost to upgrade from previous level to target level: cost = base + perLevel*(L-2). For L=2, multiplier is 0.")]
         [Min(0)] [SerializeField] private int upgradeCostBase = 50;
@@ -71,6 +76,24 @@ namespace TR.Data
             if (maxP <= minP) return minP;
             rng ??= new System.Random();
             return rng.Next(minP, maxP + 1);
+        }
+
+        
+        public void GetDuplicateSoftCurrencyRange(int currentLevel, out int minCurrency, out int maxCurrency)
+        {
+            int mn = Mathf.Max(0, dupSoftCurrencyMin);
+            int mx = Mathf.Max(mn, dupSoftCurrencyMax);
+            minCurrency = mn;
+            maxCurrency = mx;
+        }
+
+        
+        public int RollDuplicateSoftCurrency(int currentLevel, System.Random rng = null)
+        {
+            GetDuplicateSoftCurrencyRange(currentLevel, out int minC, out int maxC);
+            if (maxC <= minC) return minC;
+            rng ??= new System.Random();
+            return rng.Next(minC, maxC + 1);
         }
 
         

@@ -47,6 +47,8 @@ namespace TR.UI
         [SerializeField] private Button continueButton;
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private bool allowKeyboardContinue = true;
+        [SerializeField] private string continueLabel = "Continue";
+        [SerializeField] private string skipLabel = "Skip";
 
         [Header("Cutscene Video (optional)")]
         [Tooltip("VideoPlayer used to play the per-pack cutscene before opening. If null or no clip is assigned, the pack opens immediately.")]
@@ -61,11 +63,16 @@ namespace TR.UI
         [SerializeField] private Color resultLabelNewColor = new Color(0.2f, 1f, 0.4f);
         [Tooltip("Text color used when awarding duplicate points (e.g., +15 pts)")]
         [SerializeField] private Color resultLabelPointsColor = new Color(1f, 0.9f, 0.3f);
+        [Tooltip("Text color used when awarding soft currency on a maxed duplicate")]
+        [SerializeField] private Color resultLabelSoftCurrencyColor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private float resultLabelFontSizeNew = 22f;
 
         [SerializeField] private float resultLabelFontSizePoints = 22f;
-        [Header("Upgrade Label (separate)")]
+
+        [SerializeField] private float resultLabelFontSizeSoftCurrency = 22f;
+        [SerializeField] private string softCurrencyLabel = "gold";
+        [Header("Upgrade / Maxed Label (separate)")]
         [Tooltip("Offset applied to the 'Upgrade Available' label under each card (x,y) in anchored pixels")] 
         [SerializeField] private Vector2 upgradeLabelOffset = new Vector2(0f, -52f);
 
@@ -76,6 +83,11 @@ namespace TR.UI
         [SerializeField] private string upgradeAvailableText = "Upgrade Available";
 
         [SerializeField] private float upgradeLabelFadeOutDuration = 0.6f;
+
+        [SerializeField] private Vector2 maxedLabelOffset = new Vector2(0f, -52f);
+        [SerializeField] private Color maxedLabelColor = new Color(1f, 0.55f, 0.15f);
+        [SerializeField] private float maxedLabelFontSize = 20f;
+        [SerializeField] private string maxedLabelText = "Maxed";
 
         [Header("Hover Spread")]
         [SerializeField] private float hoverSpread = 60f;         
@@ -95,7 +107,11 @@ namespace TR.UI
         private bool _whooshPlayed;
         private int _openCount = 1;
         private float _cardWidth = 200f;
+        private float _cardHeight = 300f;
         private float _usedFinalOverlapSpacing = 80f;
+        private float _cardTargetY = 0f;
+        private Vector2 _packEndPos;
+        private bool _revealInProgress = false;
 
         private void Start()
         {
@@ -292,6 +308,10 @@ namespace TR.UI
             
             Vector2 startPos = packRect.anchoredPosition;
             Vector2 endPos = startPos + new Vector2(0f, -200f);
+            _packEndPos = endPos;
+            _cardTargetY = endPos.y + 220f;
+            _revealInProgress = true;
+            SetContinueButton(skipLabel, true);
             
             var startScale = Vector3.one * 0.85f;
             var overScale = Vector3.one * 1.05f;
@@ -347,7 +367,7 @@ namespace TR.UI
             int totalCards = _results.Count;
             float rootWidth = cardsRoot != null ? cardsRoot.rect.width : Screen.width;
             _cardWidth = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.x : 200f;
-            float cardHeight = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.y : 300f;
+            _cardHeight = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.y : 300f;
             float maxCenterSpan = Mathf.Max(100f, rootWidth - 120f - _cardWidth);
             float naturalRevealSpan = revealSpacing * Mathf.Max(0, totalCards - 1);
             float naturalFinalSpan = finalOverlapSpacing * Mathf.Max(0, totalCards - 1);
@@ -358,109 +378,39 @@ namespace TR.UI
             float usedRevealSpacing = revealSpacing * scale;
             _usedFinalOverlapSpacing = finalOverlapSpacing * scale;
 
+            float animScale = Mathf.Clamp(5f / Mathf.Max(1, totalCards), 0.25f, 1f);
+            float scaledCardRiseDuration = cardRiseDuration * animScale;
+            float scaledCardInterval = cardInterval * animScale;
+            float scaledFlipDuration = flipDuration * animScale;
+            float scaledFlipInterval = flipInterval * animScale;
+            float scaledCompressDuration = compressDuration * animScale;
+
             float startX = -usedRevealSpacing * (Mathf.Max(0, totalCards - 1) * 0.5f);
             for (int i = 0; i < _results.Count; i++)
             {
                 var res = _results[i];
-                var card = res.card;
-                var ui = Instantiate(cardPrefab, cardsRoot);
-                ui.Bind(card, 0);
+                var rt = BuildCard(res, i, new Vector2(startX + i * usedRevealSpacing, endPos.y), false);
 
-                var rt = (RectTransform)ui.transform;
-                rt.anchorMin = new Vector2(0.5f, 0.5f);
-                rt.anchorMax = new Vector2(0.5f, 0.5f);
-                rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.sizeDelta = new Vector2(_cardWidth, cardHeight);
-                
-                var frontGO = new GameObject("FrontFace", typeof(RectTransform));
-                var frontRT = frontGO.GetComponent<RectTransform>();
-                frontRT.SetParent(ui.transform, false);
-                frontRT.anchorMin = new Vector2(0f, 0f);
-                frontRT.anchorMax = new Vector2(1f, 1f);
-                frontRT.offsetMin = Vector2.zero;
-                frontRT.offsetMax = Vector2.zero;
-                
-                var tmpChildren = new System.Collections.Generic.List<Transform>();
-                for (int ci = 0; ci < ui.transform.childCount; ci++) tmpChildren.Add(ui.transform.GetChild(ci));
-                for (int ci = 0; ci < tmpChildren.Count; ci++)
-                {
-                    
-                    if (tmpChildren[ci] == frontRT) continue;
-                    tmpChildren[ci].SetParent(frontRT, false);
-                }
-                
-                var cg = frontGO.AddComponent<CanvasGroup>();
-                cg.alpha = 0f;
-                _frontGroups.Add(cg);
-                
-                RectTransform backRT = null;
-                if (backFacePrefab != null)
-                {
-                    var inst = Instantiate(backFacePrefab, ui.transform);
-                    backRT = (inst.transform as RectTransform) ?? inst.AddComponent<RectTransform>();
-                    backRT.anchorMin = new Vector2(0f, 0f);
-                    backRT.anchorMax = new Vector2(1f, 1f);
-                    backRT.offsetMin = Vector2.zero;
-                    backRT.offsetMax = Vector2.zero;
-                }
-                else
-                {
-                    var backGo = new GameObject("BackFace", typeof(RectTransform), typeof(UnityEngine.UI.Image));
-                    backRT = backGo.GetComponent<RectTransform>();
-                    backRT.SetParent(ui.transform, false);
-                    backRT.anchorMin = new Vector2(0f, 0f);
-                    backRT.anchorMax = new Vector2(1f, 1f);
-                    backRT.offsetMin = Vector2.zero;
-                    backRT.offsetMax = Vector2.zero;
-                    var backImg = backGo.GetComponent<UnityEngine.UI.Image>();
-                    if (cardBackSprite != null)
-                    {
-                        backImg.sprite = cardBackSprite;
-                        backImg.color = Color.white;
-                        backImg.preserveAspect = true;
-                    }
-                    else
-                    {
-                        backImg.color = backFaceColor;
-                    }
-                }
-                
-                backRT.SetAsLastSibling();
-                var backCg = backRT.GetComponent<CanvasGroup>();
-                if (backCg == null) backCg = backRT.gameObject.AddComponent<CanvasGroup>();
-                backCg.alpha = 1f;
-                _backFaces.Add(backRT);
-
-                rt.anchoredPosition = new Vector2(startX + i * usedRevealSpacing, endPos.y);
-
-                
                 float t2 = 0f;
                 Vector2 target = new Vector2(rt.anchoredPosition.x, endPos.y + 220f);
                 while (t2 < 1f)
                 {
-                    t2 += Time.deltaTime / Mathf.Max(0.01f, cardRiseDuration);
+                    t2 += Time.deltaTime / Mathf.Max(0.01f, scaledCardRiseDuration);
                     float e = EaseOutCubic(t2);
                     rt.anchoredPosition = Vector2.Lerp(new Vector2(rt.anchoredPosition.x, endPos.y), target, e);
                     yield return null;
                 }
 
-                
-                if (!ui.gameObject.TryGetComponent<CanvasGroup>(out var rootCg))
-                    rootCg = ui.gameObject.AddComponent<CanvasGroup>();
-                if (rootCg != null)
-                    rootCg.blocksRaycasts = false;
-
-                _spawned.Add(rt);
-                yield return new WaitForSeconds(cardInterval);
+                yield return new WaitForSeconds(scaledCardInterval);
             }
 
             
             for (int i = 0; i < _spawned.Count; i++)
             {
-                yield return StartCoroutine(FlipReveal(_spawned[i], _frontGroups[i], _backFaces[i], _results[i]));
+                yield return StartCoroutine(FlipReveal(_spawned[i], _frontGroups[i], _backFaces[i], _results[i], scaledFlipDuration));
                 
                 CreateResultLabel(_spawned[i], _results[i]);
-                yield return new WaitForSeconds(flipInterval);
+                yield return new WaitForSeconds(scaledFlipInterval);
             }
 
             
@@ -478,7 +428,7 @@ namespace TR.UI
                 float t3 = 0f;
                 while (t3 < 1f)
                 {
-                    t3 += Time.deltaTime / Mathf.Max(0.01f, compressDuration);
+                    t3 += Time.deltaTime / Mathf.Max(0.01f, scaledCompressDuration);
                     float e = EaseOutCubic(t3);
                     for (int i = 0; i < _spawned.Count; i++)
                     {
@@ -499,13 +449,168 @@ namespace TR.UI
                 StartCoroutine(FadeOutUpgradeLabels());
             }
 
-            continueButton.interactable = true;
+            _revealInProgress = false;
+            SetContinueButton(continueLabel, true);
         }
 
         public void OnContinue()
         {
+            if (_revealInProgress)
+            {
+                SkipReveal();
+                return;
+            }
+
             SceneParams.ClearAll();
             _ = SceneFader.Instance.LoadSceneWithFade(lobbySceneName);
+        }
+
+        private void SetContinueButton(string label, bool interactable)
+        {
+            if (continueButton == null) return;
+            continueButton.interactable = interactable;
+            var txt = continueButton.GetComponentInChildren<TMP_Text>(true);
+            if (txt != null) txt.text = label;
+        }
+
+        private void SkipReveal()
+        {
+            if (!_revealInProgress) return;
+            StopAllCoroutines();
+            FinalizeAllCards();
+        }
+
+        private void FinalizeAllCards()
+        {
+            int total = _results.Count;
+            float finalStartX = -_usedFinalOverlapSpacing * (Mathf.Max(0, total - 1) * 0.5f);
+
+            for (int i = _spawned.Count; i < total; i++)
+            {
+                var res = _results[i];
+                var pos = new Vector2(finalStartX + i * _usedFinalOverlapSpacing, _cardTargetY);
+                BuildCard(res, i, pos, true);
+            }
+
+            for (int i = 0; i < total; i++)
+            {
+                var rt = _spawned[i];
+                if (rt == null) continue;
+                rt.anchoredPosition = new Vector2(finalStartX + i * _usedFinalOverlapSpacing, _cardTargetY);
+                rt.localScale = Vector3.one;
+
+                if (i < _frontGroups.Count && _frontGroups[i] != null)
+                    _frontGroups[i].alpha = 1f;
+
+                if (i < _backFaces.Count && _backFaces[i] != null)
+                    _backFaces[i].gameObject.SetActive(false);
+
+                if (i < _results.Count && _results[i].card != null)
+                    PulseRarityColor(rt, _results[i].card.Rarity);
+            }
+
+            for (int i = _resultLabels.Count; i < _spawned.Count; i++)
+            {
+                if (_results[i].card == null) continue;
+                CreateResultLabel(_spawned[i], _results[i]);
+            }
+
+            _finalPositions = new Vector2[total];
+            for (int i = 0; i < total; i++)
+                _finalPositions[i] = _spawned[i].anchoredPosition;
+
+            if (packRect != null)
+            {
+                packRect.anchoredPosition = _packEndPos;
+                packRect.localScale = Vector3.one;
+                if (packCanvasGroup != null) packCanvasGroup.alpha = 0f;
+            }
+
+            _revealInProgress = false;
+            _currentHover = -1;
+            SetContinueButton(continueLabel, true);
+
+            if (_upgradeLabelRects != null && _upgradeLabelRects.Count > 0)
+                StartCoroutine(FadeOutUpgradeLabels());
+        }
+
+        private RectTransform BuildCard(CollectionService.AwardResult res, int index, Vector2 position, bool revealed)
+        {
+            var ui = Instantiate(cardPrefab, cardsRoot);
+            ui.Bind(res.card, 0);
+
+            var rt = (RectTransform)ui.transform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(_cardWidth, _cardHeight);
+            rt.anchoredPosition = position;
+
+            var frontGO = new GameObject("FrontFace", typeof(RectTransform));
+            var frontRT = frontGO.GetComponent<RectTransform>();
+            frontRT.SetParent(ui.transform, false);
+            frontRT.anchorMin = new Vector2(0f, 0f);
+            frontRT.anchorMax = new Vector2(1f, 1f);
+            frontRT.offsetMin = Vector2.zero;
+            frontRT.offsetMax = Vector2.zero;
+
+            var tmpChildren = new System.Collections.Generic.List<Transform>();
+            for (int ci = 0; ci < ui.transform.childCount; ci++) tmpChildren.Add(ui.transform.GetChild(ci));
+            for (int ci = 0; ci < tmpChildren.Count; ci++)
+            {
+                if (tmpChildren[ci] == frontRT) continue;
+                tmpChildren[ci].SetParent(frontRT, false);
+            }
+
+            var cg = frontGO.AddComponent<CanvasGroup>();
+            cg.alpha = revealed ? 1f : 0f;
+            _frontGroups.Add(cg);
+
+            RectTransform backRT = null;
+            if (backFacePrefab != null)
+            {
+                var inst = Instantiate(backFacePrefab, ui.transform);
+                backRT = (inst.transform as RectTransform) ?? inst.AddComponent<RectTransform>();
+                backRT.anchorMin = new Vector2(0f, 0f);
+                backRT.anchorMax = new Vector2(1f, 1f);
+                backRT.offsetMin = Vector2.zero;
+                backRT.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                var backGo = new GameObject("BackFace", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+                backRT = backGo.GetComponent<RectTransform>();
+                backRT.SetParent(ui.transform, false);
+                backRT.anchorMin = new Vector2(0f, 0f);
+                backRT.anchorMax = new Vector2(1f, 1f);
+                backRT.offsetMin = Vector2.zero;
+                backRT.offsetMax = Vector2.zero;
+                var backImg = backGo.GetComponent<UnityEngine.UI.Image>();
+                if (cardBackSprite != null)
+                {
+                    backImg.sprite = cardBackSprite;
+                    backImg.color = Color.white;
+                    backImg.preserveAspect = true;
+                }
+                else
+                {
+                    backImg.color = backFaceColor;
+                }
+            }
+
+            backRT.SetAsLastSibling();
+            var backCg = backRT.GetComponent<CanvasGroup>();
+            if (backCg == null) backCg = backRT.gameObject.AddComponent<CanvasGroup>();
+            backCg.alpha = 1f;
+            backRT.gameObject.SetActive(!revealed);
+            _backFaces.Add(backRT);
+
+            var rootCg = ui.gameObject.GetComponent<CanvasGroup>();
+            if (rootCg == null) rootCg = ui.gameObject.AddComponent<CanvasGroup>();
+            rootCg.blocksRaycasts = false;
+
+            _spawned.Add(rt);
+            return rt;
         }
 
         private float EaseOutCubic(float x) => 1f - Mathf.Pow(1f - Mathf.Clamp01(x), 3f);
@@ -526,15 +631,22 @@ namespace TR.UI
             {
                 msg = "NEW!";
                 tmp.color = resultLabelNewColor;
+                tmp.fontSize = resultLabelFontSizeNew;
+            }
+            else if (res.softCurrencyAwarded > 0)
+            {
+                msg = $"+{res.softCurrencyAwarded} {softCurrencyLabel}";
+                tmp.color = resultLabelSoftCurrencyColor;
+                tmp.fontSize = resultLabelFontSizeSoftCurrency;
             }
             else
             {
                 msg = $"+{res.pointsAwarded} pts";
                 tmp.color = resultLabelPointsColor;
+                tmp.fontSize = resultLabelFontSizePoints;
             }
 
             tmp.alignment = TextAlignmentOptions.Center;
-            tmp.fontSize = res.isNew ? resultLabelFontSizeNew : resultLabelFontSizePoints;
             tmp.text = msg;
             _resultLabels.Add(rt);
 
@@ -542,17 +654,23 @@ namespace TR.UI
             var cp = PlayerProfile.GetOrCreateCard(res.card.CardId);
             var rarity = res.card.Rarity;
             bool showUpgrade = false;
+            bool isMaxed = false;
             if (rarity != null)
             {
                 int currentLevel = Mathf.Max(1, cp.level);
-                if (currentLevel < rarity.MaxLevel)
+                isMaxed = currentLevel >= rarity.MaxLevel;
+                if (!isMaxed)
                 {
                     int nextLevel = currentLevel + 1;
                     int needed = rarity.GetPointsRequiredForLevel(nextLevel);
                     showUpgrade = cp.points >= needed;
                 }
             }
-            if (showUpgrade)
+            if (isMaxed)
+            {
+                CreateMaxedLabel(cardRect);
+            }
+            else if (showUpgrade)
             {
                 var goUp = new GameObject("UpgradeLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
                 var rtUp = goUp.GetComponent<RectTransform>();
@@ -572,6 +690,26 @@ namespace TR.UI
                 cgUp.alpha = 1f;
                 _upgradeLabelRects.Add(rtUp);
             }
+        }
+
+        
+        private void CreateMaxedLabel(RectTransform cardRect)
+        {
+            if (cardRect == null) return;
+            if (cardRect.Find("MaxedLabel") != null) return;
+
+            var go = new GameObject("MaxedLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rt = go.GetComponent<RectTransform>();
+            rt.SetParent(cardRect, false);
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = maxedLabelOffset;
+            var tmp = go.GetComponent<TextMeshProUGUI>();
+            tmp.text = maxedLabelText;
+            tmp.color = maxedLabelColor;
+            tmp.fontSize = maxedLabelFontSize;
+            tmp.alignment = TextAlignmentOptions.Center;
         }
 
         
@@ -620,7 +758,7 @@ namespace TR.UI
             }
         }
 
-        private IEnumerator FlipReveal(RectTransform card, CanvasGroup front, RectTransform back, CollectionService.AwardResult res)
+        private IEnumerator FlipReveal(RectTransform card, CanvasGroup front, RectTransform back, CollectionService.AwardResult res, float scaledFlipDuration)
         {
             
             float t = 0f;
@@ -629,7 +767,7 @@ namespace TR.UI
             TryPlaySfx(sfxFlipKey);
             while (t < 1f)
             {
-                t += Time.deltaTime / Mathf.Max(0.01f, flipDuration);
+                t += Time.deltaTime / Mathf.Max(0.01f, scaledFlipDuration);
                 float e = EaseOutCubic(t);
                 
                 float sx;
@@ -671,8 +809,9 @@ namespace TR.UI
 
         private void PulseRarityColor(RectTransform card, RarityDefinition rarity)
         {
-            if (rarity == null) return;
-            
+            if (card == null || rarity == null) return;
+            if (card.Find("RarityPulse") != null) return;
+
             var go = new GameObject("RarityPulse", typeof(RectTransform), typeof(UnityEngine.UI.Image));
             var rt = go.GetComponent<RectTransform>();
             rt.SetParent(card, false);
