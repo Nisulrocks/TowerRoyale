@@ -56,6 +56,8 @@ namespace TR.Net
 
         private readonly HashSet<int> _leftPlayers = new HashSet<int>();
 
+        private bool _matchStarted;
+
         private void Awake()
         {
             Instance = this;
@@ -151,6 +153,7 @@ namespace TR.Net
             if (otherPlayer != null)
             {
                 _leftPlayers.Add(otherPlayer.ActorNumber);
+                _ready.Remove(otherPlayer.ActorNumber);
                 string name = string.IsNullOrEmpty(otherPlayer.NickName) ? "Partner" : otherPlayer.NickName;
                 OnSystemMessage?.Invoke($"{name} has disconnected.");
             }
@@ -159,6 +162,7 @@ namespace TR.Net
             {
                 ResetSkipVotes();
                 TakeOverTowerSimulation();
+                TryStartMatchIfReady();
             }
         }
 
@@ -167,6 +171,7 @@ namespace TR.Net
             if (newPlayer != null)
             {
                 bool wasLeft = _leftPlayers.Remove(newPlayer.ActorNumber);
+                _ready.Remove(newPlayer.ActorNumber);
                 if (wasLeft)
                 {
                     string name = string.IsNullOrEmpty(newPlayer.NickName) ? "Partner" : newPlayer.NickName;
@@ -201,19 +206,32 @@ namespace TR.Net
         [PunRPC]
         private void RpcReadyUp(int actorNumber)
         {
-            if (!PhotonNetwork.IsMasterClient) return;
+            if (!PhotonNetwork.IsMasterClient || _matchStarted) return;
             _ready.Add(actorNumber);
-            int needed = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
-            if (_ready.Count >= needed)
-            {
-                photonView.RPC(nameof(RpcMatchStarted), RpcTarget.All);
-            }
+            TryStartMatchIfReady();
         }
 
         [PunRPC]
         private void RpcMatchStarted()
         {
+            _matchStarted = true;
             OnMatchStarted?.Invoke();
+        }
+
+        public void MarkMatchStarted()
+        {
+            _matchStarted = true;
+        }
+
+        private void TryStartMatchIfReady()
+        {
+            if (_matchStarted || !PhotonNetwork.IsMasterClient) return;
+            int needed = GetActivePlayerCount();
+            if (_ready.Count >= needed)
+            {
+                _matchStarted = true;
+                photonView.RPC(nameof(RpcMatchStarted), RpcTarget.All);
+            }
         }
 
         

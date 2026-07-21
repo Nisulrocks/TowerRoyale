@@ -451,6 +451,7 @@ namespace TR.Battle
             
             _tookOverAsMaster = true;
             _isDuoClient = false;
+            _coordinator?.MarkMatchStarted();
 
             
             
