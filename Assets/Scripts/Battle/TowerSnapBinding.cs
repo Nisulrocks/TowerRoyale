@@ -26,6 +26,12 @@ namespace TR.Battle
             _isMirror = isMirror;
         }
 
+        public void Unbind()
+        {
+            _snap = null;
+            _controller = null;
+        }
+
         private void OnDestroy()
         {
             if (_controller != null && _snap != null)

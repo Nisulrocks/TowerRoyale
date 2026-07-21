@@ -77,24 +77,98 @@ namespace TR.Battle
             if (card == null) return;
             if (snapIndex < 0 || snapIndex >= _snapList.Count) return;
             var snap = _snapList[snapIndex];
-            if (snap == null || _occupied.Contains(snap)) return;
+            if (snap == null) return;
+
+            int masterActor = PhotonNetwork.MasterClient != null ? PhotonNetwork.MasterClient.ActorNumber : -1;
+            bool incomingIsMaster = ownerActorNumber == masterActor;
+
+            
+            if (_occupied.Contains(snap) && _towerBySnapIndex.TryGetValue(snapIndex, out var existingGO))
+            {
+                var existingBase = existingGO != null ? existingGO.GetComponent<TowerBase>() : null;
+                if (existingBase != null)
+                {
+                    if (existingBase.OwnerActorNumber == ownerActorNumber) return;
+
+                    if (incomingIsMaster)
+                    {
+                        
+                        var existingBind = existingGO.GetComponent<TowerSnapBinding>();
+                        existingBind?.Unbind();
+
+                        if (existingBase.IsLocalOwner)
+                        {
+                            existingBase.DestroyForRefund(1f);
+                        }
+                        else
+                        {
+                            if (existingGO != null) Destroy(existingGO);
+                        }
+                        _occupied.Remove(snap);
+                        _towerBySnapIndex.Remove(snapIndex);
+                    }
+                    else
+                    {
+                        
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (_occupied.Contains(snap)) return;
 
             int lv = Mathf.Max(1, level);
             var pos = new Vector3(snap.position.x, snap.position.y, 0f);
             var go = TowerFactory.CreateTower(card, lv, pos, Quaternion.identity);
             if (go == null) return;
-            go.name = $"Tower_{card.DisplayName}_L{lv}_Mirror";
+
             var towerBase = go.GetComponent<TowerBase>();
             towerBase?.SetOwner(ownerActorNumber);
-            MakeVisualOnly(go);
+            bool isLocalOwner = towerBase != null && towerBase.IsLocalOwner;
+            bool ownerInactive = ownerActorNumber < 1 || (PhotonNetwork.CurrentRoom != null && (!PhotonNetwork.CurrentRoom.Players.TryGetValue(ownerActorNumber, out var ownerPlayer) || ownerPlayer == null || ownerPlayer.IsInactive));
+            bool shouldSimulate = isLocalOwner || ownerInactive;
+
+            if (isLocalOwner)
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}";
+                if (TR.Systems.EffectLimitService.IsEnabled)
+                {
+                    TR.Systems.EffectLimitService.Register(card, lv);
+                    var eff = go.GetComponent<EffectLimitBinding>();
+                    if (eff == null) eff = go.AddComponent<EffectLimitBinding>();
+                    var types = TR.Systems.EffectLimitService.GetEffectTypesForCard(card, lv);
+                    eff.SetTypes(types);
+                }
+                if (TR.Systems.EffectLimitService.CardCapsEnabled)
+                {
+                    TR.Systems.EffectLimitService.RegisterCard(card);
+                    var binder = go.GetComponent<CardLimitBinding>();
+                    if (binder == null) binder = go.AddComponent<CardLimitBinding>();
+                    binder.SetCardId(card.CardId);
+                }
+            }
+            else if (shouldSimulate)
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}";
+            }
+            else
+            {
+                go.name = $"Tower_{card.DisplayName}_L{lv}_Mirror";
+                MakeVisualOnly(go);
+            }
+
             _occupied.Add(snap);
             _towerBySnapIndex[snapIndex] = go;
 
             var bind = go.GetComponent<TowerSnapBinding>();
             if (bind == null) bind = go.AddComponent<TowerSnapBinding>();
-            bind.Bind(snap, this, snapIndex, true);
+            bind.Bind(snap, this, snapIndex, !shouldSimulate);
             RefreshSnapPointColors(pos);
-            Debug.Log($"[Placement] Mirrored remote tower {card.DisplayName} L{lv} at snap {snapIndex}.");
+            Debug.Log($"[Placement] {(isLocalOwner ? "Local" : "Remote")} tower {card.DisplayName} L{lv} at snap {snapIndex}.");
         }
 
         

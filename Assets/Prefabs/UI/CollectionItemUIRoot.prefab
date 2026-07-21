@@ -651,6 +651,14 @@ MonoBehaviour:
   upgradeButton: {fileID: 766872275713393206}
   upgradeButtonText: {fileID: 783810650005106376}
   upgradeCostText: {fileID: 9097424169561576784}
+  upgradeDot: {fileID: 0}
+  upgradeDotText: {fileID: 0}
+  upgradeDotParent: {fileID: 8808342625156897478}
+  upgradeDotColor: {r: 1, g: 0.92, b: 0.016, a: 1}
+  upgradeDotTextColor: {r: 0, g: 0, b: 0, a: 1}
+  upgradeDotFontSize: 14
+  upgradeDotOffset: {x: 6, y: 2}
+  upgradeDotSize: {x: 15, y: 15}
   arenaLockOverlayRoot: {fileID: 109650466294433751}
   arenaLockOverlayText: {fileID: 2179287971177947065}
 --- !u!114 &1226749315868390206

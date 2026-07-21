@@ -16,7 +16,7 @@ namespace TR.UI
         [SerializeField] private Image rarityStripe;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text levelText;
-        [SerializeField] private TMP_Text costText; 
+        [SerializeField] private TMP_Text costText;
 
         private string _cardId;
         private CardDefinition _def;

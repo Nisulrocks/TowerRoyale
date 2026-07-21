@@ -6,6 +6,7 @@ using TR.VFX;
 using TMPro;
 using TR.Systems;
 using TR.Data;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 namespace TR.Battle
 {
@@ -54,6 +55,9 @@ namespace TR.Battle
         private TR.Net.DuoBattleCoordinator _coordinator;
         private bool _isDuoClient;
         private bool _matchEndedReturnToLobby;
+
+        
+        private const string PROP_DUO_WAVE = "DuoWave";
         [Header("Skip Settings")]
         [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
@@ -129,6 +133,32 @@ namespace TR.Battle
             }
         }
 
+        private int GetRoomWaveProperty()
+        {
+            var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+            if (room != null && room.CustomProperties != null
+                && room.CustomProperties.TryGetValue(PROP_DUO_WAVE, out object v) && v != null)
+            {
+                try
+                {
+                    return Mathf.Max(0, System.Convert.ToInt32(v));
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+            return 0;
+        }
+
+        private void SetRoomWaveProperty(int wave)
+        {
+            if (!MatchContext.IsDuo || !Photon.Pun.PhotonNetwork.IsMasterClient) return;
+            var room = Photon.Pun.PhotonNetwork.CurrentRoom;
+            if (room == null) return;
+            room.SetCustomProperties(new Hashtable { { PROP_DUO_WAVE, wave } });
+        }
+
         private void SetupDeckAndPlacement()
         {
             if (economy != null)
@@ -156,6 +186,7 @@ namespace TR.Battle
         {
             _running = true;
             _wavesCleared = Mathf.Max(0, startWave);
+            SetRoomWaveProperty(_wavesCleared);
             _ended = false;
             ClearWaveTracking();
             _totalWaves = _arena != null ? _arena.WaveCount : 10;
@@ -167,6 +198,7 @@ namespace TR.Battle
             for (int i = Mathf.Clamp(startWave, 0, total); i < total; i++)
             {
                 _wavesCleared = i; 
+                SetRoomWaveProperty(_wavesCleared);
                 UpdateTopBar();
 
                 
@@ -352,6 +384,9 @@ namespace TR.Battle
                 return;
             }
             _isDuoClient = !Photon.Pun.PhotonNetwork.IsMasterClient;
+
+            
+            _wavesCleared = Mathf.Max(_wavesCleared, GetRoomWaveProperty());
             _coordinator.OnMatchStarted += OnDuoMatchStarted;
             _coordinator.OnWaveStateReceived += OnDuoWaveStateReceived;
             _coordinator.OnVictoryReceived += OnDuoVictoryReceived;
@@ -419,7 +454,7 @@ namespace TR.Battle
 
             
             
-            int resumeWave = Mathf.Max(0, _wavesCleared);
+            int resumeWave = Mathf.Max(0, Mathf.Max(_wavesCleared, GetRoomWaveProperty()));
             _started = true;
             _running = true;
             if (resultsPanel) resultsPanel.SetActive(false);
@@ -462,7 +497,8 @@ namespace TR.Battle
 
             _remoteAllowSkip = allowSkip;
             _wavesCleared = Mathf.Clamp(wave - 1, 0, Mathf.Max(0, total));
-            if (waveText) waveText.text = $"Wave {Mathf.Clamp(wave, 1, total)}/{total}";
+            _wavesCleared = Mathf.Clamp(Mathf.Max(_wavesCleared, GetRoomWaveProperty()), 0, Mathf.Max(0, total - 1));
+            if (waveText) waveText.text = $"Wave {Mathf.Clamp(_wavesCleared + 1, 1, total)}/{total}";
             bool isFinal = phase == TR.Net.DuoBattleCoordinator.PHASE_FINAL;
             if (timerText)
             {
@@ -1057,11 +1093,30 @@ namespace TR.Battle
 
             if (remaining == 0)
             {
-                int bonus = _waveKillMoney[wave];
-                _waveKillMoney.Remove(wave);
-                _waveRemainingEnemies.Remove(wave);
-                if (bonus > 0) PayWaveBonus(wave, bonus);
+                if (waveSpawner != null && waveSpawner.IsWaveSpawning(wave))
+                {
+                    // Defer payout until the spawner has finished this wave.
+                }
+                else
+                {
+                    int bonus = _waveKillMoney[wave];
+                    _waveKillMoney.Remove(wave);
+                    _waveRemainingEnemies.Remove(wave);
+                    if (bonus > 0) PayWaveBonus(wave, bonus);
+                }
             }
+        }
+
+        public void OnWaveSpawnComplete(int wave)
+        {
+            if (wave <= 0) return;
+            if (!_waveRemainingEnemies.ContainsKey(wave)) return;
+            if (_waveRemainingEnemies[wave] != 0) return;
+
+            int bonus = _waveKillMoney[wave];
+            _waveKillMoney.Remove(wave);
+            _waveRemainingEnemies.Remove(wave);
+            if (bonus > 0) PayWaveBonus(wave, bonus);
         }
 
         private void PayWaveBonus(int wave, int total)

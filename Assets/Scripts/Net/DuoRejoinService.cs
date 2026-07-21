@@ -241,8 +241,15 @@ namespace TR.Net
             if (!_rejoining) return;
             _rejoining = false;
             IsRejoinAttempt = false;
-            EndMatch();
-            Debug.LogWarning($"[DuoRejoinService] Rejoin failed: {message} (code {returnCode})");
+
+            
+            bool gameGone = returnCode == ErrorCode.GameDoesNotExist
+                            || returnCode == ErrorCode.GameClosed;
+            if (gameGone)
+            {
+                EndMatch();
+            }
+            Debug.LogWarning($"[DuoRejoinService] Rejoin failed: {message} (code {returnCode}), gameGone={gameGone}");
             OnRejoinComplete?.Invoke(false);
         }
 

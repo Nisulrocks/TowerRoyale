@@ -24,6 +24,10 @@ namespace TR.Battle
         private int _spawnedThisWave;
         private bool _spawning;
 
+        public int CurrentWaveNumber { get; private set; }
+        public bool IsSpawning => _spawning;
+        public bool IsWaveSpawning(int waveNumber) => _spawning && CurrentWaveNumber == waveNumber;
+
         public int GetPendingSpawns()
         {
             if (!_spawning) return 0;
@@ -102,6 +106,7 @@ namespace TR.Battle
                 Debug.LogWarning($"[WaveSpawner] Arena '{_arena.DisplayName}' has no enemies assigned.");
                 return;
             }
+            CurrentWaveNumber = waveNumber;
             _arena.GetEnemyCountRangeForWave(waveNumber, out int min, out int max);
             int count = Random.Range(min, max + 1);
 
@@ -156,6 +161,7 @@ namespace TR.Battle
             CloseAllPortals();
             Debug.Log($"[WaveSpawner] Spawned wave {waveNumber} with {count} enemies (interval {spawnInterval:F2}s).");
             _spawning = false;
+            BattleSceneController.Instance?.OnWaveSpawnComplete(waveNumber);
         }
 
         private Transform GetSpawnPoint(int index)

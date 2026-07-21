@@ -22,6 +22,12 @@ namespace TR.Net
 
         
         
+        public const string PROP_READY = "rdy";
+        
+        public const string PROP_STARTING = "st";
+
+        
+        
         
         public const int RejoinPlayerTtlMs = 90000;
 
@@ -48,6 +54,8 @@ namespace TR.Net
         
         private bool _rejoiningToSearch;
         private Coroutine _rejoinCo;
+        
+        private bool _pendingRejoinLeave;
         
         [SerializeField] private float rejoinMinDelay = 1.5f;
         [SerializeField] private float rejoinMaxDelay = 3.5f;
@@ -87,6 +95,7 @@ namespace TR.Net
             _cancelRequested = false;
             _matchmakingActive = true;
             _loadStarted = false;
+            _pendingRejoinLeave = false;
 
             
             
@@ -142,8 +151,13 @@ namespace TR.Net
         
         public void CancelMatchmaking()
         {
+            
+            
+            if (_loadStarted) return;
+
             _cancelRequested = true;
             _matchmakingActive = false;
+            _pendingRejoinLeave = false;
             StopRejoinTimer();
             SetState(MatchState.Idle, "Cancelled");
 
@@ -244,7 +258,7 @@ namespace TR.Net
             
             
             if (count < 2) StartRejoinTimer();
-            TryStartIfRoomFull();
+            MarkReadyIfFull();
         }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -256,7 +270,100 @@ namespace TR.Net
             StopRejoinTimer();
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
             SetState(MatchState.PartnerFound, $"Partner found ({count}/2)!");
-            TryStartIfRoomFull();
+            MarkReadyIfFull();
+        }
+
+        
+        
+        
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            
+            if (_loadStarted || _cancelRequested || !_matchmakingActive) return;
+
+            
+            if (IsLocalReady())
+                PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { PROP_READY, false } });
+
+            
+            if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom != null)
+            {
+                var room = PhotonNetwork.CurrentRoom;
+                room.IsOpen = true;
+                room.IsVisible = true;
+                room.SetCustomProperties(new Hashtable { { PROP_STARTING, false } });
+            }
+
+            int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 0;
+            SetState(MatchState.WaitingForPartner, $"Partner left. Waiting for a partner ({count}/2)...");
+            StartRejoinTimer();
+        }
+
+        
+        
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            if (_loadStarted || _cancelRequested || !_matchmakingActive) return;
+            if (changedProps != null && changedProps.ContainsKey(PROP_READY))
+                TryMasterStart();
+        }
+
+        
+        
+        public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+        {
+            if (_loadStarted || _cancelRequested) return;
+            if (propertiesThatChanged != null
+                && propertiesThatChanged.TryGetValue(PROP_STARTING, out object v)
+                && v is bool starting && starting)
+            {
+                if (PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.PlayerCount >= 2)
+                    BeginLoad();
+            }
+        }
+
+        private bool IsLocalReady()
+        {
+            return PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(PROP_READY, out object v)
+                   && v is bool b && b;
+        }
+
+        
+        
+        private void MarkReadyIfFull()
+        {
+            var room = PhotonNetwork.CurrentRoom;
+            if (room == null || room.PlayerCount < 2) return;
+            if (_loadStarted || _cancelRequested || !_matchmakingActive) return;
+
+            _pendingRejoinLeave = false;
+            StopRejoinTimer();
+            if (!IsLocalReady())
+                PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { PROP_READY, true } });
+
+            TryMasterStart();
+        }
+
+        
+        
+        private void TryMasterStart()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (_loadStarted || _cancelRequested) return;
+            var room = PhotonNetwork.CurrentRoom;
+            if (room == null || room.PlayerCount < 2) return;
+
+            
+            foreach (var pl in room.Players.Values)
+            {
+                bool ready = pl.CustomProperties.TryGetValue(PROP_READY, out object v) && v is bool b && b;
+                if (!ready) return;
+            }
+
+            
+            room.IsOpen = false;
+            room.IsVisible = false;
+            room.SetCustomProperties(new Hashtable { { PROP_STARTING, true } });
         }
 
         
@@ -277,6 +384,7 @@ namespace TR.Net
                 StopCoroutine(_rejoinCo);
                 _rejoinCo = null;
             }
+            _pendingRejoinLeave = false;
         }
 
         private System.Collections.IEnumerator RejoinAfterDelay()
@@ -289,22 +397,37 @@ namespace TR.Net
                 t += Time.unscaledDeltaTime;
                 yield return null;
             }
+
+            
+            if (!_matchmakingActive || _cancelRequested || _loadStarted) { _rejoinCo = null; yield break; }
+            if (PhotonNetwork.CurrentRoom == null) { _rejoinCo = null; yield break; }
+            if (PhotonNetwork.CurrentRoom.PlayerCount >= 2) { _rejoinCo = null; yield break; }
+
+            
+            
+            _pendingRejoinLeave = true;
+            t = 0f;
+            float grace = 1.0f;
+            while (t < grace)
+            {
+                if (!_pendingRejoinLeave || !_matchmakingActive || _cancelRequested || _loadStarted || PhotonNetwork.CurrentRoom == null || PhotonNetwork.CurrentRoom.PlayerCount >= 2)
+                {
+                    _pendingRejoinLeave = false;
+                    _rejoinCo = null;
+                    yield break;
+                }
+                t += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            _pendingRejoinLeave = false;
             _rejoinCo = null;
-
-            
-            if (!_matchmakingActive || _cancelRequested || _loadStarted) yield break;
-            if (PhotonNetwork.CurrentRoom == null) yield break;
-            
-            if (PhotonNetwork.CurrentRoom.PlayerCount >= 2) yield break;
-
-            
-            
             _rejoiningToSearch = true;
             SetState(MatchState.Searching, "Searching for a partner...");
             PhotonNetwork.LeaveRoom();
         }
 
-        private async void TryStartIfRoomFull()
+        private async void BeginLoad()
         {
             if (PhotonNetwork.CurrentRoom == null) return;
             if (PhotonNetwork.CurrentRoom.PlayerCount < 2) return;
@@ -312,6 +435,7 @@ namespace TR.Net
             if (_loadStarted) return;
             _loadStarted = true;
             _matchmakingActive = false;
+            StopRejoinTimer();
             SetState(MatchState.Starting, "Match found! Loading...");
 
             if (PhotonNetwork.IsMasterClient)
@@ -340,6 +464,26 @@ namespace TR.Net
             finally
             {
                 PhotonNetwork.IsMessageQueueRunning = true;
+            }
+        }
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if (!_matchmakingActive || _loadStarted || _cancelRequested) return;
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            var room = PhotonNetwork.CurrentRoom;
+            if (room == null) return;
+
+            
+            
+            if (room.PlayerCount < 2)
+            {
+                room.IsOpen = true;
+                room.IsVisible = true;
+                room.SetCustomProperties(new Hashtable { { PROP_STARTING, false } });
+                SetState(MatchState.WaitingForPartner, "Partner left. Waiting for a partner...");
+                StartRejoinTimer();
             }
         }
 

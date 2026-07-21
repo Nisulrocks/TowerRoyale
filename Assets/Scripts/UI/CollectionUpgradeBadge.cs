@@ -167,9 +167,8 @@ namespace TR.UI
             rt.offsetMax = Vector2.zero;
         }
 
-        private Sprite CreateCircleSprite(Color fill)
+        public static Sprite CreateCircleSprite(Color fill, int size = 64)
         {
-            int size = 64;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.filterMode = FilterMode.Bilinear;

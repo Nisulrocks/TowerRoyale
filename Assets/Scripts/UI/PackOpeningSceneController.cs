@@ -310,6 +310,28 @@ namespace TR.UI
             Vector2 endPos = startPos + new Vector2(0f, -200f);
             _packEndPos = endPos;
             _cardTargetY = endPos.y + 220f;
+
+            
+            _spawned.Clear();
+            _frontGroups.Clear();
+            _backFaces.Clear();
+            _resultLabels.Clear();
+            _upgradeLabelRects.Clear();
+
+            int totalCards = _results.Count;
+            float rootWidth = cardsRoot != null ? cardsRoot.rect.width : Screen.width;
+            _cardWidth = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.x : 200f;
+            _cardHeight = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.y : 300f;
+            float maxCenterSpan = Mathf.Max(100f, rootWidth - 120f - _cardWidth);
+            float naturalRevealSpan = revealSpacing * Mathf.Max(0, totalCards - 1);
+            float naturalFinalSpan = finalOverlapSpacing * Mathf.Max(0, totalCards - 1);
+            float widestSpan = Mathf.Max(naturalRevealSpan, naturalFinalSpan);
+            float scale = 1f;
+            if (widestSpan > 0f && widestSpan > maxCenterSpan)
+                scale = maxCenterSpan / widestSpan;
+            float usedRevealSpacing = revealSpacing * scale;
+            _usedFinalOverlapSpacing = finalOverlapSpacing * scale;
+
             _revealInProgress = true;
             SetContinueButton(skipLabel, true);
             
@@ -358,26 +380,6 @@ namespace TR.UI
             }
 
             
-            _spawned.Clear();
-            _frontGroups.Clear();
-            _backFaces.Clear();
-            _resultLabels.Clear();
-            _upgradeLabelRects.Clear();
-
-            int totalCards = _results.Count;
-            float rootWidth = cardsRoot != null ? cardsRoot.rect.width : Screen.width;
-            _cardWidth = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.x : 200f;
-            _cardHeight = cardPrefab != null ? ((RectTransform)cardPrefab.transform).sizeDelta.y : 300f;
-            float maxCenterSpan = Mathf.Max(100f, rootWidth - 120f - _cardWidth);
-            float naturalRevealSpan = revealSpacing * Mathf.Max(0, totalCards - 1);
-            float naturalFinalSpan = finalOverlapSpacing * Mathf.Max(0, totalCards - 1);
-            float widestSpan = Mathf.Max(naturalRevealSpan, naturalFinalSpan);
-            float scale = 1f;
-            if (widestSpan > 0f && widestSpan > maxCenterSpan)
-                scale = maxCenterSpan / widestSpan;
-            float usedRevealSpacing = revealSpacing * scale;
-            _usedFinalOverlapSpacing = finalOverlapSpacing * scale;
-
             float animScale = Mathf.Clamp(5f / Mathf.Max(1, totalCards), 0.25f, 1f);
             float scaledCardRiseDuration = cardRiseDuration * animScale;
             float scaledCardInterval = cardInterval * animScale;
