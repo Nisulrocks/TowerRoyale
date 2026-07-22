@@ -18,7 +18,6 @@ namespace TR.Battle
         private bool _dying; 
         private bool _visualOnly;
         private TowerBase _towerBase;
-        private int _snapIndex = -1;
         private float _lastSentHp = float.MaxValue;
         private float _lastSentTime;
 
@@ -114,11 +113,7 @@ namespace TR.Battle
             if (_dying) return; 
             float dt = Time.deltaTime;
             
-            if (_snapIndex < 0)
-            {
-                var bind = GetComponent<TowerSnapBinding>();
-                _snapIndex = bind != null ? bind.SnapIndex : -1;
-            }
+            if (_towerBase == null) _towerBase = GetComponent<TowerBase>();
 
             if (_auraVfx != null && !_auraVfx.isPlaying)
             {
@@ -217,14 +212,14 @@ namespace TR.Battle
                     _ring.SetProgress(_maxHp > 0f ? _hp / _maxHp : 0f);
                 }
 
-                if (_snapIndex >= 0 && TR.Net.DuoRuntime.IsDuo)
+                if (_towerBase != null && _towerBase.PlacementId >= 0 && TR.Net.DuoRuntime.IsDuo)
                 {
                     float t = Time.time;
                     if (Mathf.Abs(_hp - _lastSentHp) > 0.01f || t - _lastSentTime > 0.25f)
                     {
                         _lastSentHp = _hp;
                         _lastSentTime = t;
-                        TR.Net.DuoBattleCoordinator.Instance?.BroadcastTowerHp(_snapIndex, _hp);
+                        TR.Net.DuoBattleCoordinator.Instance?.BroadcastTowerHp(_towerBase.PlacementId, _hp);
                     }
                 }
 

@@ -33,12 +33,16 @@ namespace TR.Net
         public event Action OnDefeatReceived;
         
         
-        public event Action<string, int, int, int> OnTowerPlacedReceived;
+        public event Action<string, int, Vector3, int, int> OnTowerPlacedReceived;
         
         
         public event Action<int> OnTowerRemovedReceived;
         
         public event Action<int, float> OnTowerHpReceived;
+
+        public event Action<int> OnTowerSyncRequested;
+
+        public event Action<string[], int[], Vector3[], int[], int[], float[]> OnTowerSyncReceived;
 
         
         public event Action<int> OnEnemySyncRequested;
@@ -473,48 +477,45 @@ namespace TR.Net
         }
 
         
-        public void BroadcastTowerPlaced(string cardId, int level, int snapIndex)
+        public void BroadcastTowerPlaced(string cardId, int level, Vector3 position, int placementId)
         {
             if (string.IsNullOrEmpty(cardId)) return;
-            photonView.RPC(nameof(RpcTowerPlaced), RpcTarget.Others, cardId, level, snapIndex);
+            photonView.RPC(nameof(RpcTowerPlaced), RpcTarget.Others, cardId, level, position, placementId);
         }
 
         [PunRPC]
-        private void RpcTowerPlaced(string cardId, int level, int snapIndex, PhotonMessageInfo info)
+        private void RpcTowerPlaced(string cardId, int level, Vector3 position, int placementId, PhotonMessageInfo info)
         {
-            OnTowerPlacedReceived?.Invoke(cardId, level, snapIndex, info.Sender != null ? info.Sender.ActorNumber : 0);
+            OnTowerPlacedReceived?.Invoke(cardId, level, position, placementId, info.Sender != null ? info.Sender.ActorNumber : 0);
         }
 
         
-        public void BroadcastTowerRemoved(int snapIndex)
+        public void BroadcastTowerRemoved(int placementId)
         {
-            photonView.RPC(nameof(RpcTowerRemoved), RpcTarget.Others, snapIndex);
+            photonView.RPC(nameof(RpcTowerRemoved), RpcTarget.Others, placementId);
         }
 
         [PunRPC]
-        private void RpcTowerRemoved(int snapIndex)
+        private void RpcTowerRemoved(int placementId)
         {
-            OnTowerRemovedReceived?.Invoke(snapIndex);
+            OnTowerRemovedReceived?.Invoke(placementId);
         }
 
         
-        public void BroadcastTowerHp(int snapIndex, float hp)
+        public void BroadcastTowerHp(int placementId, float hp)
         {
-            if (snapIndex < 0) return;
-            photonView.RPC(nameof(RpcTowerHp), RpcTarget.Others, snapIndex, hp);
+            if (placementId < 0) return;
+            photonView.RPC(nameof(RpcTowerHp), RpcTarget.Others, placementId, hp);
         }
 
         [PunRPC]
-        private void RpcTowerHp(int snapIndex, float hp)
+        private void RpcTowerHp(int placementId, float hp)
         {
-            OnTowerHpReceived?.Invoke(snapIndex, hp);
+            OnTowerHpReceived?.Invoke(placementId, hp);
         }
 
         
         
-        public event Action<int> OnTowerSyncRequested;
-        public event Action<string[], int[], int[], int[], float[]> OnTowerSyncReceived;
-
         public void RequestTowerSync()
         {
             if (photonView == null) return;
@@ -529,18 +530,18 @@ namespace TR.Net
             OnTowerSyncRequested?.Invoke(actor);
         }
 
-        public void SendTowerSync(int targetActor, string[] cardIds, int[] levels, int[] snapIndices, int[] owners, float[] hps)
+        public void SendTowerSync(int targetActor, string[] cardIds, int[] levels, Vector3[] positions, int[] placementIds, int[] owners, float[] hps)
         {
             if (!PhotonNetwork.IsMasterClient || photonView == null) return;
             var target = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.GetPlayer(targetActor) : null;
             if (target == null) return;
-            photonView.RPC(nameof(RpcTowerSync), target, cardIds, levels, snapIndices, owners, hps);
+            photonView.RPC(nameof(RpcTowerSync), target, cardIds, levels, positions, placementIds, owners, hps);
         }
 
         [PunRPC]
-        private void RpcTowerSync(string[] cardIds, int[] levels, int[] snapIndices, int[] owners, float[] hps)
+        private void RpcTowerSync(string[] cardIds, int[] levels, Vector3[] positions, int[] placementIds, int[] owners, float[] hps)
         {
-            OnTowerSyncReceived?.Invoke(cardIds, levels, snapIndices, owners, hps);
+            OnTowerSyncReceived?.Invoke(cardIds, levels, positions, placementIds, owners, hps);
         }
 
         

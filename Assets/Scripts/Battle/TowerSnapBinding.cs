@@ -6,18 +6,16 @@ namespace TR.Battle
     
     public class TowerSnapBinding : MonoBehaviour
     {
-        private Transform _snap;
         private TowerPlacementController _controller;
-        private int _snapIndex = -1;
+        private int _placementId = -1;
         private bool _isMirror;
 
-        public int SnapIndex => _snapIndex;
+        public int PlacementId => _placementId;
 
-        public void Bind(Transform snap, TowerPlacementController controller, int snapIndex = -1, bool isMirror = false)
+        public void Bind(TowerPlacementController controller, int placementId = -1, bool isMirror = false)
         {
-            _snap = snap;
             _controller = controller;
-            _snapIndex = snapIndex;
+            _placementId = placementId;
             _isMirror = isMirror;
         }
 
@@ -28,15 +26,14 @@ namespace TR.Battle
 
         public void Unbind()
         {
-            _snap = null;
             _controller = null;
         }
 
         private void OnDestroy()
         {
-            if (_controller != null && _snap != null)
+            if (_controller != null && _placementId >= 0)
             {
-                _controller.NotifyTowerDestroyed(_snap, _snapIndex, _isMirror);
+                _controller.NotifyTowerDestroyed(_placementId, _isMirror);
             }
         }
     }

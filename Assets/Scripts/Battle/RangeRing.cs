@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace TR.Battle
 {
@@ -32,6 +33,11 @@ namespace TR.Battle
         {
             _lr = GetComponent<LineRenderer>();
             if (_lr == null) _lr = gameObject.AddComponent<LineRenderer>();
+
+            var sg = GetComponent<SortingGroup>();
+            if (sg == null) sg = gameObject.AddComponent<SortingGroup>();
+            sg.sortingOrder = 100;
+
             _lr.loop = true;
             _lr.useWorldSpace = useWorldSpace;
             _lr.textureMode = LineTextureMode.Stretch;

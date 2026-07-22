@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
 using TR.Data;
 using TR.Systems;
 
@@ -15,6 +16,7 @@ namespace TR.Battle
         private bool _valid;
         private RangeRing _rangeRing;
         private float _cachedRange;
+        private float _towerRadius;
         private bool _dragActive;
 
         
@@ -85,7 +87,7 @@ namespace TR.Battle
                 Vector3 world = GetMouseWorld();
                 if (_valid)
                 {
-                    bool ok = placement.TryPlaceAt(world, card);
+                    bool ok = placement.TryPlaceAt(world, card, _towerRadius);
                     Debug.Log($"[Drag] Drop {(ok ? "placed" : "failed")} at {world}");
                 }
                 GameObject.Destroy(_ghost);
@@ -154,14 +156,18 @@ namespace TR.Battle
             if (card != null && card.TowerPrefab != null)
             {
                 _ghost = Instantiate(card.TowerPrefab);
-                
+
+                var ghostSg = _ghost.GetComponent<SortingGroup>();
+                if (ghostSg == null) ghostSg = _ghost.AddComponent<SortingGroup>();
+                ghostSg.sortingOrder = 10;
+
                 foreach (var mb in _ghost.GetComponentsInChildren<MonoBehaviour>(true)) mb.enabled = false;
                 foreach (var col in _ghost.GetComponentsInChildren<Collider>(true)) col.enabled = false;
                 foreach (var col2d in _ghost.GetComponentsInChildren<Collider2D>(true)) col2d.enabled = false;
                 foreach (var sr in _ghost.GetComponentsInChildren<SpriteRenderer>(true))
                 {
                     var c = sr.color; c.a = 0.5f; sr.color = c;
-                    sr.sortingOrder += 1; 
+                    sr.sortingOrder += 1;
                 }
                 _ghost.name = $"{card.DisplayName}_Ghost";
                 Debug.Log("[Drag] Ghost created from TowerPrefab");
@@ -172,6 +178,8 @@ namespace TR.Battle
                 var sr = _ghost.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateSquareSprite();
                 sr.color = new Color(1f, 1f, 1f, 0.5f);
+                var ghostSg = _ghost.AddComponent<SortingGroup>();
+                ghostSg.sortingOrder = 10;
                 Debug.Log("[Drag] Ghost created as square placeholder (no TowerPrefab)");
             }
             var p = _ghost.transform.position; p.z = 0f; _ghost.transform.position = p;
@@ -210,12 +218,50 @@ namespace TR.Battle
             _rangeRing.Radius = _cachedRange;
             _rangeRing.Color = new Color(0.2f, 1f, 0.2f, 0.6f);
             _rangeRing.gameObject.SetActive(true);
+
+            _towerRadius = MeasureGhostRadius();
+        }
+
+        private float MeasureGhostRadius()
+        {
+            float radius = 0.4f;
+            if (_ghost == null) return radius;
+
+            var sr = _ghost.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null)
+            {
+                float srRadius = 0f;
+                if (sr.sprite != null)
+                {
+                    Vector3 spriteExt = sr.sprite.bounds.extents;
+                    srRadius = Mathf.Max(spriteExt.x, spriteExt.y) * Mathf.Max(sr.transform.lossyScale.x, sr.transform.lossyScale.y);
+                }
+                else
+                {
+                    Vector3 ext = sr.bounds.extents;
+                    srRadius = Mathf.Max(ext.x, ext.y);
+                }
+                radius = Mathf.Max(radius, srRadius);
+            }
+
+            var col = _ghost.GetComponentInChildren<Collider2D>(true);
+            if (col is CircleCollider2D cc)
+            {
+                radius = Mathf.Max(radius, cc.radius * Mathf.Max(col.transform.lossyScale.x, col.transform.lossyScale.y));
+            }
+            else if (col is BoxCollider2D bc)
+            {
+                float scale = Mathf.Max(col.transform.lossyScale.x, col.transform.lossyScale.y);
+                radius = Mathf.Max(radius, Mathf.Max(bc.size.x, bc.size.y) * scale * 0.5f);
+            }
+
+            return Mathf.Max(0.25f, radius);
         }
 
         private void UpdateGhostPosition()
         {
             Vector3 world = GetMouseWorld();
-            if (placement != null && placement.GetSnappedPosition(world, out var snapped))
+            if (placement != null && placement.GetSnappedPosition(world, _towerRadius, out var snapped))
             {
                 _valid = true;
                 _ghost.transform.position = snapped;

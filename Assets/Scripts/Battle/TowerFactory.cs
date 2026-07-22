@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using TR.Data;
 
 namespace TR.Battle
@@ -34,7 +35,10 @@ namespace TR.Battle
                 go.layer = towersLayer;
             }
 
-            
+            var sg = go.GetComponent<SortingGroup>();
+            if (sg == null) sg = go.AddComponent<SortingGroup>();
+            sg.sortingOrder = 5;
+
             var tower = go.GetComponent<TowerBase>();
             if (tower == null) tower = go.AddComponent<TowerBase>();
             tower.Initialize(def, lv);
@@ -92,7 +96,8 @@ namespace TR.Battle
                 col.radius = 0.4f;
             }
 
-            
+            tower.SetPlacementRadius(EstimatePlacementRadius(go));
+
             if (go.GetComponent<TowerSelectable>() == null)
             {
                 go.AddComponent<TowerSelectable>();
@@ -110,6 +115,42 @@ namespace TR.Battle
             tex.SetPixels(cols);
             tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
+        }
+
+        private static float EstimatePlacementRadius(GameObject go)
+        {
+            float radius = 0.4f;
+            var col = go.GetComponent<Collider2D>();
+            if (col == null) col = go.GetComponentInChildren<Collider2D>(true);
+            if (col is CircleCollider2D cc)
+            {
+                radius = cc.radius * Mathf.Max(col.transform.lossyScale.x, col.transform.lossyScale.y);
+            }
+            else if (col is BoxCollider2D bc)
+            {
+                float scale = Mathf.Max(col.transform.lossyScale.x, col.transform.lossyScale.y);
+                radius = Mathf.Max(bc.size.x, bc.size.y) * scale * 0.5f;
+            }
+
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = go.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null)
+            {
+                float srRadius = 0f;
+                if (sr.sprite != null)
+                {
+                    Vector3 spriteExt = sr.sprite.bounds.extents;
+                    srRadius = Mathf.Max(spriteExt.x, spriteExt.y) * Mathf.Max(sr.transform.lossyScale.x, sr.transform.lossyScale.y);
+                }
+                else
+                {
+                    Vector3 ext = sr.bounds.extents;
+                    srRadius = Mathf.Max(ext.x, ext.y);
+                }
+                radius = Mathf.Max(radius, srRadius);
+            }
+
+            return Mathf.Max(0.25f, radius);
         }
     }
 }

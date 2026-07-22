@@ -86,6 +86,12 @@ namespace TR.Battle
         public int OwnerActorNumber { get; private set; } = -1;
         public bool IsLocalOwner => !TR.Net.DuoRuntime.IsDuo || OwnerActorNumber < 0 || (PhotonNetwork.LocalPlayer != null && OwnerActorNumber == PhotonNetwork.LocalPlayer.ActorNumber);
         public void SetOwner(int actorNumber) => OwnerActorNumber = actorNumber;
+
+        public int PlacementId { get; private set; } = -1;
+        public void SetPlacementId(int id) => PlacementId = id;
+        public float PlacementRadius { get; private set; } = 0.4f;
+        public void SetPlacementRadius(float radius) => PlacementRadius = Mathf.Max(0.05f, radius);
+
         private int _placementCost;
 
         public void Initialize(CardDefinition def, int lv)
