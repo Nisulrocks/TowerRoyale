@@ -904,9 +904,11 @@ namespace TR.Battle
         private void UpdateEnemiesRemainingText()
         {
             if (!enemiesRemainingText) return;
-            int remaining = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
+            int active = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
+            int pending = waveSpawner != null ? waveSpawner.GetPendingSpawns() : 0;
+            int remaining = active + pending;
             enemiesRemainingText.text = $"Enemies remaining: {remaining}";
-            
+
             if (startSkipButton != null)
             {
                 startSkipButton.interactable = !_localVotedSkip && CanSkipNowEffective();
@@ -936,7 +938,9 @@ namespace TR.Battle
             {
                 if (_running && !_ended && enemiesRemainingText)
                 {
-                    int remaining = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
+                    int active = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
+                    int pending = waveSpawner != null ? waveSpawner.GetPendingSpawns() : 0;
+                    int remaining = active + pending;
                     if (remaining != _lastEnemiesCount)
                     {
                         _lastEnemiesCount = remaining;
