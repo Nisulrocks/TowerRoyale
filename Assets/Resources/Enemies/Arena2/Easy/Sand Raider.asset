@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: sand_raider
   displayName: Sand Raider
-  movementSpeed: 1.5
   maxHealth: 80
+  movementSpeed: 1.5
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 7063429890210703705, guid: 15ee138101c50c34a94d0d300bbf549c, type: 3}
+  prefab: {fileID: 7063429890210703705, guid: 46ee98cef0aa78b4baf8cd04fa73e9fa, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

@@ -18,19 +18,19 @@ MonoBehaviour:
   cardsPerPack: 5
   rarityWeights:
   - rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
-    weight: 550
-    percent: 0
+    weight: 0
+    percent: 60
   - rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
-    weight: 330
-    percent: 0
+    weight: 0
+    percent: 25
   - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
-    weight: 100
-    percent: 0
+    weight: 0
+    percent: 13
   - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
-    weight: 20
-    percent: 0
+    weight: 0
+    percent: 2
   guaranteedRarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
-  usePercentages: 0
+  usePercentages: 1
   giveSpecificCardOnly: 0
   specificCard: {fileID: 0}
   packArtPrefab: {fileID: 7600798260355237007, guid: f03f2b246596e074d9e4ffca8f423841, type: 3}

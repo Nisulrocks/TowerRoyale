@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: desert_scorpions
   displayName: Desert Scorpions
-  movementSpeed: 1.2
   maxHealth: 100
+  movementSpeed: 1.2
+  attackInterval: 1
   damagePerHit: 8
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 198b61d07e3aff845858bb3c9b3f1d51, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

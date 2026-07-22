@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ogre_chieftain
   displayName: Ogre Chieftain
-  movementSpeed: 1.2
   maxHealth: 120
+  movementSpeed: 1.2
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 7063429890210703705, guid: 47d7b1ee1e2087243ae00cf93060371f, type: 3}
+  prefab: {fileID: 7063429890210703705, guid: 08402edbdaa779b46afe522dc6b03b06, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

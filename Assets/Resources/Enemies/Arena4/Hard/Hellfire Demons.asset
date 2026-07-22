@@ -14,15 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: heallfire_demons
   displayName: Hellfire Demons
-  movementSpeed: 1.2
   maxHealth: 700
+  movementSpeed: 1.2
+  attackInterval: 1
   damagePerHit: 20
   prefab: {fileID: 0}
-  useRegenAbility: 0
-  regenPerSecondBase: 0.03
-  regenMissingHealthFactor: 0.02
-  regenSuppressAfterDamageSeconds: 2.5
-  regenPerSecondCap: 0.05
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
+  useRegenAbility: 1
+  regenPerSecondBase: 0.1
+  regenMissingHealthFactor: 0.4
+  regenSuppressAfterDamageSeconds: 0.02
+  regenPerSecondCap: 0.1
   regenTotalPercentCap: 0.4
   regenWhileDoT: 0
   regenDoTPenaltyMultiplier: 0.25

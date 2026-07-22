@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: pharaoh_of_the_forgotten_tomb
   displayName: Pharaoh of the Forgotten Tomb
-  movementSpeed: 0.8
   maxHealth: 800
+  movementSpeed: 0.8
+  attackInterval: 1
   damagePerHit: 20
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 1817db8cdd4c0f2499f8fe979e236b7d, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02
@@ -41,8 +47,8 @@ MonoBehaviour:
   pulseNukeSfxKey: 
   useStunPulseAbility: 1
   stunPulseRadius: 4.5
-  stunPulseCooldownMin: 15
-  stunPulseCooldownMax: 20
+  stunPulseCooldownMin: 20
+  stunPulseCooldownMax: 25
   stunPulseRandomCheckInterval: 1
   stunPulseTriggerChance: 1
   stunPulseDuration: 1.5

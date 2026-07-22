@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: dune_vulture
   displayName: Dune Vulture
-  movementSpeed: 1.75
   maxHealth: 70
+  movementSpeed: 1.75
+  attackInterval: 1
   damagePerHit: 8
-  prefab: {fileID: 7063429890210703705, guid: 15ee138101c50c34a94d0d300bbf549c, type: 3}
+  prefab: {fileID: 7063429890210703705, guid: 9e1bc7da483a22a4d8373240b42b4b40, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

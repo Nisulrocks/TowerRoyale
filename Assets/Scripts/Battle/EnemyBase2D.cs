@@ -11,7 +11,8 @@ namespace TR.Battle
     
     public class EnemyBase2D : MonoBehaviour
     {
-        
+        public enum SpriteFacing { Down, Right, Up, Left }
+
         private static readonly System.Collections.Generic.HashSet<EnemyBase2D> s_all = new();
         public static System.Collections.Generic.IReadOnlyCollection<EnemyBase2D> All => s_all;
         [Header("Runtime")]
@@ -32,9 +33,20 @@ namespace TR.Battle
         private string _speedFloatParam;
         
         [Header("Facing")]
-        [SerializeField] private bool defaultFacingRight = true; 
-        private Transform _visualRoot; 
+        [Tooltip("For side-view enemies when Rotate To Movement is disabled. True if the sprite art faces right.")]
+        [SerializeField] private bool defaultFacingRight = true;
+        [Tooltip("If true, rotate the visual root to face the direction it is moving.")]
+        [SerializeField] private bool rotateToMovement = true;
+        [Tooltip("Which direction the sprite art is drawn facing when rotation is identity.")]
+        [SerializeField] private SpriteFacing defaultSpriteFacing = SpriteFacing.Down;
+        [Tooltip("How fast the sprite rotates toward the movement direction (deg/sec). 0 = instant.")]
+        [SerializeField] private float rotateSpeedDegPerSec = 720f;
+
+        private Transform _visualRoot;
         private Vector3 _visualBaseScale = Vector3.one;
+        private Quaternion _visualBaseRotation = Quaternion.identity;
+        private Vector2 _desiredLookDirection;
+        private Vector3 _lastVisualPosition;
         [Header("Auto-Config")]
         [SerializeField] private bool autoFindPath = true; 
 
@@ -167,6 +179,7 @@ namespace TR.Battle
             {
                 ApplyDefinition(definition);
                 OnHealthChanged?.Invoke(currentHealth, MaxHealth);
+                SnapVisualToInitialFacing();
             }
         }
 
@@ -345,8 +358,8 @@ namespace TR.Battle
 
         private void UpdateFacing(float moveX)
         {
-            if (_visualRoot == null) return;
-            if (Mathf.Abs(moveX) < 1e-4f) return; 
+            if (rotateToMovement || _visualRoot == null) return;
+            if (Mathf.Abs(moveX) < 1e-4f) return;
             bool wantRight = moveX >= 0f;
             bool faceRight = defaultFacingRight ? wantRight : !wantRight;
             Vector3 s = _visualBaseScale;
@@ -403,12 +416,14 @@ namespace TR.Battle
             definition = def;
             path = followPath != null ? followPath : (autoFindPath ? FindFirstObjectByType<Path2D>(FindObjectsInactive.Include) : null);
             ApplyDefinition(definition);
+            SnapVisualToInitialFacing();
         }
 
         public void SetDefinition(EnemyDefinition def)
         {
             definition = def;
             ApplyDefinition(definition);
+            SnapVisualToInitialFacing();
         }
 
         public void SetArena(ArenaDefinition arena)
@@ -507,7 +522,9 @@ namespace TR.Battle
                 _visualRoot = sr != null ? sr.transform : this.transform;
             }
             _visualBaseScale = _visualRoot != null ? _visualRoot.localScale : Vector3.one;
-            
+            _visualBaseRotation = _visualRoot != null ? _visualRoot.localRotation : Quaternion.identity;
+            _lastVisualPosition = transform.position;
+
             SetAnimRunning(false);
             SetAnimAttacking(false);
             SetAnimSpeed(0f);
@@ -570,54 +587,62 @@ namespace TR.Battle
 
         private void Update()
         {
-            
-            
+
+
             if (!DuoRuntime.IsSimulationAuthority) return;
 
             TickStatusEffects();
-            
+
             TryTickPulseNuke(Time.deltaTime);
             TryTickStunPulse(Time.deltaTime);
-            
+
             if (_castleTr == null)
             {
                 var castle = FindFirstObjectByType<BaseCastle>(FindObjectsInactive.Include);
                 if (castle != null) _castleTr = castle.transform;
             }
+
             float baseDirX = 0f;
+            Vector2 fallbackDir = Vector2.zero;
             if (_castleTr != null)
             {
-                baseDirX = Mathf.Sign(_castleTr.position.x - transform.position.x);
-                if (Mathf.Abs(_castleTr.position.x - transform.position.x) < 1e-3f) baseDirX = 0f;
+                Vector3 toBase = _castleTr.position - transform.position;
+                baseDirX = Mathf.Sign(toBase.x);
+                if (Mathf.Abs(toBase.x) < 1e-3f) baseDirX = 0f;
+                if (toBase.sqrMagnitude > 1e-6f)
+                    fallbackDir = new Vector2(toBase.x, toBase.y).normalized;
             }
-            
+
             if (_stunTime > 0f)
             {
                 SetAnimRunning(false);
                 SetAnimAttacking(false);
                 SetAnimSpeed(0f);
-                if (baseDirX != 0f) UpdateFacing(baseDirX);
+                _desiredLookDirection = fallbackDir;
+                if (!rotateToMovement && baseDirX != 0f) UpdateFacing(baseDirX);
                 return;
             }
             if (path == null || path.Waypoints == null || path.Waypoints.Length == 0)
             {
-                
+
                 transform.position += Vector3.right * GetEffectiveMoveSpeed() * Time.deltaTime;
                 SetAnimRunning(true);
                 SetAnimAttacking(false);
                 SetAnimSpeed(GetEffectiveMoveSpeed());
-                UpdateFacing(baseDirX != 0f ? baseDirX : 1f);
+                _desiredLookDirection = Vector2.right;
+                if (!rotateToMovement) UpdateFacing(baseDirX != 0f ? baseDirX : 1f);
                 return;
             }
 
             var wps = path.Waypoints;
             if (waypointIndex >= wps.Length)
             {
-                
+
                 SetAnimRunning(false);
                 SetAnimAttacking(true);
                 SetAnimSpeed(0f);
-                if (baseDirX != 0f) UpdateFacing(baseDirX);
+                _desiredLookDirection = fallbackDir;
+                if (!rotateToMovement && baseDirX != 0f) UpdateFacing(baseDirX);
                 TickAttackBase();
                 return;
             }
@@ -626,6 +651,7 @@ namespace TR.Battle
             if (target == null)
             {
                 waypointIndex++;
+                _desiredLookDirection = fallbackDir;
                 return;
             }
 
@@ -638,7 +664,8 @@ namespace TR.Battle
                 SetAnimRunning(false);
                 SetAnimAttacking(false);
                 SetAnimSpeed(0f);
-                if (baseDirX != 0f) UpdateFacing(baseDirX);
+                _desiredLookDirection = fallbackDir;
+                if (!rotateToMovement && baseDirX != 0f) UpdateFacing(baseDirX);
             }
             else
             {
@@ -647,30 +674,119 @@ namespace TR.Battle
                 SetAnimRunning(true);
                 SetAnimAttacking(false);
                 SetAnimSpeed(GetEffectiveMoveSpeed());
-                
-                float desiredX;
-                const float eps = 1e-4f;
-                if (Mathf.Abs(dir.x) <= eps)
+
+                _desiredLookDirection = new Vector2(dir.x, dir.y).normalized;
+
+                if (!rotateToMovement)
                 {
-                    
-                    desiredX = (baseDirX != 0f) ? baseDirX : 0f;
+                    float desiredX;
+                    const float eps = 1e-4f;
+                    if (Mathf.Abs(dir.x) <= eps)
+                    {
+
+                        desiredX = (baseDirX != 0f) ? baseDirX : 0f;
+                    }
+                    else if (baseDirX == 0f)
+                    {
+
+                        desiredX = dir.x;
+                    }
+                    else
+                    {
+
+                        bool movingTowardBase = Mathf.Sign(dir.x) == Mathf.Sign(baseDirX);
+                        desiredX = movingTowardBase ? baseDirX : -baseDirX;
+                    }
+                    if (desiredX != 0f) UpdateFacing(desiredX);
                 }
-                else if (baseDirX == 0f)
-                {
-                    
-                    desiredX = dir.x;
-                }
-                else
-                {
-                    
-                    bool movingTowardBase = Mathf.Sign(dir.x) == Mathf.Sign(baseDirX);
-                    desiredX = movingTowardBase ? baseDirX : -baseDirX;
-                }
-                if (desiredX != 0f) UpdateFacing(desiredX);
             }
         }
 
-        
+        private void LateUpdate()
+        {
+            if (!rotateToMovement || _visualRoot == null) return;
+            UpdateVisualRotation();
+        }
+
+        private void UpdateVisualRotation()
+        {
+            Vector3 delta = transform.position - _lastVisualPosition;
+            _lastVisualPosition = transform.position;
+
+            Vector2 lookDir = _desiredLookDirection;
+            if (delta.sqrMagnitude > 1e-8f)
+                lookDir = new Vector2(delta.x, delta.y).normalized;
+
+            if (lookDir.sqrMagnitude < 1e-8f) return;
+
+            float moveAngle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
+            float targetZ = moveAngle - GetDefaultFacingAngle();
+            Quaternion desired = Quaternion.Euler(0f, 0f, targetZ) * _visualBaseRotation;
+
+            if (rotateSpeedDegPerSec > 0f)
+                _visualRoot.localRotation = Quaternion.RotateTowards(_visualRoot.localRotation, desired, rotateSpeedDegPerSec * Time.deltaTime);
+            else
+                _visualRoot.localRotation = desired;
+        }
+
+        private float GetDefaultFacingAngle()
+        {
+            switch (defaultSpriteFacing)
+            {
+                case SpriteFacing.Right: return 0f;
+                case SpriteFacing.Up: return 90f;
+                case SpriteFacing.Left: return 180f;
+                case SpriteFacing.Down:
+                default: return -90f;
+            }
+        }
+
+        public void SnapVisualToInitialFacing()
+        {
+            if (_visualRoot == null || !rotateToMovement) return;
+
+            if (_castleTr == null)
+            {
+                var castle = FindFirstObjectByType<BaseCastle>(FindObjectsInactive.Include);
+                if (castle != null) _castleTr = castle.transform;
+            }
+
+            Vector2 lookDir = Vector2.zero;
+            if (path != null && path.Waypoints != null)
+            {
+                int count = path.Waypoints.Length;
+                for (int i = waypointIndex; i < count; i++)
+                {
+                    var target = path.Waypoints[i];
+                    if (target == null) continue;
+                    Vector3 to = target.position - transform.position;
+                    if (to.sqrMagnitude > 1e-6f)
+                    {
+                        lookDir = new Vector2(to.x, to.y).normalized;
+                        break;
+                    }
+                }
+            }
+
+            if (lookDir.sqrMagnitude < 1e-6f && _castleTr != null)
+            {
+                Vector3 toBase = _castleTr.position - transform.position;
+                if (toBase.sqrMagnitude > 1e-6f)
+                    lookDir = new Vector2(toBase.x, toBase.y).normalized;
+            }
+
+            if (lookDir.sqrMagnitude < 1e-6f)
+                lookDir = Vector2.right;
+
+            _desiredLookDirection = lookDir;
+            _lastVisualPosition = transform.position;
+
+            float moveAngle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
+            float targetZ = moveAngle - GetDefaultFacingAngle();
+            _visualRoot.localRotation = Quaternion.Euler(0f, 0f, targetZ) * _visualBaseRotation;
+        }
+
+
         private void TickStatusEffects()
         {
             float dt = Time.deltaTime;

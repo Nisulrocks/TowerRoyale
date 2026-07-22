@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: orge_brute
   displayName: Ogre Brute
-  movementSpeed: 1.75
   maxHealth: 75
+  movementSpeed: 1.75
+  attackInterval: 1
   damagePerHit: 8
-  prefab: {fileID: 7063429890210703705, guid: ebfdce4d7e2ad764387faf5d35a75bc6, type: 3}
+  prefab: {fileID: 7063429890210703705, guid: 7579ce6a631186744b33e322c98ba76b, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

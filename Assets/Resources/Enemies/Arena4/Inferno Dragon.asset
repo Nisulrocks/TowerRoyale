@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: inferno_dragon
   displayName: Inferno Dragon
-  movementSpeed: 0.8
   maxHealth: 1800
+  movementSpeed: 0.8
+  attackInterval: 1
   damagePerHit: 25
   prefab: {fileID: 0}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02
@@ -29,10 +35,10 @@ MonoBehaviour:
   regenVfxKey: 
   usePulseNukeAbility: 1
   pulseNukeRadius: 4
-  pulseNukeCooldownMin: 15
+  pulseNukeCooldownMin: 20
   pulseNukeCooldownMax: 30
   pulseNukeRandomCheckInterval: 1
-  pulseNukeTriggerChance: 0.2
+  pulseNukeTriggerChance: 0.5
   pulseNukeVfxKey: 
   pulseNukeRippleColor: {r: 0.9, g: 0.85, b: 1, a: 0.5}
   pulseNukeRippleDuration: 0.45

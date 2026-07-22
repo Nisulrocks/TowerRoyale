@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ogre_grunt
   displayName: Ogre Grunt
-  movementSpeed: 1.25
   maxHealth: 50
+  movementSpeed: 1.25
+  attackInterval: 1
   damagePerHit: 5
-  prefab: {fileID: 7063429890210703705, guid: 15ee138101c50c34a94d0d300bbf549c, type: 3}
+  prefab: {fileID: 7063429890210703705, guid: 9d3e461d6087e09479c13e996b3b3d7e, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

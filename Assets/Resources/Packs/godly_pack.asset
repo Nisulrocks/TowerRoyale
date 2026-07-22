@@ -22,10 +22,10 @@ MonoBehaviour:
     percent: 70
   - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
     weight: 0
-    percent: 20
+    percent: 29
   - rarity: {fileID: 11400000, guid: dddd7cbad3b09e34b92a356a757b65b9, type: 2}
     weight: 0
-    percent: 10
+    percent: 1
   guaranteedRarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   usePercentages: 1
   giveSpecificCardOnly: 0
@@ -37,4 +37,4 @@ MonoBehaviour:
   sealCrackKey: 
   openWhooshKey: 
   unlockArena: {fileID: 0}
-  shopOrder: 2
+  shopOrder: 3

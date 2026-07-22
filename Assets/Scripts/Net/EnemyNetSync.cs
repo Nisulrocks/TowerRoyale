@@ -70,6 +70,7 @@ namespace TR.Net
             var path = Object.FindFirstObjectByType<Path2D>(FindObjectsInactive.Include);
             _enemy.Initialize(def, path);
             _enemy.RecalculateWaypointFromPosition();
+            _enemy.SnapVisualToInitialFacing();
             if (arena != null) _enemy.SetArena(arena);
             _enemy.SetWaveNumber(waveNumber);
             TR.Battle.BattleSceneController.Instance?.RegisterWaveEnemy(waveNumber);

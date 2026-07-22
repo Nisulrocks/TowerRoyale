@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: magma_leviathan
   displayName: Magma Leviathan
-  movementSpeed: 0.8
   maxHealth: 775
+  movementSpeed: 0.8
+  attackInterval: 1
   damagePerHit: 15
   prefab: {fileID: 0}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02
@@ -39,13 +45,13 @@ MonoBehaviour:
   pulseNukeRippleLineWidth: 0.12
   pulseNukeRippleSegments: 48
   pulseNukeSfxKey: 
-  useStunPulseAbility: 0
+  useStunPulseAbility: 1
   stunPulseRadius: 4.5
-  stunPulseCooldownMin: 35
-  stunPulseCooldownMax: 60
+  stunPulseCooldownMin: 10
+  stunPulseCooldownMax: 10
   stunPulseRandomCheckInterval: 1
-  stunPulseTriggerChance: 0.25
-  stunPulseDuration: 2.5
+  stunPulseTriggerChance: 0.7
+  stunPulseDuration: 0.5
   stunPulseVfxKey: 
   stunPulseRippleColor: {r: 0.8, g: 0.9, b: 1, a: 0.55}
   stunPulseRippleDuration: 0.45

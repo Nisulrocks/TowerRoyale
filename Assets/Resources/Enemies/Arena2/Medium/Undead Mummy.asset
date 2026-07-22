@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: undead_mummy
   displayName: Undead Mummy
-  movementSpeed: 1
   maxHealth: 110
+  movementSpeed: 1
+  attackInterval: 1
   damagePerHit: 8
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 870ecc7717796fd44adfc767aa702d8a, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02
