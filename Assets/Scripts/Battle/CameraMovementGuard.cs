@@ -13,7 +13,7 @@ namespace TR.Battle
         {
             if (cameraMovementScript == null)
             {
-                cameraMovementScript = GetComponent<Behaviour>();
+                cameraMovementScript = GetComponent<CameraController2D>();
             }
         }
 
@@ -30,7 +30,13 @@ namespace TR.Battle
 
         private void HandlePlacementDraggingChanged(bool dragging)
         {
-            if (cameraMovementScript != null)
+            if (cameraMovementScript == null) return;
+
+            if (cameraMovementScript is CameraController2D controller)
+            {
+                controller.dragPanEnabled = !dragging;
+            }
+            else
             {
                 cameraMovementScript.enabled = !dragging;
             }

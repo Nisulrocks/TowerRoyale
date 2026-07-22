@@ -730,8 +730,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 625, y: 0}
-  m_SizeDelta: {x: -1350, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &463127110609086031
 CanvasRenderer:
@@ -785,8 +785,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   root: {fileID: 7261777256325696087}
   panel: {fileID: 7795538180736630030}
-  showX: -40
-  hiddenX: -420
+  showX: -300
+  hiddenX: -500
   animDuration: 0.18
   icon: {fileID: 7010311386968083907}
   rarityStripe: {fileID: 575021160961293322}
@@ -841,10 +841,10 @@ RectTransform:
   - {fileID: 2840352004641725116}
   m_Father: {fileID: 4561302198837386121}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -0.0002412796, y: 0.00011103516}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -300, y: 0}
+  m_SizeDelta: {x: 550, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5112991370476246393
 CanvasRenderer:

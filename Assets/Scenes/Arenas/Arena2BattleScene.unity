@@ -735,7 +735,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1280,6 +1280,9 @@ MonoBehaviour:
   maxZoom: 10
   panSpeed: 0.5
   dragFollowsMouse: 0
+  dragPanEnabled: 1
+  edgePanMargin: 48
+  edgePanSpeed: 10
   confiner: {fileID: 759445434}
 --- !u!114 &455910170
 MonoBehaviour:
@@ -1379,7 +1382,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6639350707552210315, guid: 34276dc86756a944ebd7ef3766a85669, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -1350
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6639350707552210315, guid: 34276dc86756a944ebd7ef3766a85669, type: 3}
       propertyPath: m_SizeDelta.y
@@ -1415,7 +1418,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6639350707552210315, guid: 34276dc86756a944ebd7ef3766a85669, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 625
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6639350707552210315, guid: 34276dc86756a944ebd7ef3766a85669, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -15063,7 +15066,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4561302198837386121, guid: e085992af2730d94cbe7302829dd82a2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -1350
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4561302198837386121, guid: e085992af2730d94cbe7302829dd82a2, type: 3}
       propertyPath: m_SizeDelta.y
@@ -15099,7 +15102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4561302198837386121, guid: e085992af2730d94cbe7302829dd82a2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 625
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4561302198837386121, guid: e085992af2730d94cbe7302829dd82a2, type: 3}
       propertyPath: m_AnchoredPosition.y

@@ -15,6 +15,13 @@ public class CameraController2D : MonoBehaviour
     public float panSpeed = 1f;
     [Tooltip("If true, the camera moves with the mouse drag. If false, it moves opposite (map-style drag).")]
     public bool dragFollowsMouse = true;
+    public bool dragPanEnabled = true;
+
+    [Header("Edge Pan (while dragging tower)")]
+    [Tooltip("Screen margin in pixels from the edge that triggers panning.")]
+    public float edgePanMargin = 48f;
+    [Tooltip("World-units per second to pan when the cursor is at a screen edge.")]
+    public float edgePanSpeed = 10f;
 
     [Header("Confiner (required for clamping)")]
     public BoxCollider2D confiner; 
@@ -40,7 +47,8 @@ public class CameraController2D : MonoBehaviour
         if (cam == null) return;
 
         HandleZoom();
-        HandlePan();
+        HandleEdgePan();
+        if (dragPanEnabled) HandlePan();
         ClampToBounds();
     }
 
@@ -75,6 +83,27 @@ public class CameraController2D : MonoBehaviour
             }
             lastMouseWorldPos = currentMouseWorld;
         }
+    }
+
+    private void HandleEdgePan()
+    {
+        if (edgePanSpeed <= 0f || !TR.Systems.InputLocks.IsPlacementDragging) return;
+
+        Vector2 mouse = Input.mousePosition;
+        float w = Screen.width;
+        float h = Screen.height;
+        Vector2 dir = Vector2.zero;
+
+        if (mouse.x < edgePanMargin) dir.x = -1f;
+        else if (mouse.x > w - edgePanMargin) dir.x = 1f;
+
+        if (mouse.y < edgePanMargin) dir.y = -1f;
+        else if (mouse.y > h - edgePanMargin) dir.y = 1f;
+
+        if (dir == Vector2.zero) return;
+
+        Vector3 move = new Vector3(dir.normalized.x, dir.normalized.y, 0f) * edgePanSpeed * Time.deltaTime;
+        cam.transform.position += move;
     }
 
     private Vector3 GetWorldMousePosition()
