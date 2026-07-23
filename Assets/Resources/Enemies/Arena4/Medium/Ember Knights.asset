@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: ember_knights
   displayName: Ember Knights
-  movementSpeed: 1
   maxHealth: 250
+  movementSpeed: 1
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 231468e313b753f46a1d41e93c0a78c1, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

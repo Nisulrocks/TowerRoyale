@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: frost_gaint
   displayName: Frost Giant
-  movementSpeed: 0.6
   maxHealth: 660
+  movementSpeed: 0.6
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: a508e0c744280a94fafd6426f85c7ba4, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

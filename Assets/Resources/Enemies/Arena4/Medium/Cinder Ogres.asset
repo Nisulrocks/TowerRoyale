@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: cinder_ogres
   displayName: Cinder Ogres
-  movementSpeed: 1.2
   maxHealth: 220
+  movementSpeed: 1.2
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: b61b32abecaf3ae45bf9e9074e1f393e, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: lava_hound
   displayName: Lava Hound
-  movementSpeed: 1.75
   maxHealth: 175
+  movementSpeed: 1.75
+  attackInterval: 1
   damagePerHit: 8
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 973f963ec7a3e164687913aa9ec4182d, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

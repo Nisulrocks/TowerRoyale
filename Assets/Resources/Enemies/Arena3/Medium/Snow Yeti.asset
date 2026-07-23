@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: snow_yeti
   displayName: Snow Yeti
-  movementSpeed: 1
   maxHealth: 150
+  movementSpeed: 1
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 0323ff492d3be9847b67b2658c60ed86, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

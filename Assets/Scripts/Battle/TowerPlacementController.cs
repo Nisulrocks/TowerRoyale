@@ -16,7 +16,7 @@ namespace TR.Battle
 
         [SerializeField] private float minTowerSpacing = 0.05f;
         [SerializeField] private Color areaBaseColor = new Color(0.3f, 1f, 0.3f, 0.35f);
-        [SerializeField] private Color areaHighlightColor = new Color(0.4f, 1f, 0.4f, 0.65f);
+        [SerializeField] private float areaMergeMargin = 0.1f;
 
         private MatchEconomy _economy;
         private bool _areasVisible;
@@ -27,17 +27,7 @@ namespace TR.Battle
         private readonly Dictionary<CardDefinition, float> _cardRadiusCache = new();
         private TR.Net.DuoBattleCoordinator _coordinator;
 
-        private SpriteRenderer _areaVisual;
-        private Texture2D _areaTexture;
-        private Color[] _areaBasePixels;
-        private Color[] _areaWorkPixels;
-        private int _areaTexWidth;
-        private int _areaTexHeight;
-        private float _areaPPU;
-        private Vector2 _areaWorldMin;
-
-        private readonly List<int> _highlighted = new();
-        private readonly List<int> _lastHighlighted = new();
+        private readonly List<SpriteRenderer> _combinedVisuals = new();
 
         [SerializeField] private int maxAreaTextureSize = 512;
 
@@ -82,11 +72,12 @@ namespace TR.Battle
                 _coordinator.OnTowerSyncReceived -= OnTowerSyncReceived;
             }
 
-            if (_areaVisual != null)
+            foreach (var visual in _combinedVisuals)
             {
-                Destroy(_areaVisual.gameObject);
-                _areaVisual = null;
+                if (visual != null)
+                    Destroy(visual.gameObject);
             }
+            _combinedVisuals.Clear();
         }
 
         private void BuildAreaList()
@@ -98,11 +89,7 @@ namespace TR.Battle
                 return;
             }
 
-            if (_areaVisual != null)
-            {
-                Destroy(_areaVisual.gameObject);
-                _areaVisual = null;
-            }
+            _combinedVisuals.Clear();
 
             int found = 0;
             int skipped = 0;
@@ -110,7 +97,7 @@ namespace TR.Battle
             {
                 if (child == null) continue;
 
-                if (child.name == "PlacementAreaVisual" && child.GetComponent<BoxCollider2D>() == null)
+                if ((child.name == "PlacementAreaVisual" || child.name == "PlacementAreasVisual") && child.GetComponent<BoxCollider2D>() == null)
                 {
                     Destroy(child.gameObject);
                     continue;
@@ -127,21 +114,72 @@ namespace TR.Battle
                 found++;
             }
 
-            if (_areas.Count > 1)
-                BuildCombinedAreaVisual();
-            else
-                BuildPerAreaVisuals();
+            var clusters = BuildClusters();
+
+            bool[] inCombinedCluster = new bool[_areas.Count];
+            foreach (var cluster in clusters)
+            {
+                if (cluster.Count > 1)
+                {
+                    foreach (int idx in cluster)
+                        inCombinedCluster[idx] = true;
+                }
+            }
+
+            for (int i = 0; i < _areas.Count; i++)
+            {
+                if (!inCombinedCluster[i] || _areas[i].Transform == null) continue;
+                Transform oldVisual = _areas[i].Transform.Find("PlacementAreaVisual");
+                if (oldVisual != null)
+                    Destroy(oldVisual.gameObject);
+            }
+
+            foreach (var cluster in clusters)
+            {
+                if (cluster.Count == 1)
+                {
+                    int idx = cluster[0];
+                    if (_areas[idx].Transform == null) continue;
+                    var visual = EnsureAreaVisual(_areas[idx].Transform, _areas[idx].Collider);
+                    if (visual != null)
+                    {
+                        visual.gameObject.SetActive(false);
+                        visual.color = areaBaseColor;
+                    }
+                }
+                else
+                {
+                    BuildCombinedAreaVisual(cluster);
+                }
+            }
 
             Debug.Log($"[Placement] Built {found} area(s) from {placementAreasRoot.name}, skipped {skipped} children without BoxCollider2D.");
         }
 
-        private void BuildCombinedAreaVisual()
+        private void BuildCombinedAreaVisual(List<int> cluster)
         {
-            Bounds total = new Bounds(_areas[0].Collider.bounds.center, _areas[0].Collider.bounds.size);
-            for (int i = 1; i < _areas.Count; i++)
+            BoxCollider2D[] cols = new BoxCollider2D[cluster.Count];
+            Bounds[] originalBounds = new Bounds[cluster.Count];
+            Bounds total = new Bounds();
+            bool totalSet = false;
+
+            for (int k = 0; k < cluster.Count; k++)
             {
-                if (_areas[i].Collider != null)
-                    total.Encapsulate(_areas[i].Collider.bounds);
+                cols[k] = _areas[cluster[k]].Collider;
+                if (cols[k] == null) continue;
+
+                originalBounds[k] = cols[k].bounds;
+                Bounds expanded = GetExpandedBounds(cols[k], areaMergeMargin);
+
+                if (!totalSet)
+                {
+                    total = expanded;
+                    totalSet = true;
+                }
+                else
+                {
+                    total.Encapsulate(expanded);
+                }
             }
 
             const float padding = 0.1f;
@@ -149,56 +187,205 @@ namespace TR.Battle
             Vector2 max = new Vector2(total.max.x + padding, total.max.y + padding);
             Vector2 size = max - min;
 
-            _areaWorldMin = min;
             float maxDim = Mathf.Max(size.x, size.y);
-            _areaPPU = maxDim > 0.001f ? maxAreaTextureSize / maxDim : 32f;
-            _areaTexWidth = Mathf.Max(1, Mathf.CeilToInt(size.x * _areaPPU));
-            _areaTexHeight = Mathf.Max(1, Mathf.CeilToInt(size.y * _areaPPU));
+            float ppu = maxDim > 0.001f ? maxAreaTextureSize / maxDim : 32f;
+            int texWidth = Mathf.Max(1, Mathf.CeilToInt(size.x * ppu));
+            int texHeight = Mathf.Max(1, Mathf.CeilToInt(size.y * ppu));
 
-            _areaTexture = new Texture2D(_areaTexWidth, _areaTexHeight, TextureFormat.RGBA32, false);
-            _areaTexture.filterMode = FilterMode.Bilinear;
-            _areaTexture.wrapMode = TextureWrapMode.Clamp;
+            Texture2D texture = new Texture2D(texWidth, texHeight, TextureFormat.RGBA32, false);
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
 
-            _areaBasePixels = new Color[_areaTexWidth * _areaTexHeight];
-            _areaWorkPixels = new Color[_areaTexWidth * _areaTexHeight];
+            Color[] pixels = new Color[texWidth * texHeight];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
 
-            for (int i = 0; i < _areaBasePixels.Length; i++) _areaBasePixels[i] = Color.clear;
-
-            foreach (var area in _areas)
+            for (int y = 0; y < texHeight; y++)
             {
-                if (area.Collider == null) continue;
-                FillRect(_areaBasePixels, area.Collider.bounds, areaBaseColor);
+                int row = y * texWidth;
+                float worldY = min.y + y / ppu;
+                for (int x = 0; x < texWidth; x++)
+                {
+                    Vector2 worldPos = new Vector2(min.x + x / ppu, worldY);
+                    for (int k = 0; k < cluster.Count; k++)
+                    {
+                        if (cols[k] == null) continue;
+                        if (IsPointInsideBox(worldPos, cols[k], originalBounds[k]))
+                        {
+                            pixels[row + x] = areaBaseColor;
+                            break;
+                        }
+                    }
+                }
             }
 
-            Array.Copy(_areaBasePixels, _areaWorkPixels, _areaBasePixels.Length);
-            _areaTexture.SetPixels(_areaWorkPixels);
-            _areaTexture.Apply();
+            texture.SetPixels(pixels);
+            texture.Apply();
 
-            var sprite = Sprite.Create(_areaTexture, new Rect(0, 0, _areaTexWidth, _areaTexHeight), new Vector2(0f, 0f), _areaPPU);
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texWidth, texHeight), new Vector2(0f, 0f), ppu);
 
-            var go = new GameObject("PlacementAreasVisual");
+            GameObject go = new GameObject("PlacementAreasVisual");
             go.transform.SetParent(placementAreasRoot, false);
             go.transform.position = new Vector3(min.x, min.y, 0f);
 
-            _areaVisual = go.AddComponent<SpriteRenderer>();
-            _areaVisual.sprite = sprite;
-            _areaVisual.color = Color.white;
-            _areaVisual.sortingOrder = 1;
-            _areaVisual.gameObject.SetActive(false);
+            SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = Color.white;
+            sr.sortingOrder = 1;
+            sr.gameObject.SetActive(false);
+
+            _combinedVisuals.Add(sr);
         }
 
-        private void BuildPerAreaVisuals()
+        private List<List<int>> BuildClusters()
         {
-            foreach (var area in _areas)
+            int n = _areas.Count;
+            bool[] visited = new bool[n];
+            List<List<int>> clusters = new();
+
+            for (int i = 0; i < n; i++)
             {
-                if (area.Collider == null) continue;
-                var visual = EnsureAreaVisual(area.Transform, area.Collider);
-                if (visual != null)
+                if (visited[i]) continue;
+
+                List<int> cluster = new();
+                Queue<int> queue = new();
+                visited[i] = true;
+                queue.Enqueue(i);
+
+                while (queue.Count > 0)
                 {
-                    visual.gameObject.SetActive(false);
-                    visual.color = areaBaseColor;
+                    int cur = queue.Dequeue();
+                    cluster.Add(cur);
+
+                    for (int j = 0; j < n; j++)
+                    {
+                        if (visited[j]) continue;
+                        if (AreasIntersect(cur, j))
+                        {
+                            visited[j] = true;
+                            queue.Enqueue(j);
+                        }
+                    }
                 }
+
+                clusters.Add(cluster);
             }
+
+            return clusters;
+        }
+
+        private bool AreasIntersect(int a, int b)
+        {
+            return BoxIntersects(_areas[a].Collider, _areas[b].Collider, areaMergeMargin);
+        }
+
+        private static bool BoxIntersects(BoxCollider2D a, BoxCollider2D b, float margin)
+        {
+            Vector2 ca, hax, hay;
+            Vector2 cb, hbx, hby;
+            GetBoxHalfVectors(a, margin, out ca, out hax, out hay);
+            GetBoxHalfVectors(b, margin, out cb, out hbx, out hby);
+
+            Vector2[] axes = new Vector2[]
+            {
+                new Vector2(-hax.y, hax.x),
+                new Vector2(-hay.y, hay.x),
+                new Vector2(-hbx.y, hbx.x),
+                new Vector2(-hby.y, hby.x)
+            };
+
+            Vector2[] va = GetBoxVertices(ca, hax, hay);
+            Vector2[] vb = GetBoxVertices(cb, hbx, hby);
+
+            foreach (var axis in axes)
+            {
+                if (axis.sqrMagnitude < 0.000001f) continue;
+                if (Separated(va, vb, axis))
+                    return false;
+            }
+            return true;
+        }
+
+        private static void GetBoxHalfVectors(BoxCollider2D box, float margin, out Vector2 center, out Vector2 hx, out Vector2 hy)
+        {
+            center = box.transform.TransformPoint(new Vector3(box.offset.x, box.offset.y, 0f));
+
+            float scaleX = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.x));
+            float scaleY = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.y));
+
+            float halfX = box.size.x * 0.5f + margin / scaleX;
+            float halfY = box.size.y * 0.5f + margin / scaleY;
+
+            hx = box.transform.TransformVector(new Vector3(halfX, 0f, 0f));
+            hy = box.transform.TransformVector(new Vector3(0f, halfY, 0f));
+        }
+
+        private static Bounds GetExpandedBounds(BoxCollider2D box, float margin)
+        {
+            Vector2 c, hx, hy;
+            GetBoxHalfVectors(box, margin, out c, out hx, out hy);
+
+            Bounds b = new Bounds(new Vector3(c.x, c.y, 0f), Vector3.zero);
+            b.Encapsulate(new Vector3(c.x + hx.x + hy.x, c.y + hx.y + hy.y, 0f));
+            b.Encapsulate(new Vector3(c.x - hx.x + hy.x, c.y - hx.y + hy.y, 0f));
+            b.Encapsulate(new Vector3(c.x + hx.x - hy.x, c.y + hx.y - hy.y, 0f));
+            b.Encapsulate(new Vector3(c.x - hx.x - hy.x, c.y - hx.y - hy.y, 0f));
+            return b;
+        }
+
+        private static Vector2[] GetBoxVertices(Vector2 c, Vector2 hx, Vector2 hy)
+        {
+            return new Vector2[]
+            {
+                c - hx - hy,
+                c + hx - hy,
+                c + hx + hy,
+                c - hx + hy
+            };
+        }
+
+        private static bool Separated(Vector2[] a, Vector2[] b, Vector2 axis)
+        {
+            float minA = float.MaxValue, maxA = float.MinValue;
+            float minB = float.MaxValue, maxB = float.MinValue;
+
+            foreach (var v in a)
+            {
+                float p = Vector2.Dot(v, axis);
+                if (p < minA) minA = p;
+                if (p > maxA) maxA = p;
+            }
+            foreach (var v in b)
+            {
+                float p = Vector2.Dot(v, axis);
+                if (p < minB) minB = p;
+                if (p > maxB) maxB = p;
+            }
+
+            return maxA < minB || maxB < minA;
+        }
+
+        private bool IsPointInsideBox(Vector2 worldPoint, BoxCollider2D box)
+        {
+            return IsPointInsideBox(worldPoint, box, box.bounds);
+        }
+
+        private bool IsPointInsideBox(Vector2 worldPoint, BoxCollider2D box, Bounds bounds)
+        {
+            Bounds expanded = bounds;
+            expanded.Expand(areaMergeMargin * 1.5f);
+            if (!expanded.Contains(new Vector3(worldPoint.x, worldPoint.y, expanded.center.z)))
+                return false;
+
+            Vector3 local = box.transform.InverseTransformPoint(new Vector3(worldPoint.x, worldPoint.y, 0f));
+            Vector2 localRel = new Vector2(local.x - box.offset.x, local.y - box.offset.y);
+
+            float scaleX = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.x));
+            float scaleY = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.y));
+            float halfX = box.size.x * 0.5f + areaMergeMargin / scaleX;
+            float halfY = box.size.y * 0.5f + areaMergeMargin / scaleY;
+
+            return Mathf.Abs(localRel.x) <= halfX + 0.0001f
+                && Mathf.Abs(localRel.y) <= halfY + 0.0001f;
         }
 
         private SpriteRenderer EnsureAreaVisual(Transform area, BoxCollider2D box)
@@ -224,7 +411,13 @@ namespace TR.Battle
             if (renderer != null)
             {
                 renderer.transform.localPosition = new Vector3(box.offset.x, box.offset.y, 0f);
-                renderer.transform.localScale = new Vector3(box.size.x, box.size.y, 1f);
+
+                float scaleX = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.x));
+                float scaleY = Mathf.Max(0.0001f, Mathf.Abs(box.transform.lossyScale.y));
+                float visualSizeX = box.size.x + 2f * areaMergeMargin / scaleX;
+                float visualSizeY = box.size.y + 2f * areaMergeMargin / scaleY;
+
+                renderer.transform.localScale = new Vector3(visualSizeX, visualSizeY, 1f);
                 renderer.sortingOrder = 1;
             }
             return renderer;
@@ -238,23 +431,6 @@ namespace TR.Battle
             return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
 
-        private void FillRect(Color[] pixels, Bounds b, Color color)
-        {
-            int xStart = Mathf.Clamp(Mathf.FloorToInt((b.min.x - _areaWorldMin.x) * _areaPPU), 0, _areaTexWidth - 1);
-            int xEnd = Mathf.Clamp(Mathf.CeilToInt((b.max.x - _areaWorldMin.x) * _areaPPU), 0, _areaTexWidth - 1);
-            int yStart = Mathf.Clamp(Mathf.FloorToInt((b.min.y - _areaWorldMin.y) * _areaPPU), 0, _areaTexHeight - 1);
-            int yEnd = Mathf.Clamp(Mathf.CeilToInt((b.max.y - _areaWorldMin.y) * _areaPPU), 0, _areaTexHeight - 1);
-
-            for (int y = yStart; y <= yEnd; y++)
-            {
-                int row = y * _areaTexWidth;
-                for (int x = xStart; x <= xEnd; x++)
-                {
-                    pixels[row + x] = color;
-                }
-            }
-        }
-
         private int GeneratePlacementId()
         {
             int actor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : 1;
@@ -265,13 +441,14 @@ namespace TR.Battle
         {
             _areasVisible = visible;
             if (visible)
-            {
                 Debug.Log($"[Placement] Showing {_areas.Count} placement area overlay(s).");
-                _lastHighlighted.Clear();
-                RebuildAreaVisual(null);
+
+            foreach (var visual in _combinedVisuals)
+            {
+                if (visual != null)
+                    visual.gameObject.SetActive(visible);
             }
-            if (_areaVisual != null)
-                _areaVisual.gameObject.SetActive(visible);
+
             foreach (var area in _areas)
             {
                 if (area.Transform == null) continue;
@@ -288,35 +465,6 @@ namespace TR.Battle
             // Highlighting disabled: base color is used for all areas.
         }
 
-        private void RebuildAreaVisual(List<int> highlightedIndices)
-        {
-            if (_areaTexture == null) return;
-
-            Array.Copy(_areaBasePixels, _areaWorkPixels, _areaBasePixels.Length);
-
-            if (highlightedIndices != null)
-            {
-                foreach (int idx in highlightedIndices)
-                {
-                    if (idx < 0 || idx >= _areas.Count) continue;
-                    var col = _areas[idx].Collider;
-                    if (col == null) continue;
-                    FillRect(_areaWorkPixels, col.bounds, areaHighlightColor);
-                }
-            }
-
-            _areaTexture.SetPixels(_areaWorkPixels);
-            _areaTexture.Apply();
-        }
-
-        private static bool ListsEqual(List<int> a, List<int> b)
-        {
-            if (a.Count != b.Count) return false;
-            for (int i = 0; i < a.Count; i++)
-                if (a[i] != b[i]) return false;
-            return true;
-        }
-
         private int GetAreaIndex(Vector3 pos)
         {
             Vector2 p = new Vector2(pos.x, pos.y);
@@ -324,23 +472,9 @@ namespace TR.Battle
             {
                 var col = _areas[i].Collider;
                 if (col == null || !col.enabled || !col.gameObject.activeInHierarchy) continue;
-                var b = col.bounds;
-                if (b.Contains(new Vector3(p.x, p.y, b.center.z))) return i;
+                if (IsPointInsideBox(p, col)) return i;
             }
             return -1;
-        }
-
-        private void GetAllAreaIndices(Vector3 pos, List<int> result)
-        {
-            Vector2 p = new Vector2(pos.x, pos.y);
-            for (int i = 0; i < _areas.Count; i++)
-            {
-                var col = _areas[i].Collider;
-                if (col == null || !col.enabled || !col.gameObject.activeInHierarchy) continue;
-                var b = col.bounds;
-                if (b.Contains(new Vector3(p.x, p.y, b.center.z)))
-                    result.Add(i);
-            }
         }
 
         public bool IsInsideAnyArea(Vector3 pos)

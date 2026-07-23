@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: blizzard_wraith
   displayName: Blizzard Wraith
-  movementSpeed: 1
   maxHealth: 400
+  movementSpeed: 1
+  attackInterval: 1
   damagePerHit: 10
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: e13fa4cb8c201c24aabbf4f1167b11b0, type: 3}
+  animatorController: {fileID: 0}
+  runBoolParam: IsRunning
+  attackBoolParam: IsAttacking
+  dieTriggerParam: Die
+  speedFloatParam: 
   useRegenAbility: 0
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02

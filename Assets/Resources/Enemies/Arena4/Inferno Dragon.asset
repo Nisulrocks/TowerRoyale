@@ -18,7 +18,7 @@ MonoBehaviour:
   movementSpeed: 0.8
   attackInterval: 1
   damagePerHit: 25
-  prefab: {fileID: 0}
+  prefab: {fileID: 7063429890210703705, guid: 6eed300b7fb662446840255520b11e3b, type: 3}
   animatorController: {fileID: 0}
   runBoolParam: IsRunning
   attackBoolParam: IsAttacking

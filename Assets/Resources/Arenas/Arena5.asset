@@ -20,9 +20,17 @@ MonoBehaviour:
   waveInterval: 60
   mediumStartPercent: 0.25
   hardStartPercent: 0.6
-  easyEnemies: []
-  mediumEnemies: []
-  hardEnemies: []
+  easyEnemies:
+  - {fileID: 11400000, guid: bd97d8987bb54184390439a394f4ceda, type: 2}
+  - {fileID: 11400000, guid: 28ec5433290f8f1428aac7b06212fe64, type: 2}
+  mediumEnemies:
+  - {fileID: 11400000, guid: 4d1125755f33faf43bf49e970711dc5e, type: 2}
+  - {fileID: 11400000, guid: 0a709f2a85c78e643b53ba319c0c3b0a, type: 2}
+  - {fileID: 11400000, guid: 08e4021f92fe11046ad5c0ed49d69b90, type: 2}
+  hardEnemies:
+  - {fileID: 11400000, guid: ad1bc9c960eb5cf4aa4edb17172c90ba, type: 2}
+  - {fileID: 11400000, guid: c292de24113a1f144b57900d30137550, type: 2}
+  - {fileID: 11400000, guid: fc6771a7017b1234b9119f40a56e0ee9, type: 2}
   waveEnemyCounts:
   - min: 15
     max: 15
@@ -64,7 +72,7 @@ MonoBehaviour:
     max: 90
   - min: 100
     max: 100
-  bossEnemy: {fileID: 0}
+  bossEnemy: {fileID: 11400000, guid: 26c2bae89faf5aa4881cd920def06e80, type: 2}
   spawnBossOnSpecificWave: 0
   bossSpecificWave: 1
   bossEveryXWaves: 5
