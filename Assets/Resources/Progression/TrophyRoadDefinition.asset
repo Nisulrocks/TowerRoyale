@@ -16,15 +16,138 @@ MonoBehaviour:
   maxTrophies: 5000
   retroactiveClaim: 1
   milestones:
-  - trophyRequired: 5
-    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 50
-    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
-    oneTimeOnly: 1
-  - trophyRequired: 100
+  - trophyRequired: 10
     reward: {fileID: 11400000, guid: 5b2812da073f2cc48817fc0aaabb69ec, type: 2}
     oneTimeOnly: 1
-  - trophyRequired: 150
+  - trophyRequired: 25
+    reward: {fileID: 11400000, guid: 5b2812da073f2cc48817fc0aaabb69ec, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 50
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 75
     reward: {fileID: 11400000, guid: 6b35eb68cd726174897651e163eae277, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 100
+    reward: {fileID: 11400000, guid: 6b35eb68cd726174897651e163eae277, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 150
+    reward: {fileID: 11400000, guid: 88e414884ca958f41a262834609971fe, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 200
+    reward: {fileID: 11400000, guid: 6b35eb68cd726174897651e163eae277, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 250
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 300
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 350
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 400
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 500
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 600
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 700
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 800
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 900
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1000
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1150
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1300
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1450
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1600
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1700
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1800
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 1900
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2050
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2150
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2300
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2450
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2600
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2750
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 2900
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3050
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3200
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3350
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3500
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3650
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3800
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 3950
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4100
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4250
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4400
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4550
+    reward: {fileID: 11400000, guid: 895101f0c5f699c45b8e8138104dc2b3, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4700
+    reward: {fileID: 11400000, guid: 9aab54abc19aaf5409d639da4fb8bd2f, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 4850
+    reward: {fileID: 11400000, guid: 4cc623c7de66d2f4ebfb07cd4bd06606, type: 2}
+    oneTimeOnly: 1
+  - trophyRequired: 5000
+    reward: {fileID: 11400000, guid: 26c574a9f3a4c7643a50c3b0eddff239, type: 2}
     oneTimeOnly: 1

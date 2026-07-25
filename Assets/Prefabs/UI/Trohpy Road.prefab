@@ -327,7 +327,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 6738745622693550556, guid: aa9c2eaa5b8888d40ab506fef4ff4857, type: 3}
+  m_Sprite: {fileID: -3474114322146836603, guid: 9c00dc7616b52294b85b9e3c0d1df59b, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -437,7 +437,7 @@ MonoBehaviour:
   content: {fileID: 6829894865001087384}
   nodePrefab: {fileID: 6700550400854268702, guid: 206894fda47a94e41a489451f2769714, type: 3}
   contentPadding: 64
-  pixelsPerTrophy: 20
+  pixelsPerTrophy: 10
   minContentWidth: 1800
   sizeScale: 1
   baseSliderHeight: 100
@@ -449,7 +449,7 @@ MonoBehaviour:
   markerWidth: 5
   showMarkerLabels: 1
   markerLabelVerticalOffset: 100
-  markerLabelColor: {r: 0.01886791, g: 0.01886791, b: 0.01886791, a: 1}
+  markerLabelColor: {r: 0, g: 0, b: 0, a: 1}
   markerLabelFontSize: 36
 --- !u!1 &4933694770994837554
 GameObject:
@@ -627,7 +627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 6738745622693550556, guid: c6fb5f5274b262e4e9b523cd49d86dd4, type: 3}
+  m_Sprite: {fileID: 298198673004830636, guid: a649c6fd8ddd8e3499a9c8303abc59cb, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1

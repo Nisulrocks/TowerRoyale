@@ -15,6 +15,7 @@ namespace TR.Systems
         private static bool _loaded;
         private static readonly List<RarityDefinition> _rarities = new();
         private static readonly List<CardDefinition> _cards = new();
+        private static readonly List<CardDefinition> _visibleCards = new();
         private static readonly List<PackDefinition> _packs = new();
         private static readonly List<ArenaDefinition> _arenas = new();
         private static readonly List<EnemyDefinition> _enemies = new();
@@ -30,7 +31,7 @@ namespace TR.Systems
         private static TR.Data.Progression.TrophyRoadDefinition _trophyRoad;
 
         public static IReadOnlyList<RarityDefinition> Rarities => _rarities;
-        public static IReadOnlyList<CardDefinition> Cards => _cards;
+        public static IReadOnlyList<CardDefinition> Cards => _visibleCards;
         public static IReadOnlyList<PackDefinition> Packs => _packs;
         public static IReadOnlyList<ArenaDefinition> Arenas => _arenas;
         public static IReadOnlyList<EnemyDefinition> Enemies => _enemies;
@@ -42,6 +43,7 @@ namespace TR.Systems
 
             _rarities.Clear();
             _cards.Clear();
+            _visibleCards.Clear();
             _packs.Clear();
             _rarityById.Clear();
             _cardById.Clear();
@@ -89,6 +91,8 @@ namespace TR.Systems
             {
                 if (!string.IsNullOrWhiteSpace(c.CardId) && !_cardById.ContainsKey(c.CardId))
                     _cardById.Add(c.CardId, c);
+                if (!c.ShowInGame) continue;
+                _visibleCards.Add(c);
                 if (c.Rarity != null)
                 {
                     if (!_cardsByRarity.TryGetValue(c.Rarity, out var list))
@@ -187,9 +191,9 @@ namespace TR.Systems
             if (list == null || list.Count == 0)
             {
                 
-                if (_cards.Count == 0) return null;
+                if (_visibleCards.Count == 0) return null;
                 rng ??= new System.Random();
-                return _cards[rng.Next(0, _cards.Count)];
+                return _visibleCards[rng.Next(0, _visibleCards.Count)];
             }
             rng ??= new System.Random();
             return list[rng.Next(0, list.Count)];

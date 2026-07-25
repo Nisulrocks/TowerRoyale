@@ -9,26 +9,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b4eb4483d824cc41b853d705619a420, type: 3}
-  m_Name: InfernoCardDefinition
+  m_Script: {fileID: 11500000, guid: 1faefee48e06f014aa03911c9deba557, type: 3}
+  m_Name: Royal Treasury
   m_EditorClassIdentifier: 
-  cardId: 4
-  displayName: Inferno Tower
-  icon: {fileID: 21300000, guid: 487c4bfb3981e1a409d32082b1a71f06, type: 3}
-  rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
-  showInGame: 0
-  towerPrefab: {fileID: 1212263692359996816, guid: 9077bb2dee635f240b44b2cb18ad40ba, type: 3}
+  cardId: royal_treasury
+  displayName: Royal Treasury
+  icon: {fileID: 21300000, guid: 241561a8b7dd85748aeeb9357879fe80, type: 3}
+  rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+  showInGame: 1
+  towerPrefab: {fileID: 1212263692359996816, guid: bcdb25e70af5ed54ea6d529066e1e692, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
-  dpsBase: 20
-  dpsPerLevel: 10
-  fireRateBase: 0
+  dpsBase: 0
+  dpsPerLevel: 0
+  fireRateBase: 1
   fireRatePerLevel: 0
-  rangeBase: 3
-  rangePerLevel: 0.3
+  rangeBase: 0
+  rangePerLevel: 0
   splashBase: 0
   splashPerLevel: 0
-  costBase: 50
-  costPerLevel: 7
+  costBase: 130
+  costPerLevel: 20
   critChanceBase: 0
   critChancePerLevel: 0
   critMultiplierBase: 2
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileSpeed: 10
   projectileImpactVfxKey: 
-  idleVfxKey: InfernoIdle
+  idleVfxKey: 
   defeatDestroyVfxKey: 
   defeatDestroySfxKey: 
   chainOnHit: 0
@@ -121,20 +121,9 @@ MonoBehaviour:
   chainZapJitter: 0.15
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
-  maxTargetsBase: 3
-  maxTargetsPerLevel: 0
-  rampUpPerSecBase: 0.5
-  rampUpPerSecPerLevel: 0.05
-  rampMaxMultiplierBase: 3
-  rampMaxMultiplierPerLevel: 0
-  multiTargetPenaltyBase: 0.5
-  multiTargetPenaltyPerLevel: 0
-  rampDownPerSecBase: 100
-  rampDownPerSecPerLevel: 0
-  beamStartColor: {r: 1, g: 0.53792745, b: 0, a: 1}
-  beamEndColor: {r: 1, g: 0.2, b: 0, a: 1}
-  beamBaseWidth: 0.04
-  beamMaxWidth: 0.2
-  beamJitter: 1
-  beamJitterAmplitude: 0.3
-  beamMaterial: {fileID: 2100000, guid: 5a53a251763edd64bafa33ff9eb2c9dc, type: 2}
+  incomePerSecBase: 9
+  incomePerSecPerLevel: 2.5
+  maxHealthBase: 130
+  maxHealthPerLevel: 25
+  decayPerSecBase: 5
+  decayPerSecPerLevel: 1

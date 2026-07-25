@@ -22,6 +22,8 @@ namespace TR.Data
         [SerializeField] private string displayName;
         [SerializeField] private Sprite icon;
         [SerializeField] private RarityDefinition rarity;
+        [Tooltip("If false, this card definition is excluded from the in-game card pool, collections, decks, and packs.")]
+        [SerializeField] private bool showInGame = true;
 
         [Header("Battle Prefab")]
         [SerializeField] private GameObject towerPrefab;  
@@ -192,6 +194,7 @@ namespace TR.Data
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public RarityDefinition Rarity => rarity;
+        public bool ShowInGame => showInGame;
         public GameObject TowerPrefab => towerPrefab;
         public ArenaDefinition UnlockArena => unlockArena;
         public int RequiredTrophies => unlockArena != null ? Mathf.Max(0, unlockArena.TrophyRequirement) : 0;

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Pulse Tower
   icon: {fileID: 21300000, guid: 487c4bfb3981e1a409d32082b1a71f06, type: 3}
   rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
+  showInGame: 0
   towerPrefab: {fileID: 1212263692359996816, guid: 8b882e7053e610e46948ad66f45cb9ab, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 5
