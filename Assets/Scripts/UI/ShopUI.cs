@@ -43,7 +43,13 @@ namespace TR.UI
 
         private void OnEnable()
         {
+            PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
             Refresh();
+        }
+
+        private void HandleSoftCurrencyChanged(int balance)
+        {
+            if (softCurrencyText) softCurrencyText.text = $"Coins: {balance}";
         }
 
         private ShopPackItemUI _dailyItem;
@@ -137,7 +143,6 @@ namespace TR.UI
                 if (pack == null) continue;
                 if (!string.IsNullOrEmpty(starterId) && pack.PackId == starterId) continue; 
                 
-                if (!pack.IsUnlockedForPlayer()) continue;
                 var item = Instantiate(itemPrefab, listRoot);
                 item.Bind(pack, OnOpenPack, -1, 0);
             }
@@ -214,6 +219,7 @@ namespace TR.UI
 
         private void OnDisable()
         {
+            PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
             StopSoftFlash();
             RestoreSoftCurrencyVisuals();
         }
@@ -388,7 +394,7 @@ namespace TR.UI
                 PlayerProfile.Data.AddPacks(id, 1);
                 PlayerProfile.SetLastDailyPackNow();
                 PlayerProfile.Save();
-                UpdateDailyItemState(force: true);
+                Refresh();
             }
         }
 

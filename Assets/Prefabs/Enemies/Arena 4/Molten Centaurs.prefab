@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: -9147176943419690883}
   - component: {fileID: -414788723417171680}
   - component: {fileID: 1441826355939471513}
+  - component: {fileID: -4737112088221077566}
   m_Layer: 0
   m_Name: Molten Centaurs
   m_TagString: Untagged
@@ -227,10 +228,17 @@ MonoBehaviour:
   rotateToMovement: 1
   defaultSpriteFacing: 0
   rotateSpeedDegPerSec: 720
+  bobWhileMoving: 1
+  bobFrequency: 4
+  bobAmplitude: 0.05
   autoFindPath: 1
   healthBarUIPrefab: {fileID: 2184231122396617306, guid: c4b4c0ffe1955974db9633ba4e47af73, type: 3}
   healthBarCanvas: {fileID: 3643839534106175484, guid: 1e35bd258646ebb4495fa5570f33140d, type: 3}
   healthBarOffset: {x: 0, y: 1, z: 0}
+  useHoverOutline: 1
+  outlineMaterial: {fileID: 2100000, guid: bb8fb0969b4843bd8515b4ab6f1d46df, type: 2}
+  outlineColor: {r: 1, g: 0.07898478, b: 0, a: 1}
+  outlineThickness: 4
   bossHealthUIPrefab: {fileID: 0}
   bossHealthUIPrefabGO: {fileID: 0}
   deathVfxKey: EnemyDeath
@@ -242,6 +250,7 @@ MonoBehaviour:
   poisonTickVfxInterval: 0.3
   slowTickVfxKey: Freeze
   slowTickVfxInterval: 0.35
+  regenVfxInterval: 0.5
   hitVfxKey: EnemyHit
   hitVfxAnchor: {fileID: 0}
   hitVfxInterval: 0.12
@@ -287,3 +296,39 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interpolateSpeed: 12
   snapDistance: 2.5
+--- !u!58 &-4737112088221077566
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7063429890210703705}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.45

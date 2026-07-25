@@ -84,6 +84,7 @@ namespace TR.Battle
             SetupArenaFromContext();
             UpdateTopBar();
             SetupDeckAndPlacement();
+            TR.Net.DuoRejoinService.IsRejoinAttempt = false;
             HookCastle();
             
             if (startSkipButton != null)
@@ -163,7 +164,7 @@ namespace TR.Battle
         {
             if (economy != null)
             {
-                economy.BeginMatch();
+                economy.BeginMatch(_arena);
             }
             
             TR.Systems.EffectLimitService.Initialize(_arena);
@@ -399,6 +400,7 @@ namespace TR.Battle
             _coordinator.OnEnemySyncRequested += OnDuoEnemySyncRequested;
             _coordinator.OnEnemySyncReceived += OnDuoEnemySyncReceived;
             _coordinator.OnEnemyRespawnRequested += OnDuoEnemyRespawnRequested;
+            _coordinator.OnCritReceived += OnDuoCritReceived;
 
             
             
@@ -410,7 +412,6 @@ namespace TR.Battle
                 _coordinator.RequestTowerSync();
                 _coordinator.RequestEnemySync();
             }
-            TR.Net.DuoRejoinService.IsRejoinAttempt = false;
 
             
             BroadcastLocalDeck();
@@ -436,12 +437,18 @@ namespace TR.Battle
                 _coordinator.OnEnemySyncRequested -= OnDuoEnemySyncRequested;
                 _coordinator.OnEnemySyncReceived -= OnDuoEnemySyncReceived;
                 _coordinator.OnEnemyRespawnRequested -= OnDuoEnemyRespawnRequested;
+                _coordinator.OnCritReceived -= OnDuoCritReceived;
             }
         }
 
         
         
         
+        private void OnDuoCritReceived(Vector3 worldPos, string text)
+        {
+            TR.UI.DamageNumbers.ShowCrit(worldPos, text);
+        }
+
         private bool _tookOverAsMaster;
         private void OnDuoMasterSwitched()
         {

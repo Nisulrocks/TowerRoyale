@@ -24,19 +24,19 @@ MonoBehaviour:
   attackBoolParam: IsAttacking
   dieTriggerParam: Die
   speedFloatParam: 
-  useRegenAbility: 0
-  regenPerSecondBase: 0.03
-  regenMissingHealthFactor: 0.02
+  useRegenAbility: 1
+  regenPerSecondBase: 0.1
+  regenMissingHealthFactor: 0.15
   regenSuppressAfterDamageSeconds: 2.5
-  regenPerSecondCap: 0.05
-  regenTotalPercentCap: 0.4
-  regenWhileDoT: 0
+  regenPerSecondCap: 0.15
+  regenTotalPercentCap: 0.5
+  regenWhileDoT: 1
   regenDoTPenaltyMultiplier: 0.25
-  regenVfxKey: 
+  regenVfxKey: Regen
   usePulseNukeAbility: 1
   pulseNukeRadius: 4
-  pulseNukeCooldownMin: 20
-  pulseNukeCooldownMax: 30
+  pulseNukeCooldownMin: 5
+  pulseNukeCooldownMax: 10
   pulseNukeRandomCheckInterval: 1
   pulseNukeTriggerChance: 0.5
   pulseNukeVfxKey: 

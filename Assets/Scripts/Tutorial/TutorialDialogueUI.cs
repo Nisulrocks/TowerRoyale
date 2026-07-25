@@ -8,6 +8,15 @@ namespace TR.Tutorial
     
     public class TutorialDialogueUI : MonoBehaviour
     {
+        [System.Serializable]
+        public class AnchorPreset
+        {
+            public Vector2 anchorMin = new Vector2(0.5f, 0f);
+            public Vector2 anchorMax = new Vector2(0.5f, 0f);
+            public Vector2 pivot = new Vector2(0.5f, 0f);
+            public Vector2 anchoredPosition = new Vector2(0f, 40f);
+        }
+
         [SerializeField] private RectTransform panel;
         [SerializeField] private TextMeshProUGUI text;
         [SerializeField] private float defaultCharDelay = 0.03f;
@@ -20,6 +29,10 @@ namespace TR.Tutorial
         [SerializeField] private Vector2 pivot = new Vector2(0.5f, 0f);
         [SerializeField] private Vector2 anchoredPosition = new Vector2(0f, 40f);
         [SerializeField] private Vector2 size = new Vector2(720f, 140f);
+
+        [Header("Left / Right Presets")]
+        [SerializeField] private AnchorPreset leftPreset = new AnchorPreset();
+        [SerializeField] private AnchorPreset rightPreset = new AnchorPreset();
 
         [Header("Animation")]
         [SerializeField] private float popDuration = 0.25f;
@@ -101,14 +114,31 @@ namespace TR.Tutorial
 
         public void Show(string content, float charDelay, Sprite guideSprite = null)
         {
+            Show(content, charDelay, DialogueAnchor.Left, guideSprite);
+        }
+
+        public void Show(string content, float charDelay, DialogueAnchor anchor, Sprite guideSprite = null)
+        {
             StopAnimations();
             if (text != null) text.text = string.Empty;
             gameObject.SetActive(true);
             _dialogueTransform.localScale = Vector3.zero;
 
+            ApplyAnchor(anchor);
             ApplyGuideSprite(guideSprite);
 
             _pop = StartCoroutine(AnimateShow(content ?? string.Empty, charDelay > 0f ? charDelay : defaultCharDelay));
+        }
+
+        private void ApplyAnchor(DialogueAnchor anchor)
+        {
+            var preset = anchor == DialogueAnchor.Left ? leftPreset : rightPreset;
+            if (preset == null || _dialogueTransform == null) return;
+
+            _dialogueTransform.anchorMin = preset.anchorMin;
+            _dialogueTransform.anchorMax = preset.anchorMax;
+            _dialogueTransform.pivot = preset.pivot;
+            _dialogueTransform.anchoredPosition = preset.anchoredPosition;
         }
 
         private void ApplyGuideSprite(Sprite guideSprite)

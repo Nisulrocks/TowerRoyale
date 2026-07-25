@@ -27,6 +27,9 @@ namespace TR.UI
         [SerializeField] private float flipDuration = 0.45f;
         [SerializeField] private float flipOvershootScale = 1.08f;
         [SerializeField] private float flipInterval = 0.15f;
+        [Header("Rarity Pulse Background")]
+        [Tooltip("Optional prefab instantiated behind each revealed card. Should contain an Image on its root RectTransform. If null, a default colored Image is created. The script will tint it with the rarity color.")]
+        [SerializeField] private GameObject rarityPulsePrefab;
         [Header("Back Face")]
         [Tooltip("Optional prefab for the card back face (will be instantiated under each card). If null, a sprite or color will be used.")]
         [SerializeField] private GameObject backFacePrefab;
@@ -814,22 +817,56 @@ namespace TR.UI
             if (card == null || rarity == null) return;
             if (card.Find("RarityPulse") != null) return;
 
-            var go = new GameObject("RarityPulse", typeof(RectTransform), typeof(UnityEngine.UI.Image));
-            var rt = go.GetComponent<RectTransform>();
-            rt.SetParent(card, false);
-            rt.SetAsFirstSibling(); 
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(1f, 1f);
-            
             const float padX = 18f;
             const float padY = 24f;
-            rt.offsetMin = new Vector2(-padX, -padY);
-            rt.offsetMax = new Vector2(+padX, +padY);
-            var img = go.GetComponent<UnityEngine.UI.Image>();
-            var col = rarity.Color; col.a = 0.0f; img.color = col;
-            img.raycastTarget = false;
-            
-            StartCoroutine(PulseImageAlphaLoop(img, 0.2f, 0.55f, 1.8f));
+
+            RectTransform rt;
+            UnityEngine.UI.Image img;
+            if (rarityPulsePrefab != null)
+            {
+                var go = Instantiate(rarityPulsePrefab, card, false);
+                go.name = "RarityPulse";
+                rt = go.GetComponent<RectTransform>();
+                img = go.GetComponentInChildren<UnityEngine.UI.Image>(true);
+            }
+            else
+            {
+                var go = new GameObject("RarityPulse", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+                rt = go.GetComponent<RectTransform>();
+                rt.SetParent(card, false);
+                img = go.GetComponent<UnityEngine.UI.Image>();
+            }
+
+            if (rt != null)
+            {
+                rt.SetAsFirstSibling();
+                if (rarityPulsePrefab == null)
+                {
+                    rt.anchorMin = new Vector2(0f, 0f);
+                    rt.anchorMax = new Vector2(1f, 1f);
+                    rt.offsetMin = new Vector2(-padX, -padY);
+                    rt.offsetMax = new Vector2(+padX, +padY);
+                }
+            }
+
+            if (img != null)
+            {
+                img.raycastTarget = false;
+
+                if (img.material != null && img.material.HasProperty("_GlowColor"))
+                {
+                    var mat = new Material(img.material);
+                    mat.SetColor("_GlowColor", rarity.Color);
+                    img.material = mat;
+                    img.color = new Color(0f, 0f, 0f, 0f);
+                }
+                else
+                {
+                    var col = rarity.Color; col.a = 0.0f; img.color = col;
+                }
+
+                StartCoroutine(PulseImageAlphaLoop(img, 0.2f, 0.55f, 1.8f));
+            }
         }
 
         private IEnumerator PulseImageAlpha(UnityEngine.UI.Image img, float peakAlpha, float duration)

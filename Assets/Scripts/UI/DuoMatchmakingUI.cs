@@ -186,7 +186,7 @@ namespace TR.UI
 
         private static DuoMatchmakingUI FindRuntimeInstance()
         {
-            var all = FindObjectsOfType<DuoMatchmakingUI>(true);
+            var all = FindObjectsByType<DuoMatchmakingUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < all.Length; i++)
             {
                 var ui = all[i];

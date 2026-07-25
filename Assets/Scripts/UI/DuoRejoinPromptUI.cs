@@ -36,7 +36,6 @@ namespace TR.UI
         [SerializeField] private string matchEndedTitle = "Match Ended";
         [SerializeField, TextArea(2, 4)]
         private string matchEndedDescription = "Your last duo match has already ended.";
-        [SerializeField] private string dismissLabel = "OK";
         [SerializeField] private float endedAutoDestroyDelay = 3f;
 
         private bool _autoDestroyStarted;
@@ -90,7 +89,7 @@ namespace TR.UI
 
         private DuoMatchmakingUI FindValidMatchmakingUI()
         {
-            var all = FindObjectsOfType<DuoMatchmakingUI>(true);
+            var all = FindObjectsByType<DuoMatchmakingUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < all.Length; i++)
             {
                 var ui = all[i];

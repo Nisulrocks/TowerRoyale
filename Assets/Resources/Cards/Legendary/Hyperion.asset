@@ -20,7 +20,7 @@ MonoBehaviour:
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 50
   dpsPerLevel: 10
-  fireRateBase: 0.1
+  fireRateBase: 0.2
   fireRatePerLevel: 0
   rangeBase: 100
   rangePerLevel: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
-  defeatDestroyVfxKey: 
+  defeatDestroyVfxKey: TowerDestroy
   defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0

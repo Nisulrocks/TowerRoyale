@@ -24,15 +24,18 @@ MonoBehaviour:
     dialogueText: Greetings Commander, We've not seen your around, What shall we
       call you?
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
     waitMode: 4
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your Name
     namePlaceholderText: Your name...
     nameGreetingFormat: Highest of Greetings, Commander {0}!
     nameGreetingGuideSprite: {fileID: 21300000, guid: b4672500bdfc3b5418b9de86f4fa6e56, type: 3}
-    nameGreetingSeconds: 5
+    nameGreetingSeconds: 3
   - targetMode: 0
     targetObjectName: Shop Tab
     targetPackId: 
@@ -42,10 +45,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Open The Shop to get your first pack
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -60,10 +66,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Open Your First Starter Pack
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -78,10 +87,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Build Your First Deck by heading over to the Deck builder Tab
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -96,10 +108,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Click on your owned Cards to Build a Deck
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -115,10 +130,13 @@ MonoBehaviour:
     dialogueText: Go to the Play Menu and Enter a single player Arena for your first
       battle!
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -133,10 +151,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Click Play to Go Into your First Single Arena Match
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -151,10 +172,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Drag and place down a tower onto a snap point
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
     waitMode: 3
     waitSeconds: 0
     blockOutside: 0
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -169,10 +193,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Click on Start to Start the wave of enemies and Prepare to Defend
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 0
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -187,10 +214,13 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: 'Protect Your Castle From in Coming Enemies '
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
     waitMode: 1
     waitSeconds: 3
     blockOutside: 0
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -206,10 +236,13 @@ MonoBehaviour:
     dialogueText: Congadulations Commander! Youve Unlocked the First Arena Stonebrook
       Village !
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: b4672500bdfc3b5418b9de86f4fa6e56, type: 3}
     waitMode: 1
     waitSeconds: 6
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: 
     namePlaceholderText: 
     nameGreetingFormat: 
@@ -224,10 +257,184 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: Click on the Arena to Open the trohpy Road and Collect your rewards
     typewriterCharDelay: 0.04
+    dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 4
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Collect your Trohpy road rewards
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 1
+    guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: TrohpyRoadCloseBTN
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Close out of the Trohpy Road
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 0
+    guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: Collections Tab
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Go to the Collections Tab to check out your card collection
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 0
+    guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 3
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Upgrade your cards here before you go into battle to have mor epower
+      against the enemies
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 0
+    guideSprite: {fileID: 21300000, guid: b4672500bdfc3b5418b9de86f4fa6e56, type: 3}
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+    skipIfNoTarget: 1
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: Play Tab
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Go Back to the Play Tab
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 0
+    guideSprite: {fileID: 21300000, guid: 2f3eb10b98329564dba3c6dd7fdcdd62, type: 3}
+    waitMode: 2
+    waitSeconds: 0
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: You have unlocked Multiplayer Mode, in whihc you can play with
+      other people!
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 1
+    guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
+    waitMode: 1
+    waitSeconds: 5
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Have Fun Playing Tower Royale, Remember to always upgrade your
+      cards and build the best deck!
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 1
+    guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
+    waitMode: 1
+    waitSeconds: 5
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
+    namePromptText: Enter your name
+    namePlaceholderText: Your name...
+    nameGreetingFormat: Hello, {0}!
+    nameGreetingGuideSprite: {fileID: 0}
+    nameGreetingSeconds: 1.5
+  - targetMode: 0
+    targetObjectName: 
+    targetPackId: 
+    targetScreenOffset: {x: 0, y: -1}
+    requiredSceneName: Lobby
+    autoClickObjectNameOnStart: 
+    maxArrows: 12
+    dialogueText: Royale Commander Out, Peace!
+    typewriterCharDelay: 0.04
+    dialogueAnchor: 1
+    guideSprite: {fileID: 21300000, guid: b4672500bdfc3b5418b9de86f4fa6e56, type: 3}
+    waitMode: 1
+    waitSeconds: 3
+    blockOutside: 1
+    skipIfNoTarget: 0
+    noTargetSkipDelay: 3
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!

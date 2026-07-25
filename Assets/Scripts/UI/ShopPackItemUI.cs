@@ -14,6 +14,12 @@ namespace TR.UI
         [SerializeField] private Image packArtImage;
         [SerializeField] private Button openButton;
 
+        [Header("Unlock")]
+        [SerializeField] private GameObject lockedOverlayRoot;
+        [SerializeField] private TMP_Text lockedDescriptionText;
+        [SerializeField] private Button unlockButton;
+        [SerializeField] private Color unlockCostColor = new Color(1f, 0.84f, 0f, 1f);
+
         [Header("Quantity")]
         [SerializeField] private GameObject quantityRoot;
         [SerializeField] private TMP_Text quantityText;
@@ -35,6 +41,7 @@ namespace TR.UI
             _onOpen = onOpen;
             _maxQuantity = maxQuantity;
             _selectedQuantity = Mathf.Clamp(defaultQuantity, 1, Mathf.Max(1, _maxQuantity));
+            _overrideCostCache = -1;
 
             if (nameText) nameText.text = pack != null ? pack.DisplayName : "(null)";
             if (descText) descText.text = pack != null ? $"Cards: {pack.CardsPerPack}" : "";
@@ -43,7 +50,7 @@ namespace TR.UI
                 Sprite art = pack.ShopPackArt;
                 if (art != null) packArtImage.sprite = art;
             }
-            if (quantityRoot != null) quantityRoot.SetActive(_maxQuantity > 1);
+
             if (minusButton)
             {
                 minusButton.onClick.RemoveAllListeners();
@@ -54,33 +61,28 @@ namespace TR.UI
                 plusButton.onClick.RemoveAllListeners();
                 plusButton.onClick.AddListener(IncreaseQuantity);
             }
-
-            int cost = GetEffectiveCost(overrideCost);
-            if (costText)
-            {
-                costText.text = pack != null ? (cost <= 0 ? "Free" : $"Cost: {cost}") : "";
-                costText.color = cost <= 0 ? new Color(0.8f, 1f, 0.8f, 1f) : costText.color;
-            }
             if (openButton)
             {
-                openButton.interactable = pack != null;
                 openButton.onClick.RemoveAllListeners();
                 if (pack != null)
                     openButton.onClick.AddListener(OnClickBuy);
             }
-            RefreshQuantityUI();
-            RefreshAffordability(overrideCost);
+
+            _ = GetEffectiveCost(overrideCost);
+            RefreshLockState();
         }
 
         private void OnEnable()
         {
             PlayerProfile.OnSoftCurrencyChanged += HandleCurrencyChanged;
-            RefreshAffordability();
+            PlayerProfile.OnTrophiesChanged += HandleTrophiesChanged;
+            RefreshLockState();
         }
 
         private void OnDisable()
         {
             PlayerProfile.OnSoftCurrencyChanged -= HandleCurrencyChanged;
+            PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
         }
 
         private void HandleCurrencyChanged(int newBalance)
@@ -88,26 +90,107 @@ namespace TR.UI
             RefreshAffordability();
         }
 
+        private void HandleTrophiesChanged(int newTrophies)
+        {
+            RefreshLockState();
+        }
+
+        private void RefreshLockState()
+        {
+            if (_pack == null) return;
+
+            bool arenaUnlocked = _pack.IsUnlockedForPlayer();
+            bool fullyUnlocked = _pack.IsFullyUnlockedForPlayer();
+            bool requiresUnlock = _pack.UnlockArena != null || _pack.UnlockCost > 0;
+            bool showPackInfo = !requiresUnlock || fullyUnlocked;
+
+            if (lockedOverlayRoot)
+            {
+                lockedOverlayRoot.SetActive(requiresUnlock && !fullyUnlocked);
+            }
+
+            if (descText) descText.gameObject.SetActive(showPackInfo);
+            if (costText) costText.gameObject.SetActive(showPackInfo && fullyUnlocked);
+            if (openButton) openButton.gameObject.SetActive(showPackInfo && fullyUnlocked);
+
+            if (lockedDescriptionText)
+            {
+                if (requiresUnlock && !fullyUnlocked)
+                {
+                    if (!arenaUnlocked)
+                    {
+                        string arenaName = _pack.UnlockArena != null ? _pack.UnlockArena.DisplayName : "Arena";
+                        lockedDescriptionText.text = $"LOCKED\nunlock at {arenaName} ({_pack.RequiredTrophies} trophies)";
+                    }
+                    else
+                    {
+                        string hex = ColorUtility.ToHtmlStringRGBA(unlockCostColor);
+                        lockedDescriptionText.text = $"Purchase this Pack for <color=#{hex}>{_pack.UnlockCost}</color>";
+                    }
+                }
+                else
+                {
+                    lockedDescriptionText.text = string.Empty;
+                }
+            }
+
+            if (unlockButton)
+            {
+                bool showUnlock = requiresUnlock && !fullyUnlocked;
+                unlockButton.gameObject.SetActive(showUnlock);
+                unlockButton.onClick.RemoveAllListeners();
+                if (showUnlock)
+                    unlockButton.onClick.AddListener(OnClickUnlock);
+            }
+
+            if (requiresUnlock)
+            {
+                _buttonLabelOverride = fullyUnlocked ? null : "Locked";
+            }
+
+            RefreshAffordability();
+        }
+
         private void RefreshAffordability(int overrideCost = -1)
         {
             if (_pack == null || openButton == null) return;
+
+            bool fullyUnlocked = _pack.IsFullyUnlockedForPlayer();
+            bool arenaUnlocked = _pack.IsUnlockedForPlayer();
             int balance = PlayerProfile.GetSoftCurrency();
-            int cost = GetEffectiveCost(overrideCost);
-            int max = ComputeMaxQuantity(cost);
-            _selectedQuantity = Mathf.Clamp(_selectedQuantity, 1, max);
-            RefreshQuantityUI();
-            int totalCost = cost * _selectedQuantity;
-            bool canBuy = balance >= totalCost && _selectedQuantity > 0;
-            openButton.interactable = canBuy;
-            if (costText)
+
+            if (unlockButton)
             {
-                costText.text = cost <= 0 ? "Free" : $"Cost: {totalCost}";
-                costText.color = canBuy ? new Color(0.8f, 1f, 0.8f, 1f) : new Color(1f, 0.6f, 0.6f, 1f);
+                unlockButton.interactable = arenaUnlocked && !fullyUnlocked && balance >= _pack.UnlockCost;
             }
+
+            if (!fullyUnlocked)
+            {
+                openButton.interactable = false;
+                if (costText) costText.gameObject.SetActive(false);
+            }
+            else
+            {
+                int cost = GetEffectiveCost(overrideCost);
+                int max = ComputeMaxQuantity(cost);
+                _selectedQuantity = Mathf.Clamp(_selectedQuantity, 1, max);
+                int totalCost = cost * _selectedQuantity;
+                bool canBuy = balance >= totalCost && _selectedQuantity > 0;
+                openButton.interactable = canBuy;
+                if (costText)
+                {
+                    costText.gameObject.SetActive(true);
+                    costText.text = cost <= 0 ? "Free" : $"Cost: {totalCost}";
+                    costText.color = canBuy ? new Color(0.8f, 1f, 0.8f, 1f) : new Color(1f, 0.6f, 0.6f, 1f);
+                }
+            }
+
+            RefreshQuantityUI();
         }
 
         private void DecreaseQuantity()
         {
+            if (_pack == null || !_pack.IsFullyUnlockedForPlayer()) return;
             if (_selectedQuantity > 1)
             {
                 _selectedQuantity--;
@@ -118,6 +201,7 @@ namespace TR.UI
 
         private void IncreaseQuantity()
         {
+            if (_pack == null || !_pack.IsFullyUnlockedForPlayer()) return;
             int max = ComputeMaxQuantity(GetEffectiveCost());
             if (_selectedQuantity < max)
             {
@@ -129,10 +213,12 @@ namespace TR.UI
 
         private void RefreshQuantityUI()
         {
+            bool fullyUnlocked = _pack != null && _pack.IsFullyUnlockedForPlayer();
+            int max = ComputeMaxQuantity(GetEffectiveCost());
             if (quantityText != null) quantityText.text = _selectedQuantity.ToString();
-            if (minusButton != null) minusButton.interactable = _selectedQuantity > 1;
-            if (plusButton != null) plusButton.interactable = _selectedQuantity < ComputeMaxQuantity(GetEffectiveCost());
-            if (quantityRoot != null) quantityRoot.SetActive(ComputeMaxQuantity(GetEffectiveCost()) > 1);
+            if (minusButton != null) minusButton.interactable = fullyUnlocked && _selectedQuantity > 1;
+            if (plusButton != null) plusButton.interactable = fullyUnlocked && _selectedQuantity < max;
+            if (quantityRoot != null) quantityRoot.SetActive(fullyUnlocked && max > 1);
             RefreshOpenButtonLabel();
         }
 
@@ -161,7 +247,7 @@ namespace TR.UI
 
         private void OnClickBuy()
         {
-            if (_pack == null) return;
+            if (_pack == null || !_pack.IsFullyUnlockedForPlayer()) return;
             int cost = GetEffectiveCost();
             int totalCost = cost * _selectedQuantity;
             if (totalCost > 0 && !PlayerProfile.TrySpendSoftCurrency(totalCost))
@@ -170,6 +256,23 @@ namespace TR.UI
                 return;
             }
             _onOpen?.Invoke(_packId, _selectedQuantity);
+        }
+
+        private void OnClickUnlock()
+        {
+            if (_pack == null) return;
+            if (_pack.IsFullyUnlockedForPlayer()) return;
+            if (!_pack.IsUnlockedForPlayer()) return;
+
+            int cost = _pack.UnlockCost;
+            if (cost > 0 && !PlayerProfile.TrySpendSoftCurrency(cost))
+            {
+                RefreshAffordability();
+                return;
+            }
+
+            PlayerProfile.UnlockPack(_pack.PackId);
+            RefreshLockState();
         }
 
         private int _overrideCostCache = -1;

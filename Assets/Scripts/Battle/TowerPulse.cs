@@ -1,6 +1,7 @@
 using UnityEngine;
 using TR.Data;
 using TR.Audio;
+using TR.Net;
 using System.Collections.Generic;
 
 namespace TR.Battle
@@ -111,6 +112,8 @@ namespace TR.Battle
             if (isCrit)
             {
                 TR.UI.DamageNumbers.ShowCrit(transform, _pulseDef.GetCritBurstText());
+                if (DuoRuntime.IsDuo)
+                    DuoBattleCoordinator.Instance?.BroadcastTowerCrit(transform.position, _pulseDef.GetCritBurstText());
                 var ck = _pulseDef.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
             }
 

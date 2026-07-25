@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Shifting Sands
   arenaImage: {fileID: 21300000, guid: 4b11175b5e8e5444aa85b975d9ca404f, type: 3}
   trophyRequirement: 50
+  startingMoney: 400
   waveCount: 8
   waveInterval: 30
   mediumStartPercent: 0.25
@@ -54,16 +55,16 @@ MonoBehaviour:
   bossHealthMultPerSpawn: 1.2
   bossDamageMultPerSpawn: 1.2
   bossSpeedMultPerSpawn: 1.2
-  easyKillMin: 5
-  easyKillMax: 10
-  mediumKillMin: 10
-  mediumKillMax: 20
-  hardKillMin: 20
-  hardKillMax: 40
-  bossKillMin: 50
-  bossKillMax: 100
-  victoryMoneyMin: 15
-  victoryMoneyMax: 30
+  easyKillMin: 20
+  easyKillMax: 30
+  mediumKillMin: 40
+  mediumKillMax: 50
+  hardKillMin: 60
+  hardKillMax: 80
+  bossKillMin: 100
+  bossKillMax: 150
+  victoryMoneyMin: 30
+  victoryMoneyMax: 50
   victoryXPMin: 5
   victoryXPMax: 8
   defeatXPMin: 2
@@ -74,4 +75,10 @@ MonoBehaviour:
   defeatTrophiesMin: 15
   defeatTrophiesMax: 20
   effectLimits: []
-  cardLimits: []
+  cardLimits:
+  - card: {fileID: 11400000, guid: 2ff463be4d1149a49bc0a19a4258525f, type: 2}
+    maxCount: 1
+  - card: {fileID: 11400000, guid: 1da1d4ce90c6e6445aa676a1cf3a024c, type: 2}
+    maxCount: 4
+  - card: {fileID: 11400000, guid: 73d341fad27b74441a09202e2050233b, type: 2}
+    maxCount: 8

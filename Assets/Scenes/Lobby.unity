@@ -2623,6 +2623,10 @@ MonoBehaviour:
     prefab: {fileID: 8791802859067835849, guid: ae07f2a45f14a82428409cfe410e6002, type: 3}
     preloadCount: 0
     maxPoolSize: 0
+  - key: TowerDestroy
+    prefab: {fileID: 2433282508523890284, guid: c62fd3a7b7fa9a44b92b541f49d3fa3b, type: 3}
+    preloadCount: 0
+    maxPoolSize: 0
 --- !u!1 &1973484768 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7752869003686319047, guid: 258f5fbee898deb4bacc66b34e61aad9, type: 3}
@@ -3481,6 +3485,14 @@ PrefabInstance:
     - target: {fileID: 4303097778139530016, guid: 7f1d8c53e2585144eb67b3af50763f37, type: 3}
       propertyPath: m_Name
       value: Trohpy Road
+      objectReference: {fileID: 0}
+    - target: {fileID: 4303097778139530016, guid: 7f1d8c53e2585144eb67b3af50763f37, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4646376654827674971, guid: 7f1d8c53e2585144eb67b3af50763f37, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

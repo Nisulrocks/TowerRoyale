@@ -61,7 +61,9 @@ namespace TR.Systems
 
         
         public List<TR.Systems.ShopService.CardPointsOffer> cardPointOffers = new();
-        public int cardPointOffersDayKey = 0; 
+        public int cardPointOffersDayKey = 0;
+
+        public List<string> unlockedPackIds = new(); 
 
         public int GetPackCount(string packId)
         {
@@ -252,18 +254,7 @@ namespace TR.Systems
             baseDto.banUntilUnix = now + seconds;
 
             
-            if (strikes >= 3)
-            {
-                var fresh = new PlayerProfileDTO();
-                fresh.tamperCount = strikes; 
-                fresh.lastTamperUnix = now;
-                fresh.banUntilUnix = baseDto.banUntilUnix;
-                _data = fresh;
-            }
-            else
-            {
-                _data = baseDto;
-            }
+            _data = baseDto;
             return _data;
         }
 
@@ -409,6 +400,22 @@ namespace TR.Systems
             Save();
             OnTrophiesChanged?.Invoke(Data.trophies);
         }
+        public static bool IsPackUnlocked(string packId)
+        {
+            return !string.IsNullOrEmpty(packId) && Data.unlockedPackIds != null && Data.unlockedPackIds.Contains(packId);
+        }
+
+        public static void UnlockPack(string packId)
+        {
+            if (string.IsNullOrEmpty(packId)) return;
+            if (Data.unlockedPackIds == null) Data.unlockedPackIds = new List<string>();
+            if (!Data.unlockedPackIds.Contains(packId))
+            {
+                Data.unlockedPackIds.Add(packId);
+                Save();
+            }
+        }
+
         public static int GetSoftCurrency() => Data.softCurrency;
         public static void AddSoftCurrency(int amount)
         {

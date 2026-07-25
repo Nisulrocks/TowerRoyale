@@ -431,10 +431,22 @@ namespace TR.Battle
             return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
 
+        private int _placementIdBase = -1;
+
         private int GeneratePlacementId()
         {
             int actor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : 1;
-            return actor * 100000 + _nextLocalPlacementId++;
+            if (_placementIdBase < 0)
+            {
+                long baseId = (long)actor * 1000000L;
+                _placementIdBase = (int)System.Math.Min(baseId, (long)int.MaxValue - 100000L);
+            }
+            int id;
+            do
+            {
+                id = _placementIdBase + _nextLocalPlacementId++;
+            } while (_towersByPlacementId.ContainsKey(id));
+            return id;
         }
 
         public void SetSnapPointsVisible(bool visible)
@@ -617,7 +629,20 @@ namespace TR.Battle
         {
             var card = GameDB.GetCardById(cardId);
             if (card == null) return;
-            if (_towersByPlacementId.ContainsKey(placementId)) return;
+            if (_towersByPlacementId.TryGetValue(placementId, out var staleGO) && staleGO != null)
+            {
+                var staleBase = staleGO.GetComponent<TowerBase>();
+                if (staleBase != null && staleBase.OwnerActorNumber == ownerActorNumber &&
+                    (staleBase.Definition == null || staleBase.Definition.CardId != cardId ||
+                     Vector3.Distance(staleBase.transform.position, new Vector3(position.x, position.y, 0f)) > 0.01f))
+                {
+                    RemoveTower(staleBase.PlacementId, broadcast: false, refund: false);
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             float radius = GetCardRadius(card);
             Vector3 pos = new Vector3(position.x, position.y, 0f);
@@ -687,16 +712,7 @@ namespace TR.Battle
                 {
                     var bind = go.GetComponent<TowerSnapBinding>();
                     bind?.Unbind();
-
-                    var tb = go.GetComponent<TowerBase>();
-                    if (tb != null && tb.IsLocalOwner)
-                    {
-                        tb.DestroyForRefund(1f);
-                    }
-                    else
-                    {
-                        Destroy(go);
-                    }
+                    Destroy(go);
                 }
             }
             Debug.Log($"[Placement] Removed tower ID {placementId} (remote).");
@@ -766,14 +782,44 @@ namespace TR.Battle
             var card = GameDB.GetCardById(cardId);
             if (card == null) return;
             if (placementId < 0) return;
-            if (_towersByPlacementId.ContainsKey(placementId)) return;
 
             float radius = GetCardRadius(card);
             Vector3 pos = new Vector3(position.x, position.y, 0f);
 
-            if (!IsInsideAnyArea(pos) || !IsPositionFree(pos, radius))
+            if (!IsInsideAnyArea(pos))
             {
                 return;
+            }
+
+            // Remove any existing entry for this placement ID if it does not match exactly.
+            if (_towersByPlacementId.TryGetValue(placementId, out var syncedStaleGO) && syncedStaleGO != null)
+            {
+                var syncedStaleBase = syncedStaleGO.GetComponent<TowerBase>();
+                if (syncedStaleBase != null && syncedStaleBase.OwnerActorNumber == ownerActor &&
+                    syncedStaleBase.Definition != null && syncedStaleBase.Definition.CardId == cardId &&
+                    Vector3.Distance(syncedStaleBase.transform.position, pos) <= 0.01f)
+                {
+                    // Already in sync; just refresh HP and bail.
+                    ApplyTowerHp(syncedStaleGO, hp);
+                    return;
+                }
+                RemoveTower(placementId, broadcast: false, refund: false);
+            }
+
+            // The sync is authoritative: clear any other tower occupying this position.
+            GameObject existingAtPos = FindTowerAt(pos, radius);
+            if (existingAtPos != null)
+            {
+                var existingBase = existingAtPos.GetComponent<TowerBase>();
+                if (existingBase != null)
+                {
+                    if (existingBase.PlacementId == placementId)
+                    {
+                        ApplyTowerHp(existingAtPos, hp);
+                        return;
+                    }
+                    RemoveTower(existingBase.PlacementId, broadcast: false, refund: false);
+                }
             }
 
             bool isLocalOwner = ownerActor >= 1 && PhotonNetwork.LocalPlayer != null && ownerActor == PhotonNetwork.LocalPlayer.ActorNumber;
@@ -840,12 +886,15 @@ namespace TR.Battle
             return null;
         }
 
-        private void RemoveTower(int placementId, bool broadcast)
+        private void RemoveTower(int placementId, bool broadcast, bool refund = true)
         {
             if (!_towersByPlacementId.TryGetValue(placementId, out var go)) return;
 
+            var bind = go != null ? go.GetComponent<TowerSnapBinding>() : null;
+            bind?.Unbind();
+
             var tb = go != null ? go.GetComponent<TowerBase>() : null;
-            if (tb != null && tb.IsLocalOwner)
+            if (tb != null && refund && tb.IsLocalOwner)
             {
                 tb.DestroyForRefund(1f);
             }

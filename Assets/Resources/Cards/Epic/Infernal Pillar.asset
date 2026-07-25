@@ -18,8 +18,8 @@ MonoBehaviour:
   rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
   towerPrefab: {fileID: 1212263692359996816, guid: 2564559fee462d248aa70b2532564d94, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
-  dpsBase: 16
-  dpsPerLevel: 8
+  dpsBase: 12
+  dpsPerLevel: 2
   fireRateBase: 0
   fireRatePerLevel: 0
   rangeBase: 3.5
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
-  defeatDestroyVfxKey: 
+  defeatDestroyVfxKey: TowerDestroy
   defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0
@@ -122,14 +122,14 @@ MonoBehaviour:
   chainTransfersOnHitEffects: 0
   maxTargetsBase: 3
   maxTargetsPerLevel: 0
-  rampUpPerSecBase: 0.5
-  rampUpPerSecPerLevel: 0.25
-  rampMaxMultiplierBase: 3
+  rampUpPerSecBase: 0.1
+  rampUpPerSecPerLevel: 0.05
+  rampMaxMultiplierBase: 2
   rampMaxMultiplierPerLevel: 0
   multiTargetPenaltyBase: 0.25
-  multiTargetPenaltyPerLevel: 0
-  rampDownPerSecBase: 0
-  rampDownPerSecPerLevel: 0
+  multiTargetPenaltyPerLevel: 0.1
+  rampDownPerSecBase: 0.5
+  rampDownPerSecPerLevel: 0.25
   beamStartColor: {r: 1, g: 0.6, b: 0.2, a: 1}
   beamEndColor: {r: 1, g: 0.2, b: 0, a: 1}
   beamBaseWidth: 0.04

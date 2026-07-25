@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 011234f852f2a014ebe2ede23eaf1300, type: 3}
-  m_Name: RandomPackReward
+  m_Name: Tier 1 Packs
   m_EditorClassIdentifier: 
   candidatePacks:
   - {fileID: 11400000, guid: b3ecefea5f362d64a9156f2dee99c28d, type: 2}
   - {fileID: 11400000, guid: eb4c646a319adf14494f0ec68eb643fe, type: 2}
   count: 1
-  icon: {fileID: 21300000, guid: d7cfa1db1d447b642b63aa56c5ec14b2, type: 3}
+  icon: {fileID: -5154268015821040554, guid: b066bf7792b92984ea35b43e3a14a2e8, type: 3}
   autoOpen: 1

@@ -288,6 +288,7 @@ namespace TR.Tutorial
                     {
                         
                         Button btn = null;
+                        float noTargetTimer = 0f;
                         
                         while (btn == null)
                         {
@@ -316,28 +317,42 @@ namespace TR.Tutorial
                                         }
                                     }
                                 }
+
+                                if (step.skipIfNoTarget)
+                                {
+                                    noTargetTimer += Time.unscaledDeltaTime;
+                                    if (noTargetTimer >= Mathf.Max(0.01f, step.noTargetSkipDelay))
+                                    {
+                                        if (verboseLogs) Debug.Log($"[Tutorial] No target found for step {_stepIndex}; auto-advancing.");
+                                        break;
+                                    }
+                                }
+
                                 yield return null; 
                             }
                         }
 
-                        _buttonClickedFlag = false;
-                        _listenedButton = btn;
-                        btn.onClick.AddListener(OnListenedButtonClicked);
-                        while (true)
+                        if (btn != null)
                         {
+                            _buttonClickedFlag = false;
+                            _listenedButton = btn;
+                            btn.onClick.AddListener(OnListenedButtonClicked);
+                            while (true)
+                            {
+                                
+                                if (_listenedButton == null) break; 
+                                yield return null;
+                                if (_listenedButton == null) break;
+                                if (_buttonClickedFlag) break;
+                            }
                             
-                            if (_listenedButton == null) break; 
-                            yield return null;
-                            if (_listenedButton == null) break;
-                            if (_buttonClickedFlag) break;
+                            if (_listenedButton != null)
+                            {
+                                _listenedButton.onClick.RemoveListener(OnListenedButtonClicked);
+                                _listenedButton = null;
+                            }
+                            _buttonClickedFlag = false;
                         }
-                        
-                        if (_listenedButton != null)
-                        {
-                            _listenedButton.onClick.RemoveListener(OnListenedButtonClicked);
-                            _listenedButton = null;
-                        }
-                        _buttonClickedFlag = false;
                     }
                 }
                 else if (step.waitMode == StepWaitMode.WaitForTargetDrag)
@@ -485,7 +500,7 @@ namespace TR.Tutorial
             
             if (_dialogue != null)
             {
-                _dialogue.Show(step.dialogueText, step.typewriterCharDelay, step.guideSprite);
+                _dialogue.Show(step.dialogueText, step.typewriterCharDelay, step.dialogueAnchor, step.guideSprite);
             }
             
             if (_arrow != null)
@@ -590,6 +605,30 @@ namespace TR.Tutorial
                             var btn = it.OpenButton;
                             if (btn != null) return btn.GetComponent<RectTransform>();
                             return it.GetComponent<RectTransform>();
+                        }
+                    }
+                    return null;
+                case TargetMode.UpgradeReadyCollectionCard:
+                    var collectionTiles = Object.FindObjectsByType<TR.UI.CollectionItemUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var it in collectionTiles)
+                    {
+                        if (it != null && it.Card != null && it.CanUpgradeNow())
+                        {
+                            var upgradeBtn = it.UpgradeButton;
+                            if (upgradeBtn != null) return upgradeBtn.GetComponent<RectTransform>();
+                            return it.GetComponent<RectTransform>();
+                        }
+                    }
+                    return null;
+                case TargetMode.TrophyRoadClaimable:
+                    var nodes = Object.FindObjectsByType<TR.UI.TrophyRoad.TrophyRoadNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var node in nodes)
+                    {
+                        if (node != null && node.IsClaimable)
+                        {
+                            var claimBtn = node.ClaimButton;
+                            if (claimBtn != null) return claimBtn.GetComponent<RectTransform>();
+                            return node.GetComponent<RectTransform>();
                         }
                     }
                     return null;
@@ -764,6 +803,28 @@ namespace TR.Tutorial
                         {
                             var btn = it.OpenButton;
                             if (btn != null) return btn;
+                        }
+                    }
+                    return null;
+                case TargetMode.UpgradeReadyCollectionCard:
+                    var collectionItems = Object.FindObjectsByType<TR.UI.CollectionItemUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var it in collectionItems)
+                    {
+                        if (it != null && it.Card != null && it.CanUpgradeNow())
+                        {
+                            var upgradeBtn = it.UpgradeButton;
+                            if (upgradeBtn != null) return upgradeBtn;
+                        }
+                    }
+                    return null;
+                case TargetMode.TrophyRoadClaimable:
+                    var roadNodes = Object.FindObjectsByType<TR.UI.TrophyRoad.TrophyRoadNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var node in roadNodes)
+                    {
+                        if (node != null && node.IsClaimable)
+                        {
+                            var claimBtn = node.ClaimButton;
+                            if (claimBtn != null) return claimBtn;
                         }
                     }
                     return null;

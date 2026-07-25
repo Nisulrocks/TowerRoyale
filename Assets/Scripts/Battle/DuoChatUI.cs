@@ -300,7 +300,7 @@ namespace TR.Battle
             line.fontSize = 20f;
             line.color = Color.white;
             line.richText = true;
-            line.enableWordWrapping = true;
+            line.textWrappingMode = TextWrappingModes.Normal;
             line.alignment = TextAlignmentOptions.TopLeft;
             line.margin = Vector4.zero;
             line.overflowMode = TextOverflowModes.Overflow;
@@ -330,7 +330,7 @@ namespace TR.Battle
             line.fontSize = 20f;
             line.color = new Color(1f, 0.9f, 0.25f);
             line.richText = true;
-            line.enableWordWrapping = true;
+            line.textWrappingMode = TextWrappingModes.Normal;
             line.alignment = TextAlignmentOptions.TopLeft;
             line.margin = Vector4.zero;
             line.overflowMode = TextOverflowModes.Overflow;

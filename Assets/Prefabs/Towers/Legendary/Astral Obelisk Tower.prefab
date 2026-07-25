@@ -162,6 +162,10 @@ MonoBehaviour:
   buffGlowIntensity: 0.35
   buffGlowPulseSpeed: 2.5
   buffGlowPulseAmplitude: 0.25
+  useSelectionOutline: 1
+  outlineColor: {r: 0.2, g: 0.8, b: 1, a: 1}
+  outlineThickness: 4
+  outlineMaterial: {fileID: 2100000, guid: bb8fb0969b4843bd8515b4ab6f1d46df, type: 2}
 --- !u!1 &2543932172920465730
 GameObject:
   m_ObjectHideFlags: 0

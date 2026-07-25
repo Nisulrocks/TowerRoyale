@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Common
   color: {r: 0.5471698, g: 0.5471698, b: 0.5471698, a: 1}
   maxLevel: 20
-  pointsBase: 100
+  pointsBase: 10
   pointsPerLevel: 100
   dupPointsMin: 10
   dupPointsMax: 20

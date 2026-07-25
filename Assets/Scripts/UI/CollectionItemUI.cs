@@ -123,6 +123,22 @@ namespace TR.UI
         }
 
         public CardDefinition Card => _card;
+        public Button UpgradeButton => upgradeButton;
+
+        public bool CanUpgradeNow()
+        {
+            if (_card == null) return false;
+            var cp = PlayerProfile.GetOrCreateCard(_card.CardId);
+            if (cp == null || cp.ownedCount <= 0) return false;
+            var rarity = _card.Rarity;
+            if (rarity == null) return false;
+            int level = Mathf.Max(1, cp.level);
+            int nextLevel = level + 1;
+            if (nextLevel > rarity.MaxLevel) return false;
+            int needed = rarity.GetPointsRequiredForLevel(nextLevel);
+            int cost = rarity.GetUpgradeCostForLevel(nextLevel);
+            return cp.points >= needed && PlayerProfile.GetSoftCurrency() >= cost;
+        }
 
         private void OnEnable()
         {

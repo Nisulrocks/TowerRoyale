@@ -6,7 +6,9 @@ namespace TR.Tutorial
     {
         ByName,
         ShopPackById,
-        OwnedCollectionCards
+        OwnedCollectionCards,
+        UpgradeReadyCollectionCard,
+        TrophyRoadClaimable
     }
 
     public enum StepWaitMode
@@ -16,6 +18,12 @@ namespace TR.Tutorial
         WaitForTargetClick,
         WaitForTargetDrag,
         WaitForNameInput
+    }
+
+    public enum DialogueAnchor
+    {
+        Left,
+        Right
     }
 
     [System.Serializable]
@@ -42,6 +50,7 @@ public string targetPackId;
         [TextArea]
         public string dialogueText;
         [Range(0.01f, 0.1f)] public float typewriterCharDelay = 0.03f;
+        public DialogueAnchor dialogueAnchor = DialogueAnchor.Left;
 
         [Header("Guide Sprite")]
         [Tooltip("Optional guide/emotion sprite shown with this dialogue step.")]
@@ -54,6 +63,12 @@ public float waitSeconds = 0f;
         [Header("Options")]
         [Tooltip("If true, input outside the target is ignored (MVP: not enforced).")]
         public bool blockOutside = false;
+
+        [Header("Skip if target missing")]
+        [Tooltip("If true and the target cannot be found, the step will auto-advance after No Target Skip Delay. Useful for optional upgrade/reward steps.")]
+        public bool skipIfNoTarget = false;
+        [Tooltip("Seconds to wait before auto-advancing when the target is missing. Only used when Skip If No Target is true.")]
+        public float noTargetSkipDelay = 3f;
 
         [Header("Name Input (waitMode = WaitForNameInput)")]
         [Tooltip("Prompt label shown above the name input field.")]

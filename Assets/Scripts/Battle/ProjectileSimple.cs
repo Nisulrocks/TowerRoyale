@@ -2,6 +2,7 @@ using UnityEngine;
 using TR.Data;
 using TR.Audio;
 using TR.UI;
+using TR.Net;
 
 namespace TR.Battle
 {
@@ -80,6 +81,8 @@ namespace TR.Battle
                 if (_isCritShot && _target != null)
                 {
                     DamageNumbers.ShowCrit(_target.transform, _def.GetCritBurstText());
+                    if (DuoRuntime.IsDuo)
+                        DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
                     var ck = _def.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
                 }
                 foreach (var e in EnemyBase2D.All)
@@ -104,6 +107,8 @@ namespace TR.Battle
                     if (_isCritShot)
                     {
                         DamageNumbers.ShowCrit(_target.transform, _def.GetCritBurstText());
+                        if (DuoRuntime.IsDuo)
+                            DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
                         var ck = _def.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
                     }
                     bool stunned = _owner.ApplyOnHitEffects(_target);

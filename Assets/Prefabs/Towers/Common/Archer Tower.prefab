@@ -129,7 +129,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.94, y: 2.08}
+    oldSize: {x: 0.97, y: 1.04}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -161,6 +161,10 @@ MonoBehaviour:
   buffGlowIntensity: 0.35
   buffGlowPulseSpeed: 2.5
   buffGlowPulseAmplitude: 0.25
+  useSelectionOutline: 1
+  outlineColor: {r: 0.2, g: 0.8, b: 1, a: 1}
+  outlineThickness: 4
+  outlineMaterial: {fileID: 2100000, guid: bb8fb0969b4843bd8515b4ab6f1d46df, type: 2}
 --- !u!1 &7749777185644529703
 GameObject:
   m_ObjectHideFlags: 0

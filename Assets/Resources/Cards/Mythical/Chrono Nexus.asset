@@ -79,9 +79,9 @@ MonoBehaviour:
   slowDurationBase: 0
   slowDurationPerLevel: 0
   stunOnHit: 1
-  stunChanceBase: 1
-  stunChancePerLevel: 0
-  stunDurationBase: 10
+  stunChanceBase: 0.2
+  stunChancePerLevel: 0.1
+  stunDurationBase: 1
   stunDurationPerLevel: 0.5
   frostbiteOnHit: 0
   frostbiteDpsBase: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
-  defeatDestroyVfxKey: 
+  defeatDestroyVfxKey: TowerDestroy
   defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0
@@ -121,11 +121,11 @@ MonoBehaviour:
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
   pulseIntervalBase: 15
-  pulseIntervalPerLevel: 0
+  pulseIntervalPerLevel: -1
   pulseRadiusBase: 5
-  pulseRadiusPerLevel: 1
-  pulseDamageBase: 100
-  pulseDamagePerLevel: 0
+  pulseRadiusPerLevel: 0.5
+  pulseDamageBase: 50
+  pulseDamagePerLevel: 5
   pulseAppliesOnHitEffects: 1
   shockwaveVfxKey: 
   sfxPulseKey: 

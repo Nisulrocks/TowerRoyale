@@ -40,8 +40,6 @@ namespace TR.Battle
         [SerializeField] private float sfxFadeIn = 0.15f;
         [SerializeField] private float sfxFadeOut = 0.2f;
         private int _sfxHandle = -1;
-        [Header("Debug")]
-        [SerializeField] private bool showGizmo = true;
         [Header("Behavior")]
         [SerializeField] private bool allowCenterStack = false; 
         [SerializeField] private float falloffPower = 1.0f;     
@@ -220,7 +218,6 @@ namespace TR.Battle
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            if (!showGizmo) return;
             Gizmos.color = new Color(0.5f, 0.8f, 1f, 0.15f);
             Gizmos.DrawWireSphere(_center == Vector3.zero ? transform.position : _center, radius);
         }

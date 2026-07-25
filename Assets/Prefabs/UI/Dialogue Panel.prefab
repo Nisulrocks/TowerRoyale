@@ -219,6 +219,16 @@ MonoBehaviour:
   pivot: {x: 0.5, y: 0}
   anchoredPosition: {x: -525, y: 175}
   size: {x: 0, y: 0}
+  leftPreset:
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0}
+    anchoredPosition: {x: -525, y: 175}
+  rightPreset:
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0}
+    anchoredPosition: {x: 525, y: 175}
   popDuration: 0.25
   popScaleCurve:
     serializedVersion: 2

@@ -19,6 +19,10 @@ namespace TR.UI.TrophyRoad
         private int _index;
         private TrophyMilestone _milestone;
 
+        public int NodeIndex => _index;
+        public Button ClaimButton => button;
+        public bool IsClaimable => _milestone != null && PlayerProfile.GetTrophies() >= Mathf.Max(0, _milestone.trophyRequired) && !PlayerProfile.IsTrophyMilestoneClaimed(_index);
+
         public void SetData(int index, TrophyMilestone milestone)
         {
             _index = index;

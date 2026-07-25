@@ -39,5 +39,6 @@ MonoBehaviour:
   openingVideoClip: {fileID: 32900000, guid: 89470fa9b85069d4e98d06f70a03eabb, type: 3}
   sealCrackKey: 
   openWhooshKey: 
-  unlockArena: {fileID: 0}
+  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  unlockCost: 100
   shopOrder: 1

@@ -19,7 +19,6 @@ namespace TR.UI
         private TextMeshProUGUI _text;
         private Canvas _canvas;
         private Camera _cam;
-        private Transform _target;
         private Vector2 _vel;
         private float _t;
         private float _life;
@@ -27,7 +26,11 @@ namespace TR.UI
 
         public void Init(Transform target, string msg, Canvas canvas)
         {
-            _target = target;
+            Init(target != null ? target.position : Vector3.zero, msg, canvas);
+        }
+
+        public void Init(Vector3 worldPos, string msg, Canvas canvas)
+        {
             _canvas = canvas;
             _cam = _canvas.renderMode == RenderMode.ScreenSpaceCamera ? _canvas.worldCamera : Camera.main;
             _rect = GetComponent<RectTransform>();
@@ -39,22 +42,22 @@ namespace TR.UI
                 _text.alignment = TextAlignmentOptions.Center;
                 _text.textWrappingMode = TextWrappingModes.NoWrap;
             }
-            
-            if (_rect != null && _canvas != null && target != null)
+
+            if (_rect != null && _canvas != null)
             {
-                Vector3 worldPos = target.position + Vector3.up * 1.6f;
-                Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(_cam != null ? _cam : Camera.main, worldPos);
+                Vector3 pos = worldPos + Vector3.up * 1.6f;
+                Vector3 screenPos = RectTransformUtility.WorldToScreenPoint(_cam != null ? _cam : Camera.main, pos);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvas.transform as RectTransform, screenPos, _cam, out var canvasPos);
                 _rect.anchoredPosition = canvasPos;
             }
-            
+
             _vel = new Vector2(0f, upVelocity);
             _t = 0f;
             _life = Mathf.Max(0.01f, lifetime);
             if (_rect != null)
             {
                 _rect.localScale = Vector3.one * startScale;
-                
+
                 float sign = Random.value < 0.5f ? -1f : 1f;
                 _zStart = sign * Mathf.Abs(startZRotation);
                 _rect.localRotation = Quaternion.Euler(0f, 0f, _zStart);

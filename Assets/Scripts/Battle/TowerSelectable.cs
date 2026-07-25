@@ -27,7 +27,11 @@ namespace TR.Battle
 
         private void OnDisable()
         {
-            if (tower != null) tower.ShowRangeRing(false);
+            if (tower != null)
+            {
+                tower.ShowRangeRing(false);
+                tower.SetOutline(false);
+            }
             if (_selected)
             {
                 _selected = false;
@@ -43,6 +47,7 @@ namespace TR.Battle
             if (tower != null)
             {
                 tower.ShowRangeRing(_selected);
+                tower.SetOutline(_selected);
             }
             OnTowerSelectionChanged?.Invoke(tower, _selected);
 

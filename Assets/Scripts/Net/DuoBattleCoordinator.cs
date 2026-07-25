@@ -58,6 +58,8 @@ namespace TR.Net
         
         public event Action<string> OnSystemMessage;
 
+        public event Action<Vector3, string> OnCritReceived;
+
         private readonly HashSet<int> _leftPlayers = new HashSet<int>();
 
         private bool _matchStarted;
@@ -96,7 +98,7 @@ namespace TR.Net
         public void TransferEnemyOwnershipTo(int actorNumber)
         {
             if (actorNumber <= 0) return;
-            var syncs = FindObjectsOfType<EnemyNetSync>();
+            var syncs = FindObjectsByType<EnemyNetSync>(FindObjectsSortMode.None);
             int transferred = 0;
             int fixedCount = 0;
             foreach (var sync in syncs)
@@ -487,6 +489,18 @@ namespace TR.Net
         private void RpcTowerPlaced(string cardId, int level, Vector3 position, int placementId, PhotonMessageInfo info)
         {
             OnTowerPlacedReceived?.Invoke(cardId, level, position, placementId, info.Sender != null ? info.Sender.ActorNumber : 0);
+        }
+
+        public void BroadcastTowerCrit(Vector3 worldPos, string text)
+        {
+            if (string.IsNullOrEmpty(text) || photonView == null) return;
+            photonView.RPC(nameof(RpcTowerCrit), RpcTarget.Others, worldPos, text);
+        }
+
+        [PunRPC]
+        private void RpcTowerCrit(Vector3 worldPos, string text)
+        {
+            OnCritReceived?.Invoke(worldPos, text);
         }
 
         

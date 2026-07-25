@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TR.Data;
 using TR.VFX;
 using TR.Audio;
+using TR.Net;
 using Photon.Pun;
 
 namespace TR.Battle
@@ -74,6 +75,17 @@ namespace TR.Battle
         private SpriteRenderer[] _cachedRenderers;
         private System.Collections.Generic.Dictionary<SpriteRenderer, Color> _origColors;
         private bool _glowActive;
+
+        [Header("Selection Outline")]
+        [SerializeField] private bool useSelectionOutline = true;
+        [SerializeField] private Color outlineColor = new Color(0.2f, 0.8f, 1f, 1f);
+        [SerializeField] private float outlineThickness = 2f;
+        [SerializeField] private Material outlineMaterial;
+
+        private static Material s_baseOutlineMaterial;
+        private Material _outlineMaterialInstance;
+        private Material[] _cachedRendererMaterials;
+        private bool _outlineActive;
         
         private float _stunTimeFromEnemy;
 
@@ -300,6 +312,15 @@ namespace TR.Battle
             _stunTimeFromEnemy = 0f;
         }
 
+        private void OnDestroy()
+        {
+            if (_outlineMaterialInstance != null)
+            {
+                Destroy(_outlineMaterialInstance);
+                _outlineMaterialInstance = null;
+            }
+        }
+
         private void Update()
         {
             
@@ -456,6 +477,58 @@ namespace TR.Battle
             _rangeRing.gameObject.SetActive(true);
         }
 
+        public void SetOutline(bool active)
+        {
+            if (!useSelectionOutline) return;
+            if (_cachedRenderers == null) _cachedRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+            if (_cachedRenderers == null || _cachedRenderers.Length == 0) return;
+
+            if (_cachedRendererMaterials == null || _cachedRendererMaterials.Length != _cachedRenderers.Length)
+                _cachedRendererMaterials = new Material[_cachedRenderers.Length];
+
+            if (active)
+            {
+                if (_outlineMaterialInstance == null)
+                {
+                    Material source = outlineMaterial;
+                    if (source == null)
+                    {
+                        if (s_baseOutlineMaterial == null)
+                            s_baseOutlineMaterial = Resources.Load<Material>("TowerOutline");
+                        source = s_baseOutlineMaterial;
+                    }
+                    if (source != null)
+                        _outlineMaterialInstance = new Material(source);
+                }
+                if (_outlineMaterialInstance == null) return;
+
+                _outlineMaterialInstance.SetColor("_OutlineColor", outlineColor);
+                _outlineMaterialInstance.SetFloat("_OutlineThickness", outlineThickness);
+                _outlineMaterialInstance.SetFloat("_OutlineEnabled", 1f);
+
+                for (int i = 0; i < _cachedRenderers.Length; i++)
+                {
+                    var sr = _cachedRenderers[i];
+                    if (sr == null) continue;
+                    if (_cachedRendererMaterials[i] == null)
+                        _cachedRendererMaterials[i] = sr.sharedMaterial;
+                    sr.sharedMaterial = _outlineMaterialInstance;
+                }
+                _outlineActive = true;
+            }
+            else
+            {
+                for (int i = 0; i < _cachedRenderers.Length; i++)
+                {
+                    var sr = _cachedRenderers[i];
+                    if (sr == null) continue;
+                    if (_cachedRendererMaterials[i] != null)
+                        sr.sharedMaterial = _cachedRendererMaterials[i];
+                }
+                _outlineActive = false;
+            }
+        }
+
         
 
         private EnemyBase2D AcquireTarget()
@@ -568,7 +641,7 @@ namespace TR.Battle
                     
                     if (_lastCrit)
                     {
-                        TR.UI.DamageNumbers.ShowCrit(target.transform, definition.GetCritBurstText());
+                        ShowCritShared(target, definition.GetCritBurstText());
                         var ck = definition.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
                     }
                     for (int i = 0; i < _enemySnapshot.Count; i++)
@@ -626,7 +699,7 @@ namespace TR.Battle
                 {
                     
                     target.TakeDamage(shotDamage);
-                    if (_lastCrit) TR.UI.DamageNumbers.ShowCrit(target.transform, definition.GetCritBurstText());
+                    if (_lastCrit) ShowCritShared(target, definition.GetCritBurstText());
                     bool stunned = ApplyOnHitEffects(target);
                     var hitKey = definition.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
                     
@@ -749,6 +822,14 @@ namespace TR.Battle
                 }
                 var zapFireKey = definition.GetSfxZapFireKey(); if (!string.IsNullOrEmpty(zapFireKey)) SFXManager.Instance?.Play(zapFireKey);
             }
+        }
+
+        private void ShowCritShared(EnemyBase2D target, string text)
+        {
+            if (target == null) return;
+            TR.UI.DamageNumbers.ShowCrit(target.transform, text);
+            if (DuoRuntime.IsDuo)
+                DuoBattleCoordinator.Instance?.BroadcastTowerCrit(target.transform.position, text);
         }
 
         public void TryScheduleMoveOnAfterEffect(EnemyBase2D hitTarget, bool stunApplied)

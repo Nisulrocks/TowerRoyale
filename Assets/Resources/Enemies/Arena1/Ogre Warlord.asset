@@ -24,10 +24,10 @@ MonoBehaviour:
   attackBoolParam: IsAttacking
   dieTriggerParam: 
   speedFloatParam: 
-  useRegenAbility: 0
+  useRegenAbility: 1
   regenPerSecondBase: 0.03
   regenMissingHealthFactor: 0.02
-  regenSuppressAfterDamageSeconds: 2.5
+  regenSuppressAfterDamageSeconds: 1
   regenPerSecondCap: 0.05
   regenTotalPercentCap: 0.4
   regenWhileDoT: 0

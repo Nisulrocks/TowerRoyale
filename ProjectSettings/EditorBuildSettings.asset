@@ -23,6 +23,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Arenas/Arena2BattleScene.unity
     guid: 90ae48d4f89c8b04ca48b035a843628f
+  - enabled: 1
+    path: Assets/Scenes/Arenas/Arena3BattleScene.unity
+    guid: 1f52605fd95d0c247a2a809837afb287
+  - enabled: 1
+    path: Assets/Scenes/Arenas/Arena4BattleScene.unity
+    guid: 57b802e0d14c92f408568b8bdc1e536d
+  - enabled: 1
+    path: Assets/Scenes/Arenas/Arena5BattleScene.unity
+    guid: e501c73b6bd75fd438dd522c84517374
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 23f2b8d09d9bce148abb3e9c710a82ea, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

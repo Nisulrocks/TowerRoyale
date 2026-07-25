@@ -17,6 +17,7 @@ namespace TR.Net
         private const string PrefsArenaId = "DuoArenaId";
         private const string PrefsNick = "DuoNick";
         private const string PrefsMatchEnded = "DuoMatchEnded";
+        private const string PrefsMoney = "DuoMatchMoney";
 
         
         public static bool IsMatchEnded => PlayerPrefs.HasKey(PrefsMatchEnded);
@@ -30,6 +31,55 @@ namespace TR.Net
         public static string SavedSceneName => PlayerPrefs.GetString(PrefsSceneName, "DuoBattle");
         public static string SavedArenaId => PlayerPrefs.GetString(PrefsArenaId, "");
         public static string SavedNick => PlayerPrefs.GetString(PrefsNick, "");
+
+        private static string GetMoneyKey()
+        {
+            string nick = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.NickName : PlayerPrefs.GetString(PrefsNick, "");
+            return PrefsMoney + "_" + SanitizeKeyPart(nick);
+        }
+
+        private static string SanitizeKeyPart(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "x";
+            var sb = new System.Text.StringBuilder(s.Length);
+            foreach (char c in s)
+            {
+                if (char.IsLetterOrDigit(c) || c == '_' || c == '-') sb.Append(c);
+                else sb.Append('_');
+            }
+            return sb.ToString();
+        }
+
+        public static void SaveMatchMoney(int amount)
+        {
+            PlayerPrefs.SetInt(GetMoneyKey(), Mathf.Max(0, amount));
+            PlayerPrefs.Save();
+        }
+
+        public static bool TryLoadMatchMoney(out int amount)
+        {
+            string key = GetMoneyKey();
+            if (PlayerPrefs.HasKey(key))
+            {
+                amount = PlayerPrefs.GetInt(key, 0);
+                return true;
+            }
+            // Legacy fallback for the pre-split global key.
+            if (PlayerPrefs.HasKey(PrefsMoney))
+            {
+                amount = PlayerPrefs.GetInt(PrefsMoney, 0);
+                return true;
+            }
+            amount = 0;
+            return false;
+        }
+
+        public static void ClearMatchMoney()
+        {
+            PlayerPrefs.DeleteKey(GetMoneyKey());
+            PlayerPrefs.DeleteKey(PrefsMoney); // legacy
+            PlayerPrefs.Save();
+        }
 
         
         public event System.Action<bool> OnRejoinComplete;
@@ -81,6 +131,7 @@ namespace TR.Net
                 ClearActiveMatch();
                 return;
             }
+            ClearMatchMoney();
             PlayerPrefs.SetInt(PrefsMatchEnded, 1);
             PlayerPrefs.DeleteKey(PrefsRoomName);
             PlayerPrefs.DeleteKey(PrefsSceneName);
@@ -92,6 +143,7 @@ namespace TR.Net
 
         public static void ClearActiveMatch()
         {
+            ClearMatchMoney();
             PlayerPrefs.DeleteKey(PrefsRoomName);
             PlayerPrefs.DeleteKey(PrefsSceneName);
             PlayerPrefs.DeleteKey(PrefsArenaId);

@@ -24,15 +24,15 @@ MonoBehaviour:
   attackBoolParam: IsAttacking
   dieTriggerParam: Die
   speedFloatParam: 
-  useRegenAbility: 0
+  useRegenAbility: 1
   regenPerSecondBase: 0.03
-  regenMissingHealthFactor: 0.02
-  regenSuppressAfterDamageSeconds: 2.5
+  regenMissingHealthFactor: 0.1
+  regenSuppressAfterDamageSeconds: 1
   regenPerSecondCap: 0.05
   regenTotalPercentCap: 0.4
   regenWhileDoT: 0
   regenDoTPenaltyMultiplier: 0.25
-  regenVfxKey: 
+  regenVfxKey: Regen
   usePulseNukeAbility: 0
   pulseNukeRadius: 4.5
   pulseNukeCooldownMin: 45
@@ -46,12 +46,12 @@ MonoBehaviour:
   pulseNukeRippleSegments: 48
   pulseNukeSfxKey: 
   useStunPulseAbility: 1
-  stunPulseRadius: 4.5
-  stunPulseCooldownMin: 20
-  stunPulseCooldownMax: 25
+  stunPulseRadius: 5
+  stunPulseCooldownMin: 5
+  stunPulseCooldownMax: 15
   stunPulseRandomCheckInterval: 1
-  stunPulseTriggerChance: 1
-  stunPulseDuration: 1.5
+  stunPulseTriggerChance: 0.6
+  stunPulseDuration: 1
   stunPulseVfxKey: 
   stunPulseRippleColor: {r: 0.8, g: 0.9, b: 1, a: 0.55}
   stunPulseRippleDuration: 0.45

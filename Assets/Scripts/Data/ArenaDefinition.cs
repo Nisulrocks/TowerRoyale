@@ -13,6 +13,10 @@ namespace TR.Data
         [Header("Progression")]
         [SerializeField] private int trophyRequirement = 0; 
 
+        [Header("Economy")]
+        [Tooltip("Amount of battle currency players start with in this arena.")]
+        [Min(0)] [SerializeField] private int startingMoney = 500;
+
         [Header("Waves")]
         [SerializeField] private int waveCount = 10;
         [SerializeField] private float waveInterval = 60f; 
@@ -121,6 +125,7 @@ namespace TR.Data
         public string DisplayName => displayName;
         public Sprite ArenaImage => arenaImage;
         public int TrophyRequirement => Mathf.Max(0, trophyRequirement);
+        public int StartingMoney => Mathf.Max(0, startingMoney);
         public int WaveCount => Mathf.Max(1, waveCount);
         public float WaveInterval => Mathf.Max(0.1f, waveInterval);
         public float MediumStartPercent => Mathf.Clamp01(mediumStartPercent);

@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using TR.Data;
 
 namespace TR.Battle
 {
@@ -9,7 +11,11 @@ namespace TR.Battle
     {
         [Header("Binding")]
         [SerializeField] private Slider slider;
-        [SerializeField] private Image fillImage; 
+        [SerializeField] private Image fillImage;
+
+        [Header("Hover Info")]
+        [SerializeField] private TMP_Text nameText;
+        [SerializeField] private TMP_Text attackText;
 
         [Header("Follow Settings")]
         [SerializeField] private bool billboardToCamera = true;
@@ -19,6 +25,7 @@ namespace TR.Battle
         private Vector3 _worldOffset;
         private RectTransform _rt;
         private Canvas _canvas;
+        private bool _hovered;
 
         
         [Header("Fill Colors by Percent")] 
@@ -35,6 +42,7 @@ namespace TR.Battle
                 _enemy.OnHealthChanged -= HandleHealthChanged;
                 _enemy.OnHealthChanged += HandleHealthChanged;
                 HandleHealthChanged(_enemy.CurrentHealth, _enemy.MaxHealth);
+                SetInfo(_enemy.Definition);
             }
         }
 
@@ -43,6 +51,15 @@ namespace TR.Battle
             _rt = GetComponent<RectTransform>();
             _canvas = GetComponentInParent<Canvas>();
             if (slider == null) slider = GetComponentInChildren<Slider>(true);
+            if (nameText == null) nameText = transform.Find("NameText")?.GetComponent<TMP_Text>();
+            if (attackText == null) attackText = transform.Find("AttackText")?.GetComponent<TMP_Text>();
+
+            if (nameText == null || attackText == null)
+            {
+                var texts = GetComponentsInChildren<TMP_Text>(true);
+                if (nameText == null && texts.Length > 0) nameText = texts[0];
+                if (attackText == null && texts.Length > 1) attackText = texts[1];
+            }
         }
 
         private void OnDestroy()
@@ -77,6 +94,23 @@ namespace TR.Battle
             }
         }
 
+        public void SetHover(bool hovered)
+        {
+            _hovered = hovered;
+            if (hovered && !gameObject.activeSelf)
+                gameObject.SetActive(true);
+
+            if (nameText != null) nameText.gameObject.SetActive(hovered);
+            if (attackText != null) attackText.gameObject.SetActive(hovered);
+        }
+
+        public void SetInfo(EnemyDefinition def)
+        {
+            if (def == null) return;
+            if (nameText != null) nameText.text = def.DisplayName;
+            if (attackText != null) attackText.text = $"ATK: {def.DamagePerHit}";
+        }
+
         private void HandleHealthChanged(float current, float max)
         {
             if (slider == null) return;
@@ -84,7 +118,7 @@ namespace TR.Battle
             float pct = Mathf.Clamp01(current / max);
             slider.normalizedValue = pct;
 
-            if (hideWhenFull)
+            if (hideWhenFull && !_hovered)
             {
                 bool hide = pct >= 0.999f;
                 if (gameObject.activeSelf != !hide)

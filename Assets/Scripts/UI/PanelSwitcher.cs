@@ -17,6 +17,8 @@ namespace TR.UI
         [SerializeField] private Panel[] panels;
         private int _activeIndex = -1;
 
+        private static string _returnPanelName;
+
         private void Awake()
         {
             
@@ -28,7 +30,30 @@ namespace TR.UI
                     panels[i].tabButton.onClick.AddListener(() => Show(idx));
                 }
             }
+
+            if (!string.IsNullOrEmpty(_returnPanelName))
+            {
+                string saved = _returnPanelName;
+                _returnPanelName = null;
+                int savedIdx = GetIndexByName(saved);
+                if (savedIdx >= 0)
+                {
+                    Show(savedIdx);
+                    return;
+                }
+            }
+
             if (panels.Length > 0) Show(0);
+        }
+
+        private void OnDestroy()
+        {
+            if (panels != null && _activeIndex >= 0 && _activeIndex < panels.Length)
+            {
+                var panel = panels[_activeIndex];
+                if (panel != null && !string.IsNullOrEmpty(panel.name))
+                    _returnPanelName = panel.name;
+            }
         }
 
         public void Show(int index)

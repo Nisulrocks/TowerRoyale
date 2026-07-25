@@ -114,6 +114,12 @@ namespace TR.UI
         
         public static void ShowCrit(Transform target, string text = "CRIT!")
         {
+            if (target == null) return;
+            ShowCrit(target.position, text);
+        }
+
+        public static void ShowCrit(Vector3 worldPos, string text = "CRIT!")
+        {
             if (_instance == null)
             {
                 Debug.LogWarning("[DamageNumbers] No instance in scene. Add DamageNumbers to a GameObject and assign Canvas + Prefab.");
@@ -122,7 +128,7 @@ namespace TR.UI
             if (!_enabled) return;
             if (_instance.critBurstPrefab == null || _instance.canvas == null) return;
             var inst = Object.Instantiate(_instance.critBurstPrefab, _instance.canvas.transform);
-            inst.Init(target, text, _instance.canvas);
+            inst.Init(worldPos, text, _instance.canvas);
         }
     }
 }

@@ -18,14 +18,14 @@ MonoBehaviour:
   rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
   towerPrefab: {fileID: 1212263692359996816, guid: ff952ccf599c9cb4da29f6d49cff11d4, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
-  dpsBase: 30
+  dpsBase: 20
   dpsPerLevel: 12
   fireRateBase: 0.5
   fireRatePerLevel: 0
   rangeBase: 5
   rangePerLevel: 0.25
-  splashBase: 3
-  splashPerLevel: 0.25
+  splashBase: 2
+  splashPerLevel: 0.1
   costBase: 175
   costPerLevel: 100
   critChanceBase: 0
@@ -54,19 +54,19 @@ MonoBehaviour:
   zapGlowBoost: 2
   chainGlowEnabled: 0
   chainGlowBoost: 2
-  tornadoOnHit: 0
-  tornadoRadiusBase: 0
-  tornadoRadiusPerLevel: 0
-  tornadoStrengthBase: 0
-  tornadoStrengthPerLevel: 0
-  tornadoDurationBase: 0
-  tornadoDurationPerLevel: 0
-  tornadoMaxPullTargets: 6
-  tornadoAllowEasy: 0
-  tornadoAllowMedium: 0
-  tornadoAllowHard: 0
-  tornadoAllowBoss: 0
-  tornadoVfxKey: 
+  tornadoOnHit: 1
+  tornadoRadiusBase: 2
+  tornadoRadiusPerLevel: 0.1
+  tornadoStrengthBase: 2
+  tornadoStrengthPerLevel: 0.1
+  tornadoDurationBase: 0.5
+  tornadoDurationPerLevel: 0.1
+  tornadoMaxPullTargets: 2
+  tornadoAllowEasy: 1
+  tornadoAllowMedium: 1
+  tornadoAllowHard: 1
+  tornadoAllowBoss: 1
+  tornadoVfxKey: Tornado
   tornadoVfxScaleMultiplier: 1
   tornadoAllowCenterStack: 0
   tornadoFalloffPower: 1
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
-  defeatDestroyVfxKey: 
+  defeatDestroyVfxKey: TowerDestroy
   defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0

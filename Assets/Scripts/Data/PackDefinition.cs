@@ -60,6 +60,7 @@ namespace TR.Data
         [Header("Unlocking")]
 
         [SerializeField] private ArenaDefinition unlockArena;
+        [Min(0)] [SerializeField] private int unlockCost = 0;
 
         [Header("Shop")]
         [Tooltip("Order for listing this pack in the shop (lower comes first). Tie-breaker is DisplayName.")]
@@ -81,6 +82,7 @@ namespace TR.Data
         public string SealCrackKey => sealCrackKey;
         public string OpenWhooshKey => openWhooshKey;
         public ArenaDefinition UnlockArena => unlockArena;
+        public int UnlockCost => Mathf.Max(0, unlockCost);
         public int RequiredTrophies => unlockArena != null ? Mathf.Max(0, unlockArena.TrophyRequirement) : 0;
         public int ShopOrder => shopOrder;
 
@@ -94,6 +96,18 @@ namespace TR.Data
         public bool IsUnlockedForPlayer()
         {
             return IsUnlockedForTrophies(PlayerProfile.GetTrophies());
+        }
+
+        public bool IsFullyUnlockedForPlayer()
+        {
+            if (!IsUnlockedForPlayer()) return false;
+            if (UnlockCost <= 0) return true;
+            return PlayerProfile.IsPackUnlocked(PackId);
+        }
+
+        public bool IsPurchasableForPlayer()
+        {
+            return IsUnlockedForPlayer() && UnlockCost > 0 && !IsFullyUnlockedForPlayer();
         }
     }
 }

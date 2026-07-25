@@ -37,9 +37,9 @@ MonoBehaviour:
   burnDpsPerLevel: 0
   burnDurBase: 0
   burnDurPerLevel: 0
-  poisonDpsBase: 10
-  poisonDpsPerLevel: 5
-  poisonDurBase: 5
+  poisonDpsBase: 5
+  poisonDpsPerLevel: 1
+  poisonDurBase: 2
   poisonDurPerLevel: 0.5
   useLightningZapOnHit: 0
   zapDuration: 0.12
@@ -107,7 +107,7 @@ MonoBehaviour:
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
-  defeatDestroyVfxKey: 
+  defeatDestroyVfxKey: TowerDestroy
   defeatDestroySfxKey: 
   chainOnHit: 0
   chainMaxJumpsBase: 0

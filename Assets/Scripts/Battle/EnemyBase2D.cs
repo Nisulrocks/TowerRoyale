@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Photon.Pun;
 using TR.Data;
 using TR.UI;
@@ -9,7 +10,7 @@ using TR.Net;
 namespace TR.Battle
 {
     
-    public class EnemyBase2D : MonoBehaviour
+    public class EnemyBase2D : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public enum SpriteFacing { Down, Right, Up, Left }
 
@@ -45,8 +46,16 @@ namespace TR.Battle
         private Transform _visualRoot;
         private Vector3 _visualBaseScale = Vector3.one;
         private Quaternion _visualBaseRotation = Quaternion.identity;
+        private Vector3 _visualBasePosition = Vector3.zero;
         private Vector2 _desiredLookDirection;
         private Vector3 _lastVisualPosition;
+
+        [Header("Visual Bobbing")]
+        [SerializeField] private bool bobWhileMoving = true;
+        [SerializeField] private float bobFrequency = 6f;
+        [SerializeField] private float bobAmplitude = 0.05f;
+        private float _bobTimer;
+
         [Header("Auto-Config")]
         [SerializeField] private bool autoFindPath = true; 
 
@@ -55,6 +64,16 @@ namespace TR.Battle
         [SerializeField] private Canvas healthBarCanvas;        
         [SerializeField] private Vector3 healthBarOffset = new Vector3(0f, 0.6f, 0f);
         private GameObject _healthBarInstance;
+
+        [Header("Hover Outline")]
+        [SerializeField] private bool useHoverOutline = true;
+        [SerializeField] private Material outlineMaterial;
+        [SerializeField] private Color outlineColor = Color.white;
+        [SerializeField] private float outlineThickness = 2f;
+        private Material _outlineMaterialInstance;
+        private Material _cachedOriginalMaterial;
+        private SpriteRenderer _cachedVisualRenderer;
+        private bool _hovered;
 
         [Header("Boss UI (Screen Space)")]
         [Tooltip("Either assign a BossHealthUI prefab (if BossHealthUI is on the root), or assign a GameObject prefab where BossHealthUI exists on a child.")]
@@ -76,6 +95,7 @@ namespace TR.Battle
         [Tooltip("Seconds between poison tick VFX (rate limit)")] [SerializeField] private float poisonTickVfxInterval = 0.3f;
 [SerializeField] private string slowTickVfxKey = "";
         [Tooltip("Seconds between slow tick VFX (rate limit)")] [SerializeField] private float slowTickVfxInterval = 0.35f;
+        [Tooltip("Seconds between regen VFX (rate limit)")] [SerializeField] private float regenVfxInterval = 0.5f;
         [Tooltip("One-shot particle key to play when this enemy is hit for damage (optional)")]
         [SerializeField] private string hitVfxKey = "";
 [SerializeField]
@@ -409,6 +429,68 @@ namespace TR.Battle
                     _bossUIInstance = null;
                 }
             }
+
+            SetHovered(false);
+        }
+
+        private void OnMouseEnter() => SetHovered(true);
+        private void OnMouseExit() => SetHovered(false);
+
+        public void OnPointerEnter(PointerEventData eventData) => SetHovered(true);
+        public void OnPointerExit(PointerEventData eventData) => SetHovered(false);
+
+        public void SetHovered(bool hovered)
+        {
+            if (_hovered == hovered) return;
+            _hovered = hovered;
+
+            if (useHoverOutline) SetOutline(hovered);
+
+            var ui = _healthBarInstance != null ? _healthBarInstance.GetComponent<EnemyHealthBarUI>() : null;
+            ui?.SetHover(hovered);
+        }
+
+        public void SetOutline(bool active)
+        {
+            if (!useHoverOutline || _visualRoot == null) return;
+            if (_cachedVisualRenderer == null)
+                _cachedVisualRenderer = _visualRoot.GetComponentInChildren<SpriteRenderer>(true);
+            if (_cachedVisualRenderer == null) return;
+
+            if (_outlineMaterialInstance == null)
+            {
+                Material source = outlineMaterial;
+                if (source == null)
+                {
+                    Shader shader = Shader.Find("Universal Render Pipeline/2D/Sprite Outline");
+                    if (shader != null) source = new Material(shader);
+                }
+                if (source == null) return;
+
+                _outlineMaterialInstance = new Material(source);
+            }
+
+            if (active)
+            {
+                if (_cachedOriginalMaterial == null)
+                    _cachedOriginalMaterial = _cachedVisualRenderer.sharedMaterial;
+
+                _outlineMaterialInstance.SetColor("_OutlineColor", outlineColor);
+                _outlineMaterialInstance.SetFloat("_OutlineThickness", outlineThickness);
+                _outlineMaterialInstance.SetFloat("_OutlineEnabled", 1f);
+                _cachedVisualRenderer.sharedMaterial = _outlineMaterialInstance;
+            }
+            else
+            {
+                if (_cachedOriginalMaterial != null)
+                {
+                    _cachedVisualRenderer.sharedMaterial = _cachedOriginalMaterial;
+                }
+                else
+                {
+                    _outlineMaterialInstance.SetFloat("_OutlineEnabled", 0f);
+                }
+            }
         }
 
         public void Initialize(EnemyDefinition def, Path2D followPath)
@@ -491,6 +573,8 @@ namespace TR.Battle
             moveSpeed = Mathf.Max(0f, def != null ? def.MovementSpeed : 1.5f);
             waypointIndex = 0;
             _bossDamageMult = 1f;
+
+            EnsureVisualRoot();
             
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             if (_animator == null) _animator = GetComponent<Animator>();
@@ -500,15 +584,13 @@ namespace TR.Battle
             _speedFloatParam = def != null ? def.SpeedFloatParam : null;
             if (_animator == null && def != null && def.AnimatorController != null)
             {
-                
-                var sr = GetComponentInChildren<SpriteRenderer>();
-                var host = sr != null ? sr.transform : this.transform;
-                _animator = host.gameObject.GetComponent<Animator>();
+                if (_visualRoot == null) EnsureVisualRoot();
+                var host = _visualRoot != null ? _visualRoot.gameObject : this.gameObject;
+                _animator = host.GetComponent<Animator>();
                 if (_animator == null)
                 {
-                    _animator = host.gameObject.AddComponent<Animator>();
+                    _animator = host.AddComponent<Animator>();
                 }
-                _visualRoot = host;
             }
             if (_animator != null && def != null && def.AnimatorController != null)
             {
@@ -516,14 +598,19 @@ namespace TR.Battle
                 _animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             }
             
+            if (_visualRoot == null) EnsureVisualRoot();
             if (_visualRoot == null)
             {
-                var sr = GetComponentInChildren<SpriteRenderer>();
+                var sr = GetComponentInChildren<SpriteRenderer>(true);
                 _visualRoot = sr != null ? sr.transform : this.transform;
             }
             _visualBaseScale = _visualRoot != null ? _visualRoot.localScale : Vector3.one;
             _visualBaseRotation = _visualRoot != null ? _visualRoot.localRotation : Quaternion.identity;
+            _visualBasePosition = _visualRoot != null ? _visualRoot.localPosition : Vector3.zero;
             _lastVisualPosition = transform.position;
+
+            var healthBarUI = _healthBarInstance != null ? _healthBarInstance.GetComponent<EnemyHealthBarUI>() : null;
+            healthBarUI?.SetInfo(def);
 
             SetAnimRunning(false);
             SetAnimAttacking(false);
@@ -576,6 +663,7 @@ namespace TR.Battle
         private float _poisonVfxTimer; 
         private float _frostbiteVfxTimer; 
         private float _slowVfxTimer;   
+        private float _regenVfxTimer;   
         
         private float _slowPercent;   
         private float _slowTime;      
@@ -704,15 +792,17 @@ namespace TR.Battle
 
         private void LateUpdate()
         {
-            if (!rotateToMovement || _visualRoot == null) return;
-            UpdateVisualRotation();
-        }
+            if (_visualRoot == null) return;
 
-        private void UpdateVisualRotation()
-        {
             Vector3 delta = transform.position - _lastVisualPosition;
             _lastVisualPosition = transform.position;
 
+            if (rotateToMovement) UpdateVisualRotation(delta);
+            UpdateBobbing(delta.sqrMagnitude > 1e-8f);
+        }
+
+        private void UpdateVisualRotation(Vector3 delta)
+        {
             Vector2 lookDir = _desiredLookDirection;
             if (delta.sqrMagnitude > 1e-8f)
                 lookDir = new Vector2(delta.x, delta.y).normalized;
@@ -729,6 +819,27 @@ namespace TR.Battle
                 _visualRoot.localRotation = desired;
         }
 
+        private void UpdateBobbing(bool isMoving)
+        {
+            if (!bobWhileMoving || _visualRoot == null || _visualRoot == transform) return;
+
+            float pulse = 0f;
+            if (isMoving)
+            {
+                _bobTimer += bobFrequency * Time.deltaTime * 2f * Mathf.PI;
+                pulse = Mathf.Sin(_bobTimer) * bobAmplitude;
+            }
+            else
+            {
+                _bobTimer = 0f;
+            }
+
+            float signX = Mathf.Sign(_visualRoot.localScale.x);
+            Vector3 scale = _visualBaseScale * (1f + pulse);
+            scale.x = Mathf.Abs(scale.x) * signX;
+            _visualRoot.localScale = scale;
+        }
+
         private float GetDefaultFacingAngle()
         {
             switch (defaultSpriteFacing)
@@ -739,6 +850,66 @@ namespace TR.Battle
                 case SpriteFacing.Down:
                 default: return -90f;
             }
+        }
+
+        private void EnsureVisualRoot()
+        {
+            if (_visualRoot != null && _visualRoot != transform) return;
+
+            Transform visualChild = transform.Find("Visual");
+            if (visualChild != null && visualChild.GetComponent<SpriteRenderer>() != null)
+            {
+                _visualRoot = visualChild;
+                return;
+            }
+
+            Animator rootAnim = GetComponent<Animator>();
+            SpriteRenderer rootSr = GetComponent<SpriteRenderer>();
+            if (rootAnim != null && rootAnim.runtimeAnimatorController != null && rootSr != null)
+            {
+                _visualRoot = rootSr.transform;
+                return;
+            }
+
+            if (rootSr != null && rootSr.enabled)
+            {
+                GameObject visual = new GameObject("Visual");
+                visual.transform.SetParent(transform, false);
+                visual.transform.localPosition = Vector3.zero;
+                visual.transform.localRotation = Quaternion.identity;
+                visual.transform.localScale = Vector3.one;
+
+                SpriteRenderer copy = visual.AddComponent<SpriteRenderer>();
+                CopySpriteRenderer(rootSr, copy);
+                rootSr.enabled = false;
+                _visualRoot = visual.transform;
+            }
+            else
+            {
+                var sr = GetComponentInChildren<SpriteRenderer>(true);
+                _visualRoot = sr != null ? sr.transform : this.transform;
+            }
+        }
+
+        private static void CopySpriteRenderer(SpriteRenderer src, SpriteRenderer dst)
+        {
+            if (src == null || dst == null) return;
+            dst.sprite = src.sprite;
+            dst.color = src.color;
+            dst.flipX = src.flipX;
+            dst.flipY = src.flipY;
+            dst.drawMode = src.drawMode;
+            dst.size = src.size;
+            dst.tileMode = src.tileMode;
+            dst.maskInteraction = src.maskInteraction;
+            dst.spriteSortPoint = src.spriteSortPoint;
+            dst.sortingLayerID = src.sortingLayerID;
+            dst.sortingOrder = src.sortingOrder;
+            dst.material = src.material;
+
+            MaterialPropertyBlock block = new MaterialPropertyBlock();
+            src.GetPropertyBlock(block);
+            dst.SetPropertyBlock(block);
         }
 
         public void SnapVisualToInitialFacing()
@@ -794,6 +965,7 @@ namespace TR.Battle
             if (_poisonVfxTimer > 0f) _poisonVfxTimer -= dt;
             if (_frostbiteVfxTimer > 0f) _frostbiteVfxTimer -= dt;
             if (_slowVfxTimer > 0f) _slowVfxTimer -= dt;
+            if (_regenVfxTimer > 0f) _regenVfxTimer -= dt;
             if (_stunVfxTimer > 0f) _stunVfxTimer -= dt;
             
             if (_stunTime > 0f)
@@ -919,9 +1091,10 @@ namespace TR.Battle
             OnHealthChanged?.Invoke(currentHealth, MaxHealth);
             
             string key = definition.RegenVfxKey;
-            if (!string.IsNullOrEmpty(key))
+            if (!string.IsNullOrEmpty(key) && _regenVfxTimer <= 0f)
             {
                 SpawnStatusVfx(key);
+                _regenVfxTimer = Mathf.Max(0.05f, regenVfxInterval);
             }
         }
 

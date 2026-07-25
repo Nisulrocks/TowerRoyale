@@ -281,7 +281,7 @@ namespace TR.UI
 
             if (matchmakingUI == null || (matchmakingUI.gameObject != null && !matchmakingUI.gameObject.scene.IsValid()))
             {
-                var all = FindObjectsOfType<DuoMatchmakingUI>(true);
+                var all = FindObjectsByType<DuoMatchmakingUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                 matchmakingUI = null;
                 for (int i = 0; i < all.Length; i++)
                 {
