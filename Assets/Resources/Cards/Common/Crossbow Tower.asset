@@ -24,7 +24,7 @@ MonoBehaviour:
   fireRateBase: 5
   fireRatePerLevel: 1
   rangeBase: 1.5
-  rangePerLevel: 0.25
+  rangePerLevel: 0.1
   splashBase: 0
   splashPerLevel: 0
   costBase: 50
