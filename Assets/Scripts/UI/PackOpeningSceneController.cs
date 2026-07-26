@@ -30,6 +30,15 @@ namespace TR.UI
         [Header("Rarity Pulse Background")]
         [Tooltip("Optional prefab instantiated behind each revealed card. Should contain an Image on its root RectTransform. If null, a default colored Image is created. The script will tint it with the rarity color.")]
         [SerializeField] private GameObject rarityPulsePrefab;
+        [Tooltip("Optional outline shader for the rarity pulse. If null, 'Universal Render Pipeline/2D/Card Rarity Outline' is searched for at runtime.")]
+        [SerializeField] private Shader rarityOutlineShader;
+        [SerializeField] private float outlinePulseSpeed = 2.2f;
+        [SerializeField] private float outlineMinThickness = 3f;
+        [SerializeField] private float outlineMaxThickness = 9f;
+        [SerializeField] private float outlineMinAlpha = 0.35f;
+        [SerializeField] private float outlineMaxAlpha = 0.9f;
+        [SerializeField] private float glowStrength = 0.65f;
+        [SerializeField] private float outlineGlowRadius = 16f;
         [Header("Back Face")]
         [Tooltip("Optional prefab for the card back face (will be instantiated under each card). If null, a sprite or color will be used.")]
         [SerializeField] private GameObject backFacePrefab;
@@ -116,6 +125,8 @@ namespace TR.UI
         private Vector2 _packEndPos;
         private bool _revealInProgress = false;
 
+        private Shader _outlineShader;
+
         private void Start()
         {
             GameDB.EnsureLoaded();
@@ -129,6 +140,10 @@ namespace TR.UI
                 continueButton.onClick.RemoveAllListeners();
                 continueButton.onClick.AddListener(OnContinue);
             }
+
+            _outlineShader = rarityOutlineShader ?? Shader.Find("Universal Render Pipeline/2D/Card Rarity Outline");
+            if (_outlineShader == null)
+                Debug.LogWarning("[PackOpeningSceneController] Rarity outline shader not found. Rarity pulse will fall back to the colored background image.");
 
             var packId = SceneParams.Get<string>("packId", null);
             _openCount = Mathf.Max(1, SceneParams.Get("openCount", 1));
@@ -815,6 +830,66 @@ namespace TR.UI
         private void PulseRarityColor(RectTransform card, RarityDefinition rarity)
         {
             if (card == null || rarity == null) return;
+
+            const string outlineName = "RarityOutline";
+            var existing = card.Find(outlineName);
+            if (existing != null)
+                Destroy(existing.gameObject);
+
+            if (_outlineShader == null)
+            {
+                CreateFallbackRarityPulse(card, rarity);
+                return;
+            }
+
+            var cardFrame = card.GetComponentInChildren<Button>(true)?.GetComponent<UnityEngine.UI.Image>();
+            if (cardFrame == null)
+                cardFrame = card.Find("FrontFace")?.GetComponentInChildren<UnityEngine.UI.Image>();
+
+            if (cardFrame == null || cardFrame.sprite == null)
+            {
+                CreateFallbackRarityPulse(card, rarity);
+                return;
+            }
+
+            var go = new GameObject(outlineName, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            var rt = go.GetComponent<RectTransform>();
+            rt.SetParent(card, false);
+
+            var front = card.Find("FrontFace");
+            if (front != null)
+                rt.SetSiblingIndex(front.GetSiblingIndex() + 1);
+            else
+                rt.SetAsFirstSibling();
+
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.localScale = Vector3.one;
+
+            var img = go.GetComponent<UnityEngine.UI.Image>();
+            img.sprite = cardFrame.sprite;
+            img.type = UnityEngine.UI.Image.Type.Simple;
+            img.preserveAspect = cardFrame.preserveAspect;
+            img.raycastTarget = false;
+            img.color = Color.white;
+
+            var mat = new Material(_outlineShader);
+            mat.SetColor("_Color", Color.white);
+            mat.SetFloat("_InteriorAlpha", 0f);
+            mat.SetColor("_OutlineColor", rarity.Color);
+            mat.SetColor("_GlowColor", rarity.Color);
+            mat.SetFloat("_GlowStrength", glowStrength);
+            mat.SetFloat("_GlowRadius", outlineGlowRadius);
+            img.material = mat;
+
+            StartCoroutine(PulseRarityOutline(mat, rarity.Color));
+        }
+
+        private void CreateFallbackRarityPulse(RectTransform card, RarityDefinition rarity)
+        {
+            if (card == null || rarity == null) return;
             if (card.Find("RarityPulse") != null) return;
 
             const float padX = 18f;
@@ -898,6 +973,33 @@ namespace TR.UI
                 float s = 0.5f * (Mathf.Sin(t * Mathf.PI * 2f) + 1f); 
                 float a = Mathf.Lerp(minAlpha, maxAlpha, s);
                 var c = baseCol; c.a = a; img.color = c;
+                yield return null;
+            }
+        }
+
+        private IEnumerator PulseRarityOutline(Material mat, Color baseColor)
+        {
+            if (mat == null) yield break;
+
+            float t = Mathf.PI * 0.5f;
+            while (mat != null)
+            {
+                t += Time.deltaTime * outlinePulseSpeed * Mathf.PI * 2f;
+                float s = 0.5f * (Mathf.Sin(t) + 1f);
+
+                float thickness = Mathf.Lerp(outlineMinThickness, outlineMaxThickness, s);
+                float alpha = Mathf.Lerp(outlineMinAlpha, outlineMaxAlpha, s);
+
+                mat.SetFloat("_OutlineThickness", thickness);
+
+                Color outline = baseColor;
+                outline.a = alpha;
+                mat.SetColor("_OutlineColor", outline);
+
+                Color glow = baseColor;
+                glow.a = alpha * 0.7f;
+                mat.SetColor("_GlowColor", glow);
+
                 yield return null;
             }
         }

@@ -344,6 +344,14 @@ MonoBehaviour:
   flipOvershootScale: 1.08
   flipInterval: 0.15
   rarityPulsePrefab: {fileID: 7678216776521738193, guid: b8bea1221f458cc4e90a7c95b4854bc4, type: 3}
+  rarityOutlineShader: {fileID: 4800000, guid: 4eaf52968b8a0214fa68cfdb6d3f97c3, type: 3}
+  outlinePulseSpeed: 2.2
+  outlineMinThickness: 1
+  outlineMaxThickness: 1
+  outlineMinAlpha: 0.35
+  outlineMaxAlpha: 0.9
+  glowStrength: 1
+  outlineGlowRadius: 200
   backFacePrefab: {fileID: 7600798260355237007, guid: 6abb16cfc891508489060ed678b8866c, type: 3}
   cardBackSprite: {fileID: 0}
   backFaceColor: {r: 0.36, g: 0.22, b: 0.56, a: 1}
