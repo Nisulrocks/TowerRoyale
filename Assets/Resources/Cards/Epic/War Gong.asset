@@ -75,14 +75,14 @@ MonoBehaviour:
   moveOnIgnoreSeconds: 0.6
   focusOnHighestHp: 0
   slowOnHit: 1
-  slowPercentBase: 0.6
+  slowPercentBase: 0.2
   slowPercentPerLevel: 0.02
-  slowDurationBase: 3
+  slowDurationBase: 1
   slowDurationPerLevel: 0.2
   stunOnHit: 1
-  stunChanceBase: 0.7
+  stunChanceBase: 0.2
   stunChancePerLevel: 0.01
-  stunDurationBase: 3
+  stunDurationBase: 1
   stunDurationPerLevel: 0.2
   frostbiteOnHit: 0
   frostbiteDpsBase: 0
@@ -121,12 +121,12 @@ MonoBehaviour:
   chainZapJitter: 0.15
   chainZapSegments: 10
   chainTransfersOnHitEffects: 0
-  pulseIntervalBase: 5
-  pulseIntervalPerLevel: 0
+  pulseIntervalBase: 8
+  pulseIntervalPerLevel: -0.2
   pulseRadiusBase: 4
-  pulseRadiusPerLevel: 0
-  pulseDamageBase: 5
-  pulseDamagePerLevel: 0
+  pulseRadiusPerLevel: 0.1
+  pulseDamageBase: 10
+  pulseDamagePerLevel: 2
   pulseAppliesOnHitEffects: 1
   shockwaveVfxKey: 
   sfxPulseKey: 

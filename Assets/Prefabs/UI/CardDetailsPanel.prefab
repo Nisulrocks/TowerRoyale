@@ -786,8 +786,9 @@ MonoBehaviour:
   root: {fileID: 7261777256325696087}
   panel: {fileID: 7795538180736630030}
   showX: -300
-  hiddenX: -500
+  hiddenX: 300
   animDuration: 0.18
+  battlePanelScale: {x: 0.5, y: 0.5, z: 0.5}
   icon: {fileID: 7010311386968083907}
   rarityStripe: {fileID: 575021160961293322}
   nameText: {fileID: 437756957034161793}

@@ -231,11 +231,53 @@ public int maxPoolSize = 0;
             }
         }
 
+        public static void DisableVfxInteraction(GameObject root)
+        {
+            DisableVfxInteraction(root, false);
+        }
+
+        public static void DisableVfxInteraction(GameObject root, bool skipColliders)
+        {
+            if (root == null) return;
+
+            if (!skipColliders)
+            {
+                var colliders = root.GetComponentsInChildren<Collider>(true);
+                for (int i = 0; i < colliders.Length; i++)
+                    if (colliders[i] != null) colliders[i].enabled = false;
+
+                var colliders2D = root.GetComponentsInChildren<Collider2D>(true);
+                for (int i = 0; i < colliders2D.Length; i++)
+                    if (colliders2D[i] != null) colliders2D[i].enabled = false;
+
+                var rigidbodies = root.GetComponentsInChildren<Rigidbody>(true);
+                for (int i = 0; i < rigidbodies.Length; i++)
+                    if (rigidbodies[i] != null) rigidbodies[i].isKinematic = true;
+
+                var rigidbodies2D = root.GetComponentsInChildren<Rigidbody2D>(true);
+                for (int i = 0; i < rigidbodies2D.Length; i++)
+                    if (rigidbodies2D[i] != null) rigidbodies2D[i].isKinematic = true;
+            }
+
+            var systems = root.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var ps = systems[i];
+                if (ps == null) continue;
+                var collision = ps.collision;
+                collision.enabled = false;
+                var trigger = ps.trigger;
+                trigger.enabled = false;
+            }
+        }
+
         private ParticleSystem CreateInstance(ParticleEntry entry)
         {
             var ps = Instantiate(entry.prefab, transform);
             ps.gameObject.SetActive(false);
-            
+
+            DisableVfxInteraction(ps.gameObject);
+
             var main = ps.main;
             main.stopAction = ParticleSystemStopAction.None;
             
@@ -295,6 +337,9 @@ public int maxPoolSize = 0;
             tr.position = position;
             tr.rotation = rotation;
             ps.gameObject.SetActive(true);
+
+            DisableVfxInteraction(ps.gameObject);
+
             if (play) ps.Play(true);
             return ps;
         }

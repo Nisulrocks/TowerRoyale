@@ -1,4 +1,5 @@
 using UnityEngine;
+using TR.Battle;
 
 namespace TR.VFX
 {
@@ -18,10 +19,12 @@ namespace TR.VFX
         [SerializeField] private bool autoPlayWhenEnabled = true;
 
         private ParticleSystem[] _systems;
+        private bool _interactionDisabled;
 
         private void Awake()
         {
             CacheSystems();
+            TryDisableInteraction();
         }
 
         
@@ -34,6 +37,7 @@ namespace TR.VFX
         private void OnEnable()
         {
             if (_systems == null || _systems.Length == 0) CacheSystems();
+            TryDisableInteraction();
             ParticleQuality.OnChanged += OnQualityChanged;
             
             OnQualityChanged(ParticleQuality.Current);
@@ -50,6 +54,15 @@ namespace TR.VFX
                 _systems = GetComponentsInChildren<ParticleSystem>(true);
             else
                 _systems = GetComponents<ParticleSystem>();
+        }
+
+        private void TryDisableInteraction()
+        {
+            if (_interactionDisabled) return;
+
+            bool skipColliders = GetComponent<EnemyBase2D>() != null || GetComponent<TowerBase>() != null;
+            ParticleManager.DisableVfxInteraction(gameObject, skipColliders);
+            _interactionDisabled = true;
         }
 
         private void OnQualityChanged(int quality)
@@ -93,6 +106,7 @@ namespace TR.VFX
         {
             
             CacheSystems();
+            TryDisableInteraction();
         }
     }
 }

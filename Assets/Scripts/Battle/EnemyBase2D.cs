@@ -444,7 +444,7 @@ namespace TR.Battle
             if (_hovered == hovered) return;
             _hovered = hovered;
 
-            if (useHoverOutline) SetOutline(hovered);
+            if (useHoverOutline || IsBoss()) SetOutline(hovered);
 
             var ui = _healthBarInstance != null ? _healthBarInstance.GetComponent<EnemyHealthBarUI>() : null;
             ui?.SetHover(hovered);
@@ -452,7 +452,7 @@ namespace TR.Battle
 
         public void SetOutline(bool active)
         {
-            if (!useHoverOutline || _visualRoot == null) return;
+            if (_visualRoot == null) return;
             if (_cachedVisualRenderer == null)
                 _cachedVisualRenderer = _visualRoot.GetComponentInChildren<SpriteRenderer>(true);
             if (_cachedVisualRenderer == null) return;

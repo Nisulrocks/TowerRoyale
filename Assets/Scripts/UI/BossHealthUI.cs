@@ -16,6 +16,7 @@ namespace TR.UI
         [SerializeField] private Image fillImage;          
         [Header("Abilities UI")]
         [SerializeField] private TMP_Text abilitiesText;   
+        [SerializeField] private TMP_Text attackText;
         [Header("Fill Colors (Low/Mid/High)")]
         [SerializeField] private Color lowColor = new Color(0.9f, 0.2f, 0.2f, 1f);
         [SerializeField] private Color midColor = new Color(1f, 0.9f, 0.2f, 1f);
@@ -53,6 +54,8 @@ namespace TR.UI
                     fillImage = slider.fillRect.GetComponent<Image>();
                 }
             }
+
+            EnsureAttackText();
         }
 
         public void Bind(EnemyBase2D boss, string displayName)
@@ -68,6 +71,7 @@ namespace TR.UI
 
             if (nameText) nameText.text = string.IsNullOrEmpty(displayName) ? "Boss" : displayName;
             
+            ApplyAttackText(_boss);
             ApplyAbilitiesSummary(_boss);
 
             
@@ -92,6 +96,41 @@ namespace TR.UI
                 }
             }
             ReflowStack();
+        }
+
+        private void EnsureAttackText()
+        {
+            if (attackText != null)
+            {
+                attackText.text = "ATK: -";
+                return;
+            }
+
+            attackText = transform.Find("AttackText")?.GetComponent<TMP_Text>();
+            if (attackText != null) return;
+
+            TMP_Text template = nameText != null ? nameText : hpText;
+            if (template == null)
+            {
+                var texts = GetComponentsInChildren<TMP_Text>(true);
+                if (texts.Length > 0) template = texts[0];
+            }
+            if (template == null) return;
+
+            var clone = Instantiate(template.gameObject, transform);
+            clone.name = "AttackText";
+            attackText = clone.GetComponent<TMP_Text>();
+            if (attackText != null)
+            {
+                attackText.text = "ATK: -";
+                var rt = attackText.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    var ap = rt.anchoredPosition;
+                    ap.y -= 50f;
+                    rt.anchoredPosition = ap;
+                }
+            }
         }
 
         public void Unbind()
@@ -147,6 +186,19 @@ namespace TR.UI
                     fillImage.color = Color.Lerp(lowColor, midColor, t);
                 }
             }
+        }
+
+        private void ApplyAttackText(EnemyBase2D boss)
+        {
+            EnsureAttackText();
+            if (attackText == null) return;
+            var def = boss != null ? boss.Definition : null;
+            if (def == null)
+            {
+                attackText.text = "ATK: -";
+                return;
+            }
+            attackText.text = $"ATK: {def.DamagePerHit}";
         }
 
         private void ApplyAbilitiesSummary(EnemyBase2D boss)

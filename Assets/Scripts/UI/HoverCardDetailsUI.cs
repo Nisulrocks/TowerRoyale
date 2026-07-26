@@ -16,6 +16,7 @@ namespace TR.UI
         [SerializeField] private float showX = -40f;  
         [SerializeField] private float hiddenX = -420f; 
         [SerializeField] private float animDuration = 0.18f;
+        [SerializeField] private Vector3 battlePanelScale = new Vector3(0.5f, 0.5f, 0.5f);
 
         [Header("Header")] 
         [SerializeField] private Image icon;
@@ -62,8 +63,10 @@ namespace TR.UI
             Instance = this;
             if (panel != null)
             {
+                bool inBattle = FindFirstObjectByType<TR.Battle.BattleSceneController>(FindObjectsInactive.Include) != null;
+                panel.localScale = inBattle ? battlePanelScale : Vector3.one;
                 var p = panel.anchoredPosition;
-                p.x = hiddenX;
+                p.x = GetTargetX(false);
                 panel.anchoredPosition = p;
             }
             if (root == null && panel != null) root = panel.gameObject;
@@ -796,14 +799,47 @@ namespace TR.UI
             if (_visible == show) return;
             _visible = show;
             if (show && root != null && !root.activeSelf) root.SetActive(true);
+
+            bool inBattle = FindFirstObjectByType<TR.Battle.BattleSceneController>(FindObjectsInactive.Include) != null;
+            panel.localScale = inBattle ? battlePanelScale : Vector3.one;
+
+            if (show)
+            {
+                var startPos = panel.anchoredPosition;
+                startPos.x = GetTargetX(false);
+                panel.anchoredPosition = startPos;
+            }
+
             if (_anim != null) StopCoroutine(_anim);
             _anim = StartCoroutine(AnimatePanel(show));
         }
 
+        private float GetScaleOffsetX()
+        {
+            if (panel == null) return 0f;
+            float sx = panel.localScale.x;
+            if (Mathf.Approximately(sx, 1f)) return 0f;
+
+            float width = panel.sizeDelta.x;
+            float pivotX = panel.pivot.x;
+            float anchorMinX = panel.anchorMin.x;
+            float anchorMaxX = panel.anchorMax.x;
+            float scaleDiff = 1f - sx;
+
+            if (Mathf.Approximately(anchorMinX, 1f) && Mathf.Approximately(anchorMaxX, 1f))
+                return (1f - pivotX) * width * scaleDiff;
+            if (Mathf.Approximately(anchorMinX, 0f) && Mathf.Approximately(anchorMaxX, 0f))
+                return -pivotX * width * scaleDiff;
+
+            return (0.5f - pivotX) * width * scaleDiff;
+        }
+
+        private float GetTargetX(bool show) => (show ? showX : hiddenX) + GetScaleOffsetX();
+
         private IEnumerator AnimatePanel(bool show)
         {
             float from = panel.anchoredPosition.x;
-            float to = show ? showX : hiddenX;
+            float to = GetTargetX(show);
             float t = 0f;
             while (t < 1f)
             {
