@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Poison Tower
   icon: {fileID: 21300000, guid: 17497536eaa40844399b958b5f992981, type: 3}
   rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+  showInGame: 1
   towerPrefab: {fileID: 1212263692359996816, guid: 313604b38f40015448936f2fc908b0cf, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
   dpsBase: 1
@@ -37,10 +38,10 @@ MonoBehaviour:
   burnDpsPerLevel: 0
   burnDurBase: 0
   burnDurPerLevel: 0
-  poisonDpsBase: 3
-  poisonDpsPerLevel: 0.25
-  poisonDurBase: 5
-  poisonDurPerLevel: 0.5
+  poisonDpsBase: 1
+  poisonDpsPerLevel: 0.2
+  poisonDurBase: 1
+  poisonDurPerLevel: 0.2
   useLightningZapOnHit: 0
   zapDuration: 0.12
   zapWidth: 0.06
@@ -70,8 +71,8 @@ MonoBehaviour:
   tornadoVfxScaleMultiplier: 1
   tornadoAllowCenterStack: 0
   tornadoFalloffPower: 1
-  moveOnAfterEffect: 0
-  moveOnIgnoreSeconds: 0.6
+  moveOnAfterEffect: 1
+  moveOnIgnoreSeconds: 1
   focusOnHighestHp: 0
   slowOnHit: 0
   slowPercentBase: 0
@@ -103,7 +104,7 @@ MonoBehaviour:
   sfxCritKey: 
   rotateToTarget: 1
   rotateSpeedDegPerSec: 360
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 1212263692359996816, guid: e6569a774fd18854fb0368957eda6858, type: 3}
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 

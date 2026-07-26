@@ -744,35 +744,36 @@ namespace TR.Battle
                         }
                         var zapHitKey = definition.GetSfxZapHitKey(); if (!string.IsNullOrEmpty(zapHitKey)) SFXManager.Instance?.Play(zapHitKey);
                     }
-                    if (definition.HasTornadoOnHit())
+                    TryScheduleMoveOnAfterEffect(target, stunned);
+                }
+
+                if (definition.HasTornadoOnHit())
+                {
+                    float tRad = definition.GetTornadoRadius(level);
+                    float tStr = definition.GetTornadoStrength(level);
+                    float tDur = definition.GetTornadoDuration(level);
+                    if (tRad > 0f && tStr > 0f && tDur > 0f)
                     {
-                        float tRad = definition.GetTornadoRadius(level);
-                        float tStr = definition.GetTornadoStrength(level);
-                        float tDur = definition.GetTornadoDuration(level);
-                        if (tRad > 0f && tStr > 0f && tDur > 0f)
+                        int maxTargets = definition.GetTornadoMaxPullTargets();
+                        bool allowEasy = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Easy);
+                        bool allowMedium = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Medium);
+                        bool allowHard = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Hard);
+                        bool allowBoss = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Boss);
+                        string vfxKey = definition.GetTornadoVfxKey();
+                        float vfxMul = definition.GetTornadoVfxScaleMultiplier();
+                        bool allowCenterStack = definition.GetTornadoAllowCenterStack();
+                        float falloffPower = definition.GetTornadoFalloffPower();
+                        var tf = TornadoField.Spawn(hitPos, tRad, tStr, tDur,
+                                           maxTargets, allowEasy, allowMedium, allowHard, allowBoss,
+                                           vfxKey, vfxMul,
+                                           allowCenterStack, falloffPower);
+
+                        var tornadoKey = definition.GetSfxTornadoKey();
+                        if (tf != null && !string.IsNullOrEmpty(tornadoKey))
                         {
-                            int maxTargets = definition.GetTornadoMaxPullTargets();
-                            bool allowEasy = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Easy);
-                            bool allowMedium = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Medium);
-                            bool allowHard = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Hard);
-                            bool allowBoss = definition.TornadoAllowsTier(TR.Data.ArenaDefinition.EnemyTier.Boss);
-                            string vfxKey = definition.GetTornadoVfxKey();
-                            float vfxMul = definition.GetTornadoVfxScaleMultiplier();
-                            bool allowCenterStack = definition.GetTornadoAllowCenterStack();
-                            float falloffPower = definition.GetTornadoFalloffPower();
-                            var tf = TornadoField.Spawn(target.transform.position, tRad, tStr, tDur,
-                                               maxTargets, allowEasy, allowMedium, allowHard, allowBoss,
-                                               vfxKey, vfxMul,
-                                               allowCenterStack, falloffPower);
-                            
-                            var tornadoKey = definition.GetSfxTornadoKey();
-                            if (tf != null && !string.IsNullOrEmpty(tornadoKey))
-                            {
-                                tf.SetSfxKey(tornadoKey);
-                            }
+                            tf.SetSfxKey(tornadoKey);
                         }
                     }
-                    TryScheduleMoveOnAfterEffect(target, stunned);
                 }
 
                 

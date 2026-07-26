@@ -47,6 +47,8 @@ namespace TR.Battle
             Vector3 dest = _target.transform.position;
             Vector3 to = dest - pos;
             float dist = to.magnitude;
+            if (dist > 0.001f)
+                transform.up = to / dist;
             float step = _speed * Time.deltaTime;
             if (dist <= step || dist <= 0.001f)
             {

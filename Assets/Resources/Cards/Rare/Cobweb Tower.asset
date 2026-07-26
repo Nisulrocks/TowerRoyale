@@ -16,10 +16,11 @@ MonoBehaviour:
   displayName: Cobweb Tower
   icon: {fileID: 21300000, guid: a7059bbf83ac3b44ebbd9f6f9fb31f64, type: 3}
   rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+  showInGame: 1
   towerPrefab: {fileID: 1212263692359996816, guid: 4a5298ffec9b1474fbf5a2489b6ab926, type: 3}
   unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
-  dpsBase: 5
-  dpsPerLevel: 0
+  dpsBase: 4
+  dpsPerLevel: 1
   fireRateBase: 1
   fireRatePerLevel: 0
   rangeBase: 4
@@ -74,7 +75,7 @@ MonoBehaviour:
   moveOnIgnoreSeconds: 0.6
   focusOnHighestHp: 0
   slowOnHit: 1
-  slowPercentBase: 0.6
+  slowPercentBase: 0.3
   slowPercentPerLevel: 0.01
   slowDurationBase: 3
   slowDurationPerLevel: 0.25
@@ -103,7 +104,7 @@ MonoBehaviour:
   sfxCritKey: 
   rotateToTarget: 1
   rotateSpeedDegPerSec: 360
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 1212263692359996816, guid: bcb614621cf57854aaf0532c3bd2e9d4, type: 3}
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 

@@ -16,8 +16,9 @@ MonoBehaviour:
   displayName: Toxic Fortress
   icon: {fileID: 21300000, guid: ac9af1dfeaf294c46844c58982303eac, type: 3}
   rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+  showInGame: 1
   towerPrefab: {fileID: 1212263692359996816, guid: 2b0eeb4e2390a3c468e9f0eaa0148a91, type: 3}
-  unlockArena: {fileID: 11400000, guid: f36a7414ef2a3e9459cc862d9822af27, type: 2}
+  unlockArena: {fileID: 11400000, guid: 2c90b3850fc61c64991374143748bc6e, type: 2}
   dpsBase: 8
   dpsPerLevel: 0
   fireRateBase: 0.5
@@ -70,8 +71,8 @@ MonoBehaviour:
   tornadoVfxScaleMultiplier: 1
   tornadoAllowCenterStack: 0
   tornadoFalloffPower: 1
-  moveOnAfterEffect: 0
-  moveOnIgnoreSeconds: 0.6
+  moveOnAfterEffect: 1
+  moveOnIgnoreSeconds: 1.5
   focusOnHighestHp: 0
   slowOnHit: 0
   slowPercentBase: 0
@@ -103,7 +104,7 @@ MonoBehaviour:
   sfxCritKey: 
   rotateToTarget: 1
   rotateSpeedDegPerSec: 360
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 1212263692359996816, guid: 0373940af7557b3449a334140e5cdbb0, type: 3}
   projectileSpeed: 8
   projectileImpactVfxKey: 
   idleVfxKey: 
