@@ -50,6 +50,8 @@ namespace TR.UI
         [SerializeField] private string sfxRarityRare = "rarity_rare";
         [SerializeField] private string sfxRarityEpic = "rarity_epic";
         [SerializeField] private string sfxRarityLegendary = "rarity_legendary";
+        [SerializeField] private string sfxRarityMythic = "rarity_mythic";
+        [SerializeField] private string sfxCardAppear = "card_appear";
 
         [Header("Refs")]
         [SerializeField] private RectTransform packRect;      
@@ -410,6 +412,7 @@ namespace TR.UI
             {
                 var res = _results[i];
                 var rt = BuildCard(res, i, new Vector2(startX + i * usedRevealSpacing, endPos.y), false);
+                TryPlaySfx(sfxCardAppear);
 
                 float t2 = 0f;
                 Vector2 target = new Vector2(rt.anchoredPosition.x, endPos.y + 220f);
@@ -1019,7 +1022,8 @@ namespace TR.UI
             if (!string.IsNullOrEmpty(id))
             {
                 var lid = id.Trim().ToLowerInvariant();
-                if (lid == "legendary") key = sfxRarityLegendary;
+                if (lid == "mythic") key = sfxRarityMythic;
+                else if (lid == "legendary") key = sfxRarityLegendary;
                 else if (lid == "epic") key = sfxRarityEpic;
                 else if (lid == "rare") key = sfxRarityRare;
                 else key = sfxRarityCommon;

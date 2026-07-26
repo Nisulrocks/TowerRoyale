@@ -21,3 +21,59 @@ MonoBehaviour:
     pitchMax: 1
     cooldown: 0.1
     maxConcurrent: 5
+  - key: card_flip
+    clips:
+    - {fileID: 8300000, guid: 46dd35912a20c6a47879d00afaaee0e0, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 1
+  - key: rarity_common
+    clips:
+    - {fileID: 8300000, guid: eee000a90dff37e43b95e2fb4bb896ca, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
+  - key: rarity_rare
+    clips:
+    - {fileID: 8300000, guid: e6b203495598eb146ae12498171f5b0d, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
+  - key: rarity_epic
+    clips:
+    - {fileID: 8300000, guid: 62fbaced81aa96240abc5aafefb4f71f, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
+  - key: rarity_legendary
+    clips:
+    - {fileID: 8300000, guid: 521b86ba11ed48743a99866edd7204e4, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
+  - key: rarity_mythic
+    clips:
+    - {fileID: 8300000, guid: 8bfa59ccf077f2f439639b6650ead97f, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
+  - key: card_appear
+    clips:
+    - {fileID: 8300000, guid: 7be47ae5513cc1d4ea727378275060e1, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.1
+    maxConcurrent: 5
