@@ -199,6 +199,45 @@ namespace TR.Battle
             return appliedAny || stunApplied;
         }
 
+        public void PlayOnHitSfx(EnemyBase2D enemy)
+        {
+            if (definition == null || enemy == null || !enemy.gameObject.activeInHierarchy || enemy.CurrentHealth <= 0f) return;
+
+            float burnDps = definition.GetBurnDps(level) * _burnDpsMul;
+            float burnDur = definition.GetBurnDuration(level) * _burnDurMul;
+            if (burnDps > 0f && burnDur > 0f)
+            {
+                var k = definition.GetSfxBurnApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
+            }
+
+            float poisonDps = definition.GetPoisonDps(level) * _poisonDpsMul;
+            float poisonDur = definition.GetPoisonDuration(level) * _poisonDurMul;
+            if (poisonDps > 0f && poisonDur > 0f)
+            {
+                var k = definition.GetSfxPoisonApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
+            }
+
+            if (definition.HasSlowOnHit())
+            {
+                float sp = definition.GetSlowPercent(level) * _slowPctMul;
+                float sd = definition.GetSlowDuration(level) * _slowDurMul;
+                if (sp > 0f && sd > 0f)
+                {
+                    var k = definition.GetSfxSlowApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
+                }
+            }
+
+            if (definition.HasStunOnHit())
+            {
+                float chance = Mathf.Clamp01(definition.GetStunChance(level) * Mathf.Max(0f, _stunChanceMul));
+                float dur = Mathf.Max(0f, definition.GetStunDuration(level) * Mathf.Max(0f, _stunDurMul));
+                if (chance > 0f && dur > 0f && Random.value <= chance)
+                {
+                    var k = definition.GetSfxStunApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
+                }
+            }
+        }
+
         
         public void TryDoChainRicochet(EnemyBase2D first, Vector3 sourcePos, float baseDamage)
         {
@@ -277,6 +316,78 @@ namespace TR.Battle
                 current = best;
                 damage *= falloff;
                 if (damage <= 0.01f) break;
+            }
+        }
+
+        public void PlayChainSfx(EnemyBase2D first)
+        {
+            if (definition == null || first == null || !first.gameObject.activeInHierarchy || first.CurrentHealth <= 0f) return;
+            if (!definition.HasChainOnHit()) return;
+            int maxJumps = definition.GetChainMaxJumps(level);
+            if (maxJumps <= 0) return;
+
+            string chainKey = definition.GetSfxChainJumpKey();
+            if (string.IsNullOrEmpty(chainKey)) return;
+
+            var visited = new HashSet<EnemyBase2D>();
+            visited.Add(first);
+            var current = first;
+            Color zapCol = definition.GetChainZapColor();
+
+            for (int j = 0; j < maxJumps; j++)
+            {
+                EnemyBase2D best = null;
+                float bestDist = float.MaxValue;
+                Vector3 curPos = current.transform.position;
+                foreach (var e in EnemyBase2D.All)
+                {
+                    if (e == null || e == current || visited.Contains(e)) continue;
+                    if (!e.gameObject.activeInHierarchy || e.CurrentHealth <= 0f) continue;
+                    float d = (e.transform.position - curPos).magnitude;
+                    if (d <= 0.0001f) continue;
+                    if (d < bestDist)
+                    {
+                        bestDist = d; best = e;
+                    }
+                }
+                if (best == null) break;
+
+                visited.Add(best);
+                SFXManager.Instance?.Play(chainKey);
+
+                var mat = definition.GetForceDefaultZapMaterial() ? null : definition.GetZapMaterial();
+                bool glowOn = definition.GetChainGlowEnabled();
+                float glow = definition.GetChainGlowBoost();
+                if (mat != null)
+                {
+                    TR.Battle.LightningZap.Spawn(curPos,
+                                                 best.transform.position,
+                                                 definition.GetChainZapDurationOrFallback(),
+                                                 definition.GetChainZapWidthOrFallback(),
+                                                 definition.GetChainZapJitterOrFallback(),
+                                                 definition.GetChainZapSegmentsOrFallback(),
+                                                 zapCol,
+                                                 mat,
+                                                 glowOn,
+                                                 glow);
+                }
+                else
+                {
+                    TR.Battle.LightningZap.Spawn(curPos,
+                                                 best.transform.position,
+                                                 definition.GetChainZapDurationOrFallback(),
+                                                 definition.GetChainZapWidthOrFallback(),
+                                                 definition.GetChainZapJitterOrFallback(),
+                                                 definition.GetChainZapSegmentsOrFallback(),
+                                                 zapCol,
+                                                 glowOn,
+                                                 glow);
+                }
+
+                if (definition.GetChainTransfersOnHitEffects())
+                    PlayOnHitSfx(best);
+
+                current = best;
             }
         }
 
@@ -699,7 +810,11 @@ namespace TR.Battle
                 {
                     
                     target.TakeDamage(shotDamage);
-                    if (_lastCrit) ShowCritShared(target, definition.GetCritBurstText());
+                    if (_lastCrit)
+                    {
+                        ShowCritShared(target, definition.GetCritBurstText());
+                        var critKey = definition.GetSfxCritKey(); if (!string.IsNullOrEmpty(critKey)) SFXManager.Instance?.Play(critKey);
+                    }
                     bool stunned = ApplyOnHitEffects(target);
                     var hitKey = definition.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
                     
@@ -793,6 +908,7 @@ namespace TR.Battle
             bool useZap = definition.UseLightningZapOnHit();
             var projPrefab = definition.GetProjectilePrefab();
             float projSpeed = definition.GetProjectileSpeed();
+            float splashRadius = _stats.splashRadius * _splashMul;
 
             if (!useZap && projPrefab != null)
             {
@@ -801,8 +917,8 @@ namespace TR.Battle
                 var proj = go.GetComponent<ProjectileSimple>();
                 if (proj == null) proj = go.AddComponent<ProjectileSimple>();
                 string impactKey = !string.IsNullOrEmpty(projectileImpactVfxKey) ? projectileImpactVfxKey : definition.GetProjectileImpactVfxKey();
-                
-                proj.Init(target, projSpeed, 0f, 0f, this, definition, level, impactKey, false, true);
+
+                proj.Init(target, projSpeed, 0f, splashRadius, this, definition, level, impactKey, _lastCrit, true);
             }
             else if (useZap)
             {
@@ -822,6 +938,49 @@ namespace TR.Battle
                         definition.GetZapSegments(), definition.GetZapColor(), glowOn, glow);
                 }
                 var zapFireKey = definition.GetSfxZapFireKey(); if (!string.IsNullOrEmpty(zapFireKey)) SFXManager.Instance?.Play(zapFireKey);
+
+                if (_lastCrit)
+                {
+                    var critKey = definition.GetSfxCritKey(); if (!string.IsNullOrEmpty(critKey)) SFXManager.Instance?.Play(critKey);
+                }
+
+                if (target.gameObject.activeInHierarchy && target.CurrentHealth > 0f)
+                {
+                    if (splashRadius > 0.01f)
+                    {
+                        var splashKey = definition.GetSfxSplashKey(); if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
+                    }
+                    else
+                    {
+                        var hitKey = definition.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
+                    }
+                    var zapHitKey = definition.GetSfxZapHitKey(); if (!string.IsNullOrEmpty(zapHitKey)) SFXManager.Instance?.Play(zapHitKey);
+                    PlayOnHitSfx(target);
+                    if (splashRadius <= 0.01f && definition.HasChainOnHit())
+                        PlayChainSfx(target);
+                }
+            }
+            else
+            {
+                // Instant hit (no projectile, no zap) — play impact SFX on the visual client.
+                if (target.gameObject.activeInHierarchy && target.CurrentHealth > 0f)
+                {
+                    if (_lastCrit)
+                    {
+                        var critKey = definition.GetSfxCritKey(); if (!string.IsNullOrEmpty(critKey)) SFXManager.Instance?.Play(critKey);
+                    }
+                    if (splashRadius > 0.01f)
+                    {
+                        var splashKey = definition.GetSfxSplashKey(); if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
+                    }
+                    else
+                    {
+                        var hitKey = definition.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
+                    }
+                    PlayOnHitSfx(target);
+                    if (splashRadius <= 0.01f && definition.HasChainOnHit())
+                        PlayChainSfx(target);
+                }
             }
         }
 

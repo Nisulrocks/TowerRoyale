@@ -13027,7 +13027,7 @@ MonoBehaviour:
   pulseScale: 1.12
   pulseUpTime: 0.08
   pulseDownTime: 0.14
-  sfxInsufficientKey: 
+  sfxInsufficientKey: insufficient_funds
   shakeAmplitude: 8
   shakeDuration: 0.25
 --- !u!114 &455910169

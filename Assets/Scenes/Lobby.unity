@@ -170,7 +170,7 @@ MonoBehaviour:
   holdTime: 5
   fadeOutTime: 0.3
   iconChildName: Icon
-  sfxKey: 
+  sfxKey: ui_lobby_arena_unlock
   autoPlay: 1
 --- !u!4 &93518000
 Transform:
@@ -210,7 +210,7 @@ MonoBehaviour:
   popInOvershoot: 0
   holdTime: 2
   fadeOutTime: 0.3
-  sfxKey: 
+  sfxKey: ui_lobby_level_up
   autoPlay: 1
 --- !u!114 &93518002
 MonoBehaviour:
@@ -2007,7 +2007,7 @@ MonoBehaviour:
   fadeOutTime: 0.25
   visibleHoldTime: 10
   slideOffset: {x: 0, y: -300}
-  sfxKey: 
+  sfxKey: ui_lobby_ban
 --- !u!4 &1583035300
 Transform:
   m_ObjectHideFlags: 0

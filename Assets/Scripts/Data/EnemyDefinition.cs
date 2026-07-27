@@ -59,7 +59,7 @@ namespace TR.Data
         [SerializeField] [Min(0.05f)] private float pulseNukeRippleDuration = 0.45f;
         [SerializeField] [Min(0.001f)] private float pulseNukeRippleLineWidth = 0.12f;
         [SerializeField] [Min(8)] private int pulseNukeRippleSegments = 48;
-[SerializeField] private string pulseNukeSfxKey = "";
+[SerializeField] private string pulseNukeSfxKey = "enemy_pulse_nuke";
 
         [Header("Abilities - Stun Pulse (Stuns Towers)")]
 
@@ -76,7 +76,7 @@ namespace TR.Data
         [SerializeField] [Min(0.05f)] private float stunPulseRippleDuration = 0.45f;
         [SerializeField] [Min(0.001f)] private float stunPulseRippleLineWidth = 0.12f;
         [SerializeField] [Min(8)] private int stunPulseRippleSegments = 48;
-[SerializeField] private string stunPulseSfxKey = "";
+[SerializeField] private string stunPulseSfxKey = "enemy_stun_pulse";
 
         public string EnemyId => enemyId;
         public string DisplayName => displayName;

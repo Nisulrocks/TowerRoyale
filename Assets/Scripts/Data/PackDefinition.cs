@@ -53,9 +53,9 @@ namespace TR.Data
 
         [Header("Pack Opening SFX (optional)")]
         [Tooltip("SFX key played when the pack seal cracks (start of pop phase)")]
-        [SerializeField] private string sealCrackKey;
+        [SerializeField] private string sealCrackKey = "pack_seal_crack";
         [Tooltip("SFX key played as the pack opens/slides (whoosh during slide phase)")]
-        [SerializeField] private string openWhooshKey;
+        [SerializeField] private string openWhooshKey = "pack_open_whoosh";
 
         [Header("Unlocking")]
 

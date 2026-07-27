@@ -89,19 +89,19 @@ MonoBehaviour:
   frostbiteDpsPerLevel: 0
   frostbiteDurBase: 0
   frostbiteDurPerLevel: 0
-  sfxFireKey: 
-  sfxHitKey: 
-  sfxSplashKey: 
-  sfxChainJumpKey: 
-  sfxZapFireKey: 
-  sfxZapHitKey: 
-  sfxBeamKey: 
-  sfxTornadoKey: 
-  sfxBurnApplyKey: 
-  sfxPoisonApplyKey: 
-  sfxSlowApplyKey: 
-  sfxStunApplyKey: 
-  sfxCritKey: 
+  sfxFireKey: Fire
+  sfxHitKey: tower_hit
+  sfxSplashKey: tower_splash
+  sfxChainJumpKey: tower_chain_jump
+  sfxZapFireKey: tower_zap_fire
+  sfxZapHitKey: tower_zap_hit
+  sfxBeamKey: tower_beam_loop
+  sfxTornadoKey: tornado_loop
+  sfxBurnApplyKey: status_burn
+  sfxPoisonApplyKey: status_poison
+  sfxSlowApplyKey: status_slow
+  sfxStunApplyKey: status_stun
+  sfxCritKey: tower_crit
   rotateToTarget: 1
   rotateSpeedDegPerSec: 360
   projectilePrefab: {fileID: 1212263692359996816, guid: d845b3ad4d5951d4bb366b072dc583b5, type: 3}
@@ -109,7 +109,7 @@ MonoBehaviour:
   projectileImpactVfxKey: 
   idleVfxKey: 
   defeatDestroyVfxKey: TowerDestroy
-  defeatDestroySfxKey: 
+  defeatDestroySfxKey: tower_destroy
   chainOnHit: 0
   chainMaxJumpsBase: 0
   chainMaxJumpsPerLevel: 0

@@ -255,7 +255,7 @@ MonoBehaviour:
   hitVfxAnchor: {fileID: 0}
   hitVfxInterval: 0.12
   statusHitVfxInterval: 0.45
-  deathSfxKey: EnemyDeath
+  deathSfxKey: enemy_death
   attackInterval: 1
   stunTickVfxKey: 
   stunTickVfxInterval: 0.35

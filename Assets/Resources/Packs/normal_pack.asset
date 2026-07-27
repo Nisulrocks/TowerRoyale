@@ -37,7 +37,7 @@ MonoBehaviour:
   packArtSprite: {fileID: -5497566949674162969, guid: b0106d73fca92454c96e3a858bb083d6, type: 3}
   shopPackArtSprite: {fileID: 0}
   openingVideoClip: {fileID: 32900000, guid: e0e3f6a672efccd498639a5d85493618, type: 3}
-  sealCrackKey: 
-  openWhooshKey: 
+  sealCrackKey: pack_seal_crack
+  openWhooshKey: pack_open_whoosh
   unlockArena: {fileID: 0}
   shopOrder: 0

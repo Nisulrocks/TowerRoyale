@@ -134,19 +134,19 @@ namespace TR.Data
         private float frostbiteDurBase = 0f; [SerializeField] private float frostbiteDurPerLevel = 0f;
 
         [Header("SFX (Keys)")]
-        [Tooltip("Sound key when the tower fires (muzzle)")] [SerializeField] private string sfxFireKey = "";
-[SerializeField] private string sfxHitKey = "";
-[SerializeField] private string sfxSplashKey = "";
-[SerializeField] private string sfxChainJumpKey = "";
-[SerializeField] private string sfxZapFireKey = "";
-[SerializeField] private string sfxZapHitKey = "";
-        [Tooltip("Looping beam sound key for Inferno (will fade in/out)")] [SerializeField] private string sfxBeamKey = "";
-        [Tooltip("Looping tornado sound key (will fade in/out)")] [SerializeField] private string sfxTornadoKey = "";
-[SerializeField] private string sfxBurnApplyKey = "";
-[SerializeField] private string sfxPoisonApplyKey = "";
-[SerializeField] private string sfxSlowApplyKey = "";
-[SerializeField] private string sfxStunApplyKey = "";
-[SerializeField] private string sfxCritKey = "";
+        [Tooltip("Sound key when the tower fires (muzzle)")] [SerializeField] private string sfxFireKey = "Fire";
+[SerializeField] private string sfxHitKey = "tower_hit";
+[SerializeField] private string sfxSplashKey = "tower_splash";
+[SerializeField] private string sfxChainJumpKey = "tower_chain_jump";
+[SerializeField] private string sfxZapFireKey = "tower_zap_fire";
+[SerializeField] private string sfxZapHitKey = "tower_zap_hit";
+        [Tooltip("Looping beam sound key for Inferno (will fade in/out)")] [SerializeField] private string sfxBeamKey = "tower_beam_loop";
+        [Tooltip("Looping tornado sound key (will fade in/out)")] [SerializeField] private string sfxTornadoKey = "tornado_loop";
+[SerializeField] private string sfxBurnApplyKey = "status_burn";
+[SerializeField] private string sfxPoisonApplyKey = "status_poison";
+[SerializeField] private string sfxSlowApplyKey = "status_slow";
+[SerializeField] private string sfxStunApplyKey = "status_stun";
+[SerializeField] private string sfxCritKey = "tower_crit";
 
         [Header("Aiming (Regular Towers)")]
         [Tooltip("If true, regular towers rotate to face their current target (Economy/Inferno ignore this).")]
@@ -168,7 +168,7 @@ namespace TR.Data
 
         [SerializeField] private string defeatDestroyVfxKey = "";
 
-        [SerializeField] private string defeatDestroySfxKey = "";
+        [SerializeField] private string defeatDestroySfxKey = "tower_destroy";
         [Header("On-Hit Chain (Ricochet)")]
 
         [SerializeField] private bool chainOnHit = false;

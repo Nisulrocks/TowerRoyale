@@ -27,7 +27,7 @@ namespace TR.UI
         [SerializeField] private float fadeOutTime = 0.3f;
 
         [Header("SFX (Optional)")]
-        [SerializeField] private string sfxKey = "";
+        [SerializeField] private string sfxKey = "ui_lobby_level_up";
 
         [Tooltip("When disabled, this notifier will not trigger on its own and should be driven by LobbyNotificationQueue.")]
         public bool autoPlay = true;

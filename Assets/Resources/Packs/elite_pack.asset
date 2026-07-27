@@ -34,8 +34,8 @@ MonoBehaviour:
   packArtSprite: {fileID: -1553972393530499636, guid: 1f64c3bed9f247347a03d121bc8afeaf, type: 3}
   shopPackArtSprite: {fileID: 0}
   openingVideoClip: {fileID: 32900000, guid: 105b0064ca760f9498c195ba9b669b85, type: 3}
-  sealCrackKey: 
-  openWhooshKey: 
+  sealCrackKey: pack_seal_crack
+  openWhooshKey: pack_open_whoosh
   unlockArena: {fileID: 11400000, guid: b428e9a1dd2428f4b9d8733efe720f65, type: 2}
   unlockCost: 300
   shopOrder: 2

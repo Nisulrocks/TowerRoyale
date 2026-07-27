@@ -108,7 +108,7 @@ namespace TR.Battle
         private float _nextStatusHitVfxTime = 0f;
         [Header("SFX")]
         [Tooltip("SFX key to play on death (SFXManager). Leave empty to disable.")]
-        [SerializeField] private string deathSfxKey = "";
+        [SerializeField] private string deathSfxKey = "enemy_death";
 
         
         private float _lastDamageTime;

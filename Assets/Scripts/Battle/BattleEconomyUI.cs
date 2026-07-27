@@ -38,7 +38,7 @@ namespace TR.Battle
         [SerializeField] private float pulseUpTime = 0.08f;
         [SerializeField] private float pulseDownTime = 0.14f;
 [SerializeField]
-        private string sfxInsufficientKey = "";
+        private string sfxInsufficientKey = "insufficient_funds";
 [SerializeField]
         private float shakeAmplitude = 8f;
 [SerializeField]

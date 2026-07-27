@@ -55,6 +55,13 @@ namespace TR.Battle
                 }
                 _beams.Clear();
             }
+
+            if (_beamSfxHandle > 0 && SFXManager.Instance != null)
+            {
+                SFXManager.Instance.StopLoop(_beamSfxHandle, 0.2f);
+                _beamSfxHandle = -1;
+            }
+
             _slowCooldown.Clear();
             _burnCooldown.Clear();
             _poisonCooldown.Clear();
@@ -248,13 +255,13 @@ namespace TR.Battle
             }
 
             
-            for (int i = 0; i < _enemySnapshot.Count && !_visualOnly; i++)
+            for (int i = 0; i < _enemySnapshot.Count; i++)
             {
                 var e = _enemySnapshot[i];
                 if (!_ramp.TryGetValue(e, out float f)) f = 1f;
                 float perTargetDps = (baseDps * f) / splitDivisor;
                 float dmg = perTargetDps * dt;
-                e.TakeDamage(dmg);
+                if (!_visualOnly) e.TakeDamage(dmg);
                 
                 if (_def != null && _def.HasSlowOnHit())
                 {
@@ -267,8 +274,9 @@ namespace TR.Battle
                         _slowCooldown.TryGetValue(e, out cd);
                         if (cd <= 0f)
                         {
-                            e.ApplySlow(sp, sd);
+                            if (!_visualOnly) e.ApplySlow(sp, sd);
                             _slowCooldown[e] = Mathf.Max(0.05f, slowReapplyInterval);
+                            var k = _def.GetSfxSlowApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
                         }
                     }
                 }
@@ -283,8 +291,9 @@ namespace TR.Battle
                         float cd = 0f; _burnCooldown.TryGetValue(e, out cd);
                         if (cd <= 0f)
                         {
-                            e.ApplyBurn(burnDps, burnDur);
+                            if (!_visualOnly) e.ApplyBurn(burnDps, burnDur);
                             _burnCooldown[e] = Mathf.Max(0.05f, burnReapplyInterval);
+                            var k = _def.GetSfxBurnApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
                         }
                     }
                 }
@@ -298,8 +307,9 @@ namespace TR.Battle
                         float cd = 0f; _poisonCooldown.TryGetValue(e, out cd);
                         if (cd <= 0f)
                         {
-                            e.ApplyPoison(poisonDps, poisonDur);
+                            if (!_visualOnly) e.ApplyPoison(poisonDps, poisonDur);
                             _poisonCooldown[e] = Mathf.Max(0.05f, poisonReapplyInterval);
+                            var k = _def.GetSfxPoisonApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
                         }
                     }
                 }
@@ -313,11 +323,13 @@ namespace TR.Battle
                         float cd = 0f; _stunCooldown.TryGetValue(e, out cd);
                         if (cd <= 0f)
                         {
-                            if (Random.value <= chance)
-                            {
-                                e.ApplyStun(dur);
-                            }
+                            bool rolledStun = Random.value <= chance;
+                            if (rolledStun && !_visualOnly) e.ApplyStun(dur);
                             _stunCooldown[e] = Mathf.Max(0.05f, stunReapplyInterval);
+                            if (rolledStun)
+                            {
+                                var k = _def.GetSfxStunApplyKey(); if (!string.IsNullOrEmpty(k)) SFXManager.Instance?.Play(k);
+                            }
                         }
                     }
                 }

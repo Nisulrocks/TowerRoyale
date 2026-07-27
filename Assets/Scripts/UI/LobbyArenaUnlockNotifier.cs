@@ -39,7 +39,7 @@ namespace TR.UI
         [SerializeField] private string iconChildName = "Icon";
 
         [Header("SFX (Optional)")]
-        [SerializeField] private string sfxKey = "";
+        [SerializeField] private string sfxKey = "ui_lobby_arena_unlock";
 
         [Tooltip("When disabled, this notifier will not trigger on its own and should be driven by LobbyNotificationQueue.")]
         public bool autoPlay = true;

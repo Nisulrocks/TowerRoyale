@@ -40,7 +40,7 @@ namespace TR.UI
         [SerializeField] private Vector2 slideOffset = new Vector2(0f, -40f);
 
         [Header("SFX (Optional)")]
-        [SerializeField] private string sfxKey = "";
+        [SerializeField] private string sfxKey = "ui_lobby_ban";
 
         private GameObject _instance;
         private CanvasGroup _cg;

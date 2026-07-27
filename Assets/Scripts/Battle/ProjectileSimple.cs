@@ -59,14 +59,48 @@ namespace TR.Battle
             transform.position = pos + to.normalized * step;
         }
 
+        private void PlayImpactSfx()
+        {
+            if (_def == null || _target == null || !_target.gameObject.activeInHierarchy || _target.CurrentHealth <= 0f)
+                return;
+
+            if (_isCritShot)
+            {
+                var ck = _def.GetSfxCritKey();
+                if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
+            }
+
+            if (_splashRadius > 0.01f)
+            {
+                var splashKey = _def.GetSfxSplashKey();
+                if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
+            }
+            else
+            {
+                var hitKey = _def.GetSfxHitKey();
+                if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
+            }
+        }
+
         private void Impact(Vector3 hitPos)
         {
             if (!string.IsNullOrEmpty(_impactVfxKey))
             {
                 TR.VFX.ParticleManager.SpawnOneShot(_impactVfxKey, hitPos);
             }
-            
-            if (_visualOnly) return;
+
+            PlayImpactSfx();
+
+            if (_visualOnly)
+            {
+                if (_owner != null && _target != null)
+                {
+                    _owner.PlayOnHitSfx(_target);
+                    if (_splashRadius <= 0.01f && _def != null && _def.HasChainOnHit())
+                        _owner.PlayChainSfx(_target);
+                }
+                return;
+            }
             if (_owner == null || _def == null)
             {
                 return;
@@ -85,7 +119,6 @@ namespace TR.Battle
                     DamageNumbers.ShowCrit(_target.transform, _def.GetCritBurstText());
                     if (DuoRuntime.IsDuo)
                         DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
-                    var ck = _def.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
                 }
                 foreach (var e in EnemyBase2D.All)
                 {
@@ -97,8 +130,6 @@ namespace TR.Battle
                         if (e != _target) _owner.ApplyOnHitEffects(e);
                     }
                 }
-                var splashKey = _def.GetSfxSplashKey(); if (!string.IsNullOrEmpty(splashKey)) SFXManager.Instance?.Play(splashKey);
-                
                 _owner.TryScheduleMoveOnAfterEffect(_target, stunPrimary);
             }
             else
@@ -111,10 +142,8 @@ namespace TR.Battle
                         DamageNumbers.ShowCrit(_target.transform, _def.GetCritBurstText());
                         if (DuoRuntime.IsDuo)
                             DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
-                        var ck = _def.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
                     }
                     bool stunned = _owner.ApplyOnHitEffects(_target);
-                    var hitKey = _def.GetSfxHitKey(); if (!string.IsNullOrEmpty(hitKey)) SFXManager.Instance?.Play(hitKey);
                     
                     _owner.TryDoChainRicochet(_target, _owner.transform.position, _damage);
                     

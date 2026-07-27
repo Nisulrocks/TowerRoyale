@@ -49,6 +49,7 @@ namespace TR.Audio
             var clip = library.GetRandomClip(e);
             if (clip == null) return -1;
             var src = GetFreeSource();
+            if (src == null) return -1;
             src.clip = clip;
             src.pitch = library.GetRandomPitch(e);
             src.loop = true;
@@ -89,6 +90,9 @@ namespace TR.Audio
             masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(PREF_SFX_VOL, 1f));
             muted = PlayerPrefs.GetInt(PREF_SFX_MUTE, 0) != 0;
             
+            if (library == null)
+                library = Resources.Load<SFXLibrary>("SFX/SFXLibrary");
+            
             EnsurePool(initialPoolSize);
         }
 
@@ -108,17 +112,37 @@ namespace TR.Audio
 
         private AudioSource GetFreeSource()
         {
+            // Prefer an idle source that isn't running a loop.
             for (int i = 0; i < _pool.Count; i++)
             {
-                if (!_pool[i].isPlaying) return _pool[i];
+                if (!_pool[i].isPlaying && !IsLoopSource(_pool[i]))
+                    return _pool[i];
             }
+
             if (_pool.Count < maxPoolSize)
             {
                 EnsurePool(_pool.Count + 1);
                 return _pool[_pool.Count - 1];
             }
-            
-            return _pool[0];
+
+            // Pool is full. Reuse a non-loop source if possible, but never steal a loop.
+            for (int i = 0; i < _pool.Count; i++)
+            {
+                if (!IsLoopSource(_pool[i]))
+                    return _pool[i];
+            }
+
+            return null;
+        }
+
+        private bool IsLoopSource(AudioSource src)
+        {
+            foreach (var kv in _loops)
+            {
+                var inst = kv.Value;
+                if (inst != null && inst.src == src) return true;
+            }
+            return false;
         }
 
         public void Play(string key, float volumeScale = 1f)
@@ -141,6 +165,7 @@ namespace TR.Audio
             var clip = library.GetRandomClip(e);
             if (clip == null) return;
             var src = GetFreeSource();
+            if (src == null) return;
             
             if (e.maxConcurrent > 0)
             {

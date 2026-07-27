@@ -21,7 +21,7 @@ namespace TR.UI
         [SerializeField] private string retrySceneName = "";
 
         [Header("SFX (Optional)")]
-        [SerializeField] private string showSfxKey = "";
+        [SerializeField] private string showSfxKey = "ui_popup_show";
 
         public string RetrySceneName { get => retrySceneName; set => retrySceneName = value; }
 

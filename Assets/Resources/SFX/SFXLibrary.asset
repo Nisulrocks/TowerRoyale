@@ -15,65 +15,273 @@ MonoBehaviour:
   entries:
   - key: Fire
     clips:
-    - {fileID: 8300000, guid: 2c4d693576641df4aa54d5e2e3fb44f1, type: 3}
+    - {fileID: 8300000, guid: b01fe8a0502c30c40a4079372b069fcf, type: 3}
     volume: 1
     pitchMin: 1
     pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
-  - key: card_flip
-    clips:
-    - {fileID: 8300000, guid: 46dd35912a20c6a47879d00afaaee0e0, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 1
-  - key: rarity_common
-    clips:
-    - {fileID: 8300000, guid: eee000a90dff37e43b95e2fb4bb896ca, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
-  - key: rarity_rare
-    clips:
-    - {fileID: 8300000, guid: e6b203495598eb146ae12498171f5b0d, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
-  - key: rarity_epic
-    clips:
-    - {fileID: 8300000, guid: 62fbaced81aa96240abc5aafefb4f71f, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
-  - key: rarity_legendary
-    clips:
-    - {fileID: 8300000, guid: 521b86ba11ed48743a99866edd7204e4, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
-  - key: rarity_mythic
-    clips:
-    - {fileID: 8300000, guid: 8bfa59ccf077f2f439639b6650ead97f, type: 3}
-    volume: 1
-    pitchMin: 1
-    pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
+    cooldown: 0
+    maxConcurrent: 0
   - key: card_appear
     clips:
     - {fileID: 8300000, guid: 7be47ae5513cc1d4ea727378275060e1, type: 3}
     volume: 1
     pitchMin: 1
     pitchMax: 1
-    cooldown: 0.1
-    maxConcurrent: 5
+    cooldown: 0
+    maxConcurrent: 0
+  - key: card_flip
+    clips:
+    - {fileID: 8300000, guid: 46dd35912a20c6a47879d00afaaee0e0, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: castle_death
+    clips:
+    - {fileID: 8300000, guid: 1e2cdb1b1b460b34c807defdca082047, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: enemy_death
+    clips:
+    - {fileID: 8300000, guid: ac5a80b8375b2fb4c8ae4513c719a675, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: enemy_pulse_nuke
+    clips:
+    - {fileID: 8300000, guid: 6942578d3531731459cf8224d66b733d, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: enemy_stun_pulse
+    clips:
+    - {fileID: 8300000, guid: c2769c3093fea16438683d40b1356506, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: insufficient_funds
+    clips:
+    - {fileID: 8300000, guid: 98886cb16acbed04d938919decb33219, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: pack_open_whoosh
+    clips:
+    - {fileID: 8300000, guid: 9f22461456a24e540add6fd0aec9ef6e, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: pack_seal_crack
+    clips:
+    - {fileID: 8300000, guid: d01253f676bba0443b6505683d2d753e, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: pulse_fire
+    clips:
+    - {fileID: 8300000, guid: f32c00d6a846f0c478f887bf5297fe73, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: rarity_common
+    clips:
+    - {fileID: 8300000, guid: eee000a90dff37e43b95e2fb4bb896ca, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: rarity_epic
+    clips:
+    - {fileID: 8300000, guid: 62fbaced81aa96240abc5aafefb4f71f, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: rarity_legendary
+    clips:
+    - {fileID: 8300000, guid: 521b86ba11ed48743a99866edd7204e4, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: rarity_mythic
+    clips:
+    - {fileID: 8300000, guid: 8bfa59ccf077f2f439639b6650ead97f, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: rarity_rare
+    clips:
+    - {fileID: 8300000, guid: e6b203495598eb146ae12498171f5b0d, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: status_burn
+    clips:
+    - {fileID: 8300000, guid: f172a486a2cb76945a73d03ffb43f659, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: status_poison
+    clips:
+    - {fileID: 8300000, guid: c9681fcaeaec178448344815c4f4f880, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: status_slow
+    clips:
+    - {fileID: 8300000, guid: 1561d03ce67190c44b36b8a4ac402c23, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: status_stun
+    clips:
+    - {fileID: 8300000, guid: 55bc07dcc01c2a44eaece6472d981cc7, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tornado_loop
+    clips:
+    - {fileID: 8300000, guid: 38576c8d6e9168c47a62ce88faeb98a8, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_beam_loop
+    clips:
+    - {fileID: 8300000, guid: dffed3b5f3c85424bb130fb72483c098, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_chain_jump
+    clips:
+    - {fileID: 8300000, guid: 15d01c1f7bcba5449a61e2a134925417, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_crit
+    clips:
+    - {fileID: 8300000, guid: 694ebb7adac6edf42871b5e768a41083, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_destroy
+    clips:
+    - {fileID: 8300000, guid: 26e2a373b2f94494ca5618bd825e46bf, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_splash
+    clips:
+    - {fileID: 8300000, guid: 12bb8969a1715b742ad498269f3e3bfc, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_zap_fire
+    clips:
+    - {fileID: 8300000, guid: f0bbf50fb6fd4d74db6155a0bf923f8c, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_zap_hit
+    clips:
+    - {fileID: 8300000, guid: 1b735154f87040c41a2b384f760ceef0, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_level_up
+    clips:
+    - {fileID: 8300000, guid: f026e7a25a0819d44841eec35c73ac70, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_lobby_arena_unlock
+    clips:
+    - {fileID: 8300000, guid: 23c4611c28a158c4089300863cfa7e06, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_lobby_ban
+    clips:
+    - {fileID: 8300000, guid: 41b38f5f285bdfb428c6640abe9d54a6, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_lobby_level_up
+    clips:
+    - {fileID: 8300000, guid: 6769f2e25e10dd14d936045fdeb04693, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: tower_hit
+    clips:
+    - {fileID: 8300000, guid: 8297dc3af8f858845a8324f585d61b96, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_popup_show
+    clips:
+    - {fileID: 8300000, guid: b9b317e42e55143419d88f1be21931d5, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0

@@ -20,7 +20,7 @@ namespace TR.Data
 
         [SerializeField] private string shockwaveVfxKey = "";
 
-        [SerializeField] private string sfxPulseKey = "";
+        [SerializeField] private string sfxPulseKey = "pulse_fire";
 
         [SerializeField] private float rippleDuration = 0.25f;
         [Tooltip("Fallback ripple line thickness (world units)")]

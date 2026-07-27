@@ -2186,7 +2186,7 @@ MonoBehaviour:
   levelUpVfxParent: {fileID: 2853151956299602956}
   debugTriggerLevelUpVfxWithL: 1
   levelUpVfxBurstStagger: 0.08
-  levelUpSfxKey: 
+  levelUpSfxKey: ui_level_up
   arenaImage: {fileID: 4543496932208066368}
   battleSceneNameFormat: Arena{0}BattleScene
   playButton: {fileID: 6147144344784399207}

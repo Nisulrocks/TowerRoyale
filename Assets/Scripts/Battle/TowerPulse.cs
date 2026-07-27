@@ -71,8 +71,6 @@ namespace TR.Battle
 
         private void DoPulse()
         {
-            if (IsVisualOnly) return;
-
             float radius = _pulseDef.GetPulseRadius(_cachedLevel) * Mathf.Max(0f, GetRangeMultiplier());
             float baseDamage = _pulseDef.GetPulseDamage(_cachedLevel) * Mathf.Max(0f, GetDpsMultiplier());
             
@@ -111,9 +109,12 @@ namespace TR.Battle
             
             if (isCrit)
             {
-                TR.UI.DamageNumbers.ShowCrit(transform, _pulseDef.GetCritBurstText());
-                if (DuoRuntime.IsDuo)
-                    DuoBattleCoordinator.Instance?.BroadcastTowerCrit(transform.position, _pulseDef.GetCritBurstText());
+                if (!IsVisualOnly)
+                {
+                    TR.UI.DamageNumbers.ShowCrit(transform, _pulseDef.GetCritBurstText());
+                    if (DuoRuntime.IsDuo)
+                        DuoBattleCoordinator.Instance?.BroadcastTowerCrit(transform.position, _pulseDef.GetCritBurstText());
+                }
                 var ck = _pulseDef.GetSfxCritKey(); if (!string.IsNullOrEmpty(ck)) SFXManager.Instance?.Play(ck);
             }
 
@@ -121,25 +122,41 @@ namespace TR.Battle
             s_snapshot.Clear();
             foreach (var e in EnemyBase2D.All) s_snapshot.Add(e);
             int hits = 0;
-            for (int i = 0; i < s_snapshot.Count; i++)
+            if (IsVisualOnly)
             {
-                var e = s_snapshot[i];
-                if (e == null || !e.gameObject.activeInHierarchy || e.CurrentHealth <= 0f) continue;
-                float d = Vector2.Distance((Vector2)transform.position, (Vector2)e.transform.position);
-                if (d <= radius)
+                for (int i = 0; i < s_snapshot.Count; i++)
                 {
-                    e.TakeDamage(damage);
-                    hits++;
-                    if (_pulseDef.PulseAppliesOnHitEffects())
+                    var e = s_snapshot[i];
+                    if (e == null || !e.gameObject.activeInHierarchy || e.CurrentHealth <= 0f) continue;
+                    float d = Vector2.Distance((Vector2)transform.position, (Vector2)e.transform.position);
+                    if (d <= radius && _pulseDef.PulseAppliesOnHitEffects())
                     {
-                        
-                        ApplyOnHitEffects(e);
+                        PlayOnHitSfx(e);
                     }
                 }
             }
-            if (debugPulseLogs)
+            else
             {
-                Debug.Log($"[TowerPulse] Pulse hit {hits} enemies | radius={radius:0.##} dmg={damage:0.##} interval={_pulseDef.GetPulseInterval(_cachedLevel):0.##}", this);
+                for (int i = 0; i < s_snapshot.Count; i++)
+                {
+                    var e = s_snapshot[i];
+                    if (e == null || !e.gameObject.activeInHierarchy || e.CurrentHealth <= 0f) continue;
+                    float d = Vector2.Distance((Vector2)transform.position, (Vector2)e.transform.position);
+                    if (d <= radius)
+                    {
+                        e.TakeDamage(damage);
+                        hits++;
+                        if (_pulseDef.PulseAppliesOnHitEffects())
+                        {
+                            
+                            ApplyOnHitEffects(e);
+                        }
+                    }
+                }
+                if (debugPulseLogs)
+                {
+                    Debug.Log($"[TowerPulse] Pulse hit {hits} enemies | radius={radius:0.##} dmg={damage:0.##} interval={_pulseDef.GetPulseInterval(_cachedLevel):0.##}", this);
+                }
             }
 
             

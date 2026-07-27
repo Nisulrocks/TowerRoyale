@@ -36,7 +36,7 @@ namespace TR.Battle
 
         [SerializeField] private Transform deathVfxAnchor;
 
-        [SerializeField] private string deathSfxKey = "";
+        [SerializeField] private string deathSfxKey = "castle_death";
 
         [Header("Runtime")]
         [SerializeField] private int maxHealth;

@@ -175,7 +175,7 @@ MonoBehaviour:
   retryButton: {fileID: 2304352662154483160}
   quitButton: {fileID: 3549625105210897950}
   retrySceneName: Boot
-  showSfxKey: 
+  showSfxKey: ui_popup_show
 --- !u!1 &3456253531330968301
 GameObject:
   m_ObjectHideFlags: 0

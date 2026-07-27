@@ -39,7 +39,7 @@ namespace TR.UI
         [SerializeField] private float levelUpVfxBurstStagger = 0.08f;
         [Header("SFX")]
         [Tooltip("SFX key to play when castle levels up (uses SFXManager)")]
-        [SerializeField] private string levelUpSfxKey = "";
+        [SerializeField] private string levelUpSfxKey = "ui_level_up";
         [Header("Arena Image")]
         [SerializeField] private Image arenaImage;           
 
@@ -457,7 +457,7 @@ namespace TR.UI
                     curXpF -= needed;
                     curLevel++;
                     
-                    //TryPlayLevelUpVfx(0f);
+                    TryPlayLevelUpVfx(0f);
                     needed = curLevel < castleCfg.MaxLevel ? Mathf.Max(1, castleCfg.GetXPForLevel(curLevel)) : 1;
                 }
                 if (curLevel >= toLevel)
@@ -476,7 +476,7 @@ namespace TR.UI
         
         private void TryPlayLevelUpVfx(float delaySeconds)
         {
-            if (string.IsNullOrWhiteSpace(levelUpVfxKey)) return;
+            if (string.IsNullOrWhiteSpace(levelUpVfxKey) && string.IsNullOrWhiteSpace(levelUpSfxKey)) return;
             float d = Mathf.Max(0f, delaySeconds);
             StartCoroutine(SpawnLevelUpVfxAfterDelay(d));
         }

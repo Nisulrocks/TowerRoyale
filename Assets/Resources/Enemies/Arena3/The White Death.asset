@@ -44,7 +44,7 @@ MonoBehaviour:
   pulseNukeRippleDuration: 0.45
   pulseNukeRippleLineWidth: 0.12
   pulseNukeRippleSegments: 48
-  pulseNukeSfxKey: 
+  pulseNukeSfxKey: enemy_pulse_nuke
   useStunPulseAbility: 1
   stunPulseRadius: 5
   stunPulseCooldownMin: 5
@@ -57,4 +57,4 @@ MonoBehaviour:
   stunPulseRippleDuration: 0.45
   stunPulseRippleLineWidth: 0.12
   stunPulseRippleSegments: 48
-  stunPulseSfxKey: 
+  stunPulseSfxKey: enemy_stun_pulse
