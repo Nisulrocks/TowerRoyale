@@ -14,17 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxDeckSize: 5
   cardPointsOfferSlots:
-  - rarityId: legendary
+  - rarityId: common
     pointsMin: 10
     pointsMax: 20
     costPerPointMin: 1
     costPerPointMax: 10
-  - rarityId: legendary
+  - rarityId: common
     pointsMin: 10
     pointsMax: 20
     costPerPointMin: 1
     costPerPointMax: 10
-  - rarityId: legendary
+  - rarityId: rare
+    pointsMin: 10
+    pointsMax: 20
+    costPerPointMin: 1
+    costPerPointMax: 10
+  - rarityId: epic
     pointsMin: 10
     pointsMax: 20
     costPerPointMin: 1

@@ -7,8 +7,11 @@ namespace TR.Data
     {
         [Header("Deck")]
         [Min(1)] [SerializeField] private int maxDeckSize = 8;
+        [Min(1)] [Tooltip("How many deck presets the player can save and switch between")]
+        [SerializeField] private int maxDeckPresets = 3;
 
         public int MaxDeckSize => Mathf.Max(1, maxDeckSize);
+        public int MaxDeckPresets => Mathf.Max(1, maxDeckPresets);
 
         [System.Serializable]
         public class CardPointsOfferSlot

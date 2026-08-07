@@ -533,7 +533,7 @@ namespace TR.Battle
         private void BroadcastLocalDeck()
         {
             if (_coordinator == null) return;
-            var deck = TR.Systems.PlayerProfile.Data.deck;
+            var deck = TR.Systems.DeckService.GetDeck();
             if (deck == null || deck.Count == 0) return;
             var ids = new string[deck.Count];
             var levels = new int[deck.Count];

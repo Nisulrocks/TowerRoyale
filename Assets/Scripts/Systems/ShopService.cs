@@ -37,8 +37,12 @@ namespace TR.Systems
             bool hasEligible = HasAnyEligibleCard();
             if (!hasEligible)
             {
-                
                 if (PlayerProfile.Data.cardPointOffers == null) PlayerProfile.Data.cardPointOffers = new List<CardPointsOffer>();
+                if (PlayerProfile.Data.cardPointOffers.Count > 0)
+                {
+                    PlayerProfile.Data.cardPointOffers.Clear();
+                    PlayerProfile.Save();
+                }
                 return PlayerProfile.Data.cardPointOffers;
             }
 
@@ -57,6 +61,18 @@ namespace TR.Systems
             
             var offers = PlayerProfile.Data.cardPointOffers;
             bool stale = offers == null || offers.Count == 0 || offers.TrueForAll(o => o == null || string.IsNullOrEmpty(o.cardId));
+            if (!stale && offers != null)
+            {
+                foreach (var o in offers)
+                {
+                    if (o == null || o.sold) continue;
+                    if (!IsOfferCardEligible(o))
+                    {
+                        stale = true;
+                        break;
+                    }
+                }
+            }
             if (stale)
             {
                 GenerateDailyCardPointOffers(cfg);
@@ -237,6 +253,23 @@ namespace TR.Systems
             }
 
             PlayerProfile.Data.cardPointOffers = list;
+        }
+
+        public static bool AreAllCardsMaxed()
+        {
+            GameDB.EnsureLoaded();
+            return !HasAnyEligibleCard();
+        }
+
+        private static bool IsOfferCardEligible(CardPointsOffer offer)
+        {
+            if (offer == null || string.IsNullOrEmpty(offer.cardId)) return false;
+            var card = GameDB.GetCardById(offer.cardId);
+            if (card == null) return false;
+            var cp = PlayerProfile.GetOrCreateCard(offer.cardId);
+            if (cp.ownedCount <= 0) return false;
+            if (card.Rarity != null && cp.level >= card.Rarity.MaxLevel) return false;
+            return true;
         }
 
         private static bool HasAnyEligibleCard()

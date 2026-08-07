@@ -84,8 +84,12 @@ namespace TR.Tutorial
             bool InsideTarget(RectTransform rt)
             {
                 if (rt == null) return false;
+                Camera targetCam = eventCamera;
+                var targetCanvas = rt.GetComponentInParent<Canvas>();
+                if (targetCanvas != null && targetCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    targetCam = targetCanvas.worldCamera != null ? targetCanvas.worldCamera : Camera.main;
                 Vector2 lp;
-                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, sp, eventCamera, out lp)) return false;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, sp, targetCam, out lp)) return false;
                 return rt.rect.Contains(lp);
             }
 

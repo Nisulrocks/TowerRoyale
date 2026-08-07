@@ -177,6 +177,11 @@ namespace TR.UI
         private void UpdateCardPointsCountdown()
         {
             if (_offersCountdown == null) return;
+            if (ShopService.AreAllCardsMaxed())
+            {
+                _offersCountdown.text = "All cards maxed";
+                return;
+            }
             var remain = ShopService.GetTimeUntilNextRefresh();
             if (remain.TotalSeconds < 0) { _offersCountdown.text = "--:--:--"; return; }
             string hh = Mathf.FloorToInt((float)remain.TotalHours).ToString("00");

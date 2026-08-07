@@ -224,7 +224,7 @@ namespace TR.UI
         private async System.Threading.Tasks.Task StartBattle(GameMode mode)
         {
             
-            if (PlayerProfile.Data == null || PlayerProfile.Data.deck == null || PlayerProfile.Data.deck.Count == 0)
+            if (PlayerProfile.Data == null || DeckService.GetDeck() == null || DeckService.GetDeck().Count == 0)
             {
                 Debug.LogWarning("[PlayPanelUI] Cannot play: deck is empty. Build a deck first.");
                 
@@ -612,7 +612,7 @@ namespace TR.UI
 
         private void UpdateBanGatingUI()
         {
-            bool hasDeck = PlayerProfile.Data != null && PlayerProfile.Data.deck != null && PlayerProfile.Data.deck.Count > 0;
+            bool hasDeck = DeckService.GetDeck() != null && DeckService.GetDeck().Count > 0;
             bool banned = PlayerProfile.IsBanned(out var remaining);
             bool tutorialActive = PlayerProfile.GetTutorialActive();
             if (playButton)

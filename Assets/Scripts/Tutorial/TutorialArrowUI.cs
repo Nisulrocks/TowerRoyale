@@ -84,17 +84,28 @@ namespace TR.Tutorial
 
         private Vector2 GetWorldToCanvasPosition(RectTransform rt)
         {
-            
             Vector3[] corners = new Vector3[4];
             rt.GetWorldCorners(corners);
             Vector3 center = (corners[0] + corners[2]) * 0.5f;
             var canvasRT = transform.parent as RectTransform;
-            Vector2 localPoint;
             if (canvasRT == null)
             {
                 return Vector2.zero;
             }
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRT, RectTransformUtility.WorldToScreenPoint(null, center), null, out localPoint);
+
+            Camera targetCamera = null;
+            var targetCanvas = rt.GetComponentInParent<Canvas>();
+            if (targetCanvas != null && targetCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                targetCamera = targetCanvas.worldCamera != null ? targetCanvas.worldCamera : Camera.main;
+
+            var overlayCanvas = canvasRT.GetComponentInParent<Canvas>();
+            Camera overlayCamera = null;
+            if (overlayCanvas != null && overlayCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                overlayCamera = overlayCanvas.worldCamera != null ? overlayCanvas.worldCamera : Camera.main;
+
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(targetCamera, center);
+            Vector2 localPoint;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRT, screenPoint, overlayCamera, out localPoint);
             return localPoint;
         }
     }

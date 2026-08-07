@@ -25,7 +25,7 @@ namespace TR.Battle
             foreach (var it in _items) if (it) Destroy(it.gameObject);
             _items.Clear();
 
-            var deck = PlayerProfile.Data.deck;
+            var deck = DeckService.GetDeck();
             Debug.Log($"[DeckBar] Binding deck with {deck.Count} entries");
             foreach (var cardId in deck)
             {

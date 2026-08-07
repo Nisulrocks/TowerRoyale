@@ -14,6 +14,12 @@ namespace TR.Systems
     }
 
     [Serializable]
+    public class DeckPreset
+    {
+        public List<string> cards = new();
+    }
+
+    [Serializable]
     public class PlayerProfileDTO
     {
         public string playerName = ""; 
@@ -22,7 +28,9 @@ namespace TR.Systems
         
         public int trophiesFloor = 0;
         public List<CardProgress> cards = new();
-        public List<string> deck = new(); 
+        public List<string> deck = new();
+        public List<DeckPreset> decks = new();
+        public int selectedDeckIndex = 0; 
 
         
         public string pendingArenaUnlockName = null; 
@@ -146,6 +154,7 @@ namespace TR.Systems
                     {
                         if (VerifyIntegrity(dto))
                         {
+                            MigrateDecks(dto);
                             return dto;
                         }
                         else
@@ -159,6 +168,7 @@ namespace TR.Systems
                                 {
                                     
                                     var moderated = HandleTamperAndModerate(backupDto);
+                                    MigrateDecks(_data);
                                     Save();
                                     return moderated;
                                 }
@@ -178,6 +188,19 @@ namespace TR.Systems
                 Debug.LogError($"TR Profile load error: {ex}");
             }
             return new PlayerProfileDTO();
+        }
+
+        private static void MigrateDecks(PlayerProfileDTO dto)
+        {
+            if (dto == null) return;
+            if (dto.decks == null) dto.decks = new List<DeckPreset>();
+            if (dto.decks.Count == 0 && dto.deck != null && dto.deck.Count > 0)
+            {
+                dto.decks.Add(new DeckPreset { cards = new List<string>(dto.deck) });
+                dto.deck.Clear();
+            }
+            if (dto.selectedDeckIndex < 0 || (dto.decks.Count > 0 && dto.selectedDeckIndex >= dto.decks.Count))
+                dto.selectedDeckIndex = 0;
         }
 
         public static void Save()

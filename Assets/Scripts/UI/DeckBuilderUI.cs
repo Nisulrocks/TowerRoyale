@@ -25,8 +25,13 @@ namespace TR.UI
         [Tooltip("Optional explicit rarity order from lowest to highest (e.g., Common, Rare, Epic, Legendary). Leave empty to use GameDB order.")]
         [SerializeField] private List<RarityDefinition> rarityOrderOverride;
 
+        [Header("Deck Presets")]
+        [SerializeField] private Transform presetBarRoot;
+        [SerializeField] private DeckPresetNodeUI presetNodePrefab;
+
         private readonly List<CardItemUI> _collectionItems = new();
         private readonly List<DeckSlotUI> _deckSlots = new();
+        private readonly List<DeckPresetNodeUI> _presetNodes = new();
 
         private void OnEnable()
         {
@@ -42,7 +47,34 @@ namespace TR.UI
 
         public void Refresh()
         {
+            DeckService.EnsureDecksInitialized();
             if (headerText) headerText.text = $"Deck Builder (Max {DeckService.MaxDeckSize})";
+            RefreshPresetBar();
+            RefreshCollection();
+            RefreshDeck();
+        }
+
+        private void RefreshPresetBar()
+        {
+            if (presetBarRoot == null || presetNodePrefab == null) return;
+            foreach (var node in _presetNodes) if (node) Destroy(node.gameObject);
+            _presetNodes.Clear();
+
+            int count = DeckService.DeckCount;
+            int selected = DeckService.SelectedDeckIndex;
+            for (int i = 0; i < count; i++)
+            {
+                var node = Instantiate(presetNodePrefab, presetBarRoot);
+                node.Bind(i, i == selected, OnPresetClicked);
+                _presetNodes.Add(node);
+            }
+        }
+
+        private void OnPresetClicked(int index)
+        {
+            if (index == DeckService.SelectedDeckIndex) return;
+            DeckService.SelectDeck(index);
+            RefreshPresetBar();
             RefreshCollection();
             RefreshDeck();
         }
