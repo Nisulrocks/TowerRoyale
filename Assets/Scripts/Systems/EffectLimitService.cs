@@ -11,8 +11,14 @@ namespace TR.Systems
         private static Dictionary<EffectType, int> _counts;
         private static ArenaDefinition _arena;
         
-        private static Dictionary<string, int> _cardCaps;    
-        private static Dictionary<string, int> _cardCounts;  
+        private static Dictionary<string, int> _cardCaps;
+        private static Dictionary<string, int> _cardCounts;
+
+        // Rarity caps are keyed by the rarity asset's name so a card only needs its Rarity
+        // reference to be checked — no per-card configuration required.
+        private static Dictionary<string, int> _rarityCaps;
+        private static Dictionary<string, int> _rarityCounts;
+        private static Dictionary<string, string> _rarityDisplayNames;
 
         public static void Initialize(ArenaDefinition arena)
         {
@@ -21,6 +27,9 @@ namespace TR.Systems
             _counts = new Dictionary<EffectType, int>();
             _cardCaps = new Dictionary<string, int>();
             _cardCounts = new Dictionary<string, int>();
+            _rarityCaps = new Dictionary<string, int>();
+            _rarityCounts = new Dictionary<string, int>();
+            _rarityDisplayNames = new Dictionary<string, string>();
             if (arena != null)
             {
                 var limits = arena.EffectLimits;
@@ -51,11 +60,43 @@ namespace TR.Systems
                         if (!_cardCounts.ContainsKey(id)) _cardCounts[id] = 0;
                     }
                 }
+
+                var rarityLimits = arena.RarityLimits;
+                if (rarityLimits != null)
+                {
+                    for (int i = 0; i < rarityLimits.Length; i++)
+                    {
+                        var r = rarityLimits[i].rarity;
+                        if (r == null) continue;
+                        string key = RarityKey(r);
+                        if (string.IsNullOrEmpty(key)) continue;
+
+                        _rarityCaps[key] = Mathf.Max(0, rarityLimits[i].maxCount);
+                        if (!_rarityCounts.ContainsKey(key)) _rarityCounts[key] = 0;
+                        _rarityDisplayNames[key] = RarityLabel(r);
+                    }
+                }
             }
+        }
+
+        // RarityId is the stable identifier; fall back to the asset name if it was left blank.
+        private static string RarityKey(RarityDefinition rarity)
+        {
+            if (rarity == null) return null;
+            return !string.IsNullOrEmpty(rarity.RarityId) ? rarity.RarityId : rarity.name;
+        }
+
+        // Prefer a designer-facing display name if the rarity asset has one.
+        private static string RarityLabel(RarityDefinition rarity)
+        {
+            if (rarity == null) return "Rarity";
+            string display = rarity.DisplayName;
+            return string.IsNullOrEmpty(display) ? rarity.name : display;
         }
 
         public static bool IsEnabled => _caps != null && _caps.Count > 0;
         public static bool CardCapsEnabled => _cardCaps != null && _cardCaps.Count > 0;
+        public static bool RarityCapsEnabled => _rarityCaps != null && _rarityCaps.Count > 0;
 
         public static IReadOnlyDictionary<EffectType, int> CurrentCounts => _counts;
         public static IReadOnlyDictionary<EffectType, int> CurrentCaps => _caps;
@@ -112,6 +153,43 @@ namespace TR.Systems
             cap = max; current = cnt;
             return (cnt + 1) <= max;
         }
+
+        public static bool CanPlaceRarity(CardDefinition def, out int cap, out int current, out string rarityName)
+        {
+            cap = 0; current = 0; rarityName = null;
+            if (!RarityCapsEnabled || def == null) return true;
+
+            string key = RarityKey(def.Rarity);
+            if (string.IsNullOrEmpty(key)) return true;
+
+            // Only an ABSENT entry means "unlimited". A configured cap of 0 means this rarity is
+            // banned from the arena, so it must block rather than be treated as no cap.
+            if (!_rarityCaps.TryGetValue(key, out var max)) return true;
+
+            int cnt = _rarityCounts.TryGetValue(key, out var c) ? c : 0;
+            cap = max; current = cnt;
+            rarityName = _rarityDisplayNames.TryGetValue(key, out var n) ? n : key;
+            return (cnt + 1) <= max;
+        }
+
+        public static void RegisterRarity(CardDefinition def)
+        {
+            if (!RarityCapsEnabled || def == null) return;
+            string key = RarityKey(def.Rarity);
+            if (string.IsNullOrEmpty(key)) return;
+            if (!_rarityCounts.ContainsKey(key)) _rarityCounts[key] = 0;
+            _rarityCounts[key] = _rarityCounts[key] + 1;
+        }
+
+        public static void UnregisterRarity(string rarityKey)
+        {
+            if (!RarityCapsEnabled || string.IsNullOrEmpty(rarityKey)) return;
+            if (_rarityCounts.TryGetValue(rarityKey, out var c))
+                _rarityCounts[rarityKey] = Mathf.Max(0, c - 1);
+        }
+
+        // Key a placed tower needs to remember so it can decrement the right counter when removed.
+        public static string GetRarityKey(CardDefinition def) => def != null ? RarityKey(def.Rarity) : null;
 
         public static void Register(CardDefinition def, int level)
         {

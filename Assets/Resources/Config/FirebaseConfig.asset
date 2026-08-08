@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bc7be16d3201e4397206b1374d27c6, type: 3}
+  m_Name: FirebaseConfig
+  m_EditorClassIdentifier: Assembly-CSharp::TR.Systems.FirebaseConfig
+  apiKey: AIzaSyCB6ES2JFtLth5NRHAaCREqid9GkS0LhkM
+  authDomain: tower-royale-e74ab.firebaseapp.com
+  projectId: tower-royale-e74ab
+  storageBucket: tower-royale-e74ab.firebasestorage.app
+  messagingSenderId: 
+  appId: 1:974987092320:web:37fe119a24ac053fa93e05
+  webClientId: 974987092320-a3gru9fove7fut4k8dvb9von1egce2mm.apps.googleusercontent.com
+  clientSecret: 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
+  redirectPort: 5050
+  scopes: openid email profile

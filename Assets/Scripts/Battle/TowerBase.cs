@@ -63,6 +63,12 @@ namespace TR.Battle
 
         [SerializeField] private string projectileImpactVfxKey = "";
 
+        // Exposed so non-combat consumers (the card hover preview) can reproduce the firing
+        // visuals without running any of the combat code.
+        public string MuzzleFlashVfxKey => muzzleFlashVfxKey;
+        public Transform MuzzleFlashAnchor => muzzleFlashAnchor;
+        public string ProjectileImpactVfxKey => projectileImpactVfxKey;
+
         
         [Header("Buff Glow (Optional)")]
 
@@ -538,7 +544,33 @@ namespace TR.Battle
         
         public bool IsStunnedByEnemy => _stunTimeFromEnemy > 0f;
 
-        
+
+        private bool _playedDestroyFeedback;
+
+
+        public bool PlayedDestroyFeedback => _playedDestroyFeedback;
+
+        // Destruction feedback is deliberately not gated on ownership: a mirrored tower has to be
+        // able to play it when the simulating client reports the tower was destroyed.
+        public void PlayDestroyFeedback()
+        {
+            if (_playedDestroyFeedback) return;
+            _playedDestroyFeedback = true;
+            if (definition == null) return;
+
+            string vfxKey = definition.GetDefeatDestroyVfxKey();
+            if (!string.IsNullOrEmpty(vfxKey))
+            {
+                ParticleManager.SpawnOneShot(vfxKey, transform.position);
+            }
+            string sfxKey = definition.GetDefeatDestroySfxKey();
+            if (!string.IsNullOrEmpty(sfxKey) && SFXManager.Instance != null)
+            {
+                SFXManager.Instance.Play(sfxKey);
+            }
+        }
+
+
         public void DestroyForRefund(float refundPercent)
         {
             if (!IsLocalOwner) return;
@@ -549,20 +581,7 @@ namespace TR.Battle
             {
                 econ.Earn(refund);
             }
-            
-            if (definition != null)
-            {
-                string vfxKey = definition.GetDefeatDestroyVfxKey();
-                if (!string.IsNullOrEmpty(vfxKey))
-                {
-                    ParticleManager.SpawnOneShot(vfxKey, transform.position);
-                }
-                string sfxKey = definition.GetDefeatDestroySfxKey();
-                if (!string.IsNullOrEmpty(sfxKey) && SFXManager.Instance != null)
-                {
-                    SFXManager.Instance.Play(sfxKey);
-                }
-            }
+            PlayDestroyFeedback();
             Destroy(gameObject);
         }
 

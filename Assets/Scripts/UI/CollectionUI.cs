@@ -14,7 +14,9 @@ namespace TR.UI
         [SerializeField] private Transform listRoot;
         [SerializeField] private CollectionItemUI itemPrefab;
         [SerializeField] private TMP_Text headerText;
-        [SerializeField] private TMP_Text softCurrencyText; 
+        [SerializeField] private TMP_Text softCurrencyText;
+        [Tooltip("ScrollRect containing listRoot. If not assigned, searches listRoot's parent.")]
+        [SerializeField] private ScrollRect scrollRect;
         [Header("Sorting")]
         [Tooltip("Optional dropdown to control rarity order. If not assigned, defaults to ascending (Common -> Legendary).")]
         [SerializeField] private TMP_Dropdown raritySortDropdown;
@@ -42,9 +44,30 @@ namespace TR.UI
             GameDB.EnsureLoaded();
         }
 
+        private void ResetScrollToTop()
+        {
+            if (scrollRect == null && listRoot != null)
+            {
+                var parent = listRoot.parent;
+                if (parent != null) scrollRect = parent.GetComponent<ScrollRect>();
+                if (scrollRect == null && parent != null)
+                {
+                    var grandparent = parent.parent;
+                    if (grandparent != null) scrollRect = grandparent.GetComponent<ScrollRect>();
+                }
+            }
+            if (scrollRect != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.GetComponent<RectTransform>());
+                scrollRect.normalizedPosition = new Vector2(0, 1);
+            }
+        }
+
         private void OnEnable()
         {
             HoverCardDetailsUI.SetCollectionContext(true);
+            ResetScrollToTop();
             Refresh();
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
             SetupSortingUI();

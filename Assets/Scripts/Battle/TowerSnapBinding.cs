@@ -33,7 +33,9 @@ namespace TR.Battle
         {
             if (_controller != null && _placementId >= 0)
             {
-                _controller.NotifyTowerDestroyed(_placementId, _isMirror);
+                var tower = GetComponent<TowerBase>();
+                bool playedFeedback = tower != null && tower.PlayedDestroyFeedback;
+                _controller.NotifyTowerDestroyed(_placementId, _isMirror, playedFeedback);
             }
         }
     }

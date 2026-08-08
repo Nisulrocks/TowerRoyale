@@ -18,6 +18,7 @@ namespace TR.UI
         private int _activeIndex = -1;
 
         private static string _returnPanelName;
+        private static bool _skipSave;
 
         private void Awake()
         {
@@ -48,6 +49,11 @@ namespace TR.UI
 
         private void OnDestroy()
         {
+            if (_skipSave)
+            {
+                _skipSave = false;
+                return;
+            }
             if (panels != null && _activeIndex >= 0 && _activeIndex < panels.Length)
             {
                 var panel = panels[_activeIndex];
@@ -83,6 +89,12 @@ namespace TR.UI
                 if (panels[i] != null && panels[i].name == panelName) return i;
             }
             return -1;
+        }
+
+        public static void ClearReturnPanel()
+        {
+            _returnPanelName = null;
+            _skipSave = true;
         }
     }
 }

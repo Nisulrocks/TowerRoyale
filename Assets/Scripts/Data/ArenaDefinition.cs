@@ -8,7 +8,10 @@ namespace TR.Data
         [Header("Identity")]
         [SerializeField] private string arenaId; 
         [SerializeField] private string displayName = "Arena";
-        [SerializeField] private Sprite arenaImage; 
+        [SerializeField] private Sprite arenaImage;
+
+        [Tooltip("Full-screen artwork shown on the loading screen when entering this arena. Leave empty to use the plain fade instead.")]
+        [SerializeField] private Sprite loadingScreenImage;
 
         [Header("Progression")]
         [SerializeField] private int trophyRequirement = 0; 
@@ -121,9 +124,21 @@ namespace TR.Data
         [Tooltip("Optional caps per specific card (e.g., Only 1 Freeze Tower). Leave empty for no caps.")]
         [SerializeField] private CardLimit[] cardLimits;
 
+        [System.Serializable]
+        public struct RarityLimit
+        {
+            public RarityDefinition rarity;
+            [Min(0)] public int maxCount;
+        }
+
+        [Header("Rarity Limits (per battle)")]
+        [Tooltip("Optional caps per rarity (e.g., Legendary=1 means at most one Legendary tower placed). Leave empty for no caps.")]
+        [SerializeField] private RarityLimit[] rarityLimits;
+
         public string ArenaId => arenaId;
         public string DisplayName => displayName;
         public Sprite ArenaImage => arenaImage;
+        public Sprite LoadingScreenImage => loadingScreenImage;
         public int TrophyRequirement => Mathf.Max(0, trophyRequirement);
         public int StartingMoney => Mathf.Max(0, startingMoney);
         public int WaveCount => Mathf.Max(1, waveCount);
@@ -154,6 +169,7 @@ namespace TR.Data
         public GameObject BattleToastPrefab => battleToastPrefab;
         public EffectLimit[] EffectLimits => effectLimits ?? System.Array.Empty<EffectLimit>();
         public CardLimit[] CardLimits => cardLimits ?? System.Array.Empty<CardLimit>();
+        public RarityLimit[] RarityLimits => rarityLimits ?? System.Array.Empty<RarityLimit>();
         public EnemyDefinition BossEnemy => bossEnemy;
         public bool SpawnBossOnSpecificWave => spawnBossOnSpecificWave;
         public int BossSpecificWave => Mathf.Clamp(bossSpecificWave, 1, WaveCount);

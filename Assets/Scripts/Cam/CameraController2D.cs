@@ -46,6 +46,10 @@ public class CameraController2D : MonoBehaviour
     {
         if (cam == null) return;
 
+        // Update and Input both keep running at timeScale 0, so pausing does not stop camera
+        // input on its own — the pause panel would otherwise pan/zoom the board behind it.
+        if (TR.UI.BattlePauseController.IsPaused) return;
+
         HandleZoom();
         HandleEdgePan();
         if (dragPanEnabled) HandlePan();

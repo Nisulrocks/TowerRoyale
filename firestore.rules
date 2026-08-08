@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // ---------------- profiles ----------------
+    // Reads are open to any signed-in player. Four separate features need to read *other*
+    // players' profile documents:
+    //   - leaderboard            (list)
+    //   - friend search by name  (list)
+    //   - friend search by ID    (get)
+    //   - friends list + presence(get, one per friend)
+    // The previous rules allowed `list` but not `get`, so the two get-based paths would have
+    // been denied. Writes stay owner-only.
+    match /profiles/{userId} {
+      allow get, list: if signedIn();
+      allow create, update, delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // ---------------- friends ----------------
+    // Accepting a request writes both directions of the friendship, so the other party is
+    // allowed to write the document that points back at them.
+    match /friends/{userId}/list/{friendId} {
+      allow get, list: if signedIn() && request.auth.uid == userId;
+      allow write: if signedIn()
+                   && (request.auth.uid == userId || request.auth.uid == friendId);
+    }
+
+    // ---------------- friend requests ----------------
+    // Written into the recipient's subtree: only the sender may create it, only the
+    // recipient may read it, and either side may clear it.
+    match /friendRequests/{userId}/incoming/{fromId} {
+      allow get, list: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn()
+                            && request.auth.uid == fromId
+                            && fromId != userId;
+      allow delete: if signedIn()
+                    && (request.auth.uid == userId || request.auth.uid == fromId);
+    }
+
+    // ---------------- duo invites ----------------
+    match /duoInvites/{userId}/incoming/{fromId} {
+      allow get, list: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn()
+                            && request.auth.uid == fromId
+                            && fromId != userId;
+      allow delete: if signedIn()
+                    && (request.auth.uid == userId || request.auth.uid == fromId);
+    }
+  }
+}

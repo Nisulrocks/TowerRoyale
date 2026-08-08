@@ -31,6 +31,36 @@ namespace TR.Systems
         public static int CastleXPOnDefeat = 25;       
 
         
+        // Battle scenes are per arena (Arena0BattleScene ... Arena5BattleScene). PlayPanelUI builds
+        // the same name from its own serialized format field; keep the two in step if that changes.
+        public const string BattleSceneNameFormat = "Arena{0}BattleScene";
+
+        // Mirrors PlayPanelUI: prefer the arena's id, fall back to its 1-based position.
+        public static string ResolveArenaKey(ArenaDefinition arena)
+        {
+            if (arena == null) return null;
+            if (!string.IsNullOrEmpty(arena.ArenaId)) return arena.ArenaId;
+
+            var arenas = GameDB.GetArenasSortedByRequirement();
+            if (arenas != null)
+            {
+                for (int i = 0; i < arenas.Count; i++)
+                    if (arenas[i] == arena) return (i + 1).ToString();
+            }
+            return null;
+        }
+
+        public static string GetBattleSceneName(string arenaKey)
+            => string.IsNullOrEmpty(arenaKey) ? null : string.Format(BattleSceneNameFormat, arenaKey);
+
+        // The arena this device's player currently belongs to. Duo matches are arena-locked, so this
+        // is what any "can we play together?" check compares against.
+        public static string GetLocalArenaKey()
+        {
+            var arena = GetArenaForTrophies(PlayerProfile.GetTrophies()) ?? GetCurrentArena();
+            return ResolveArenaKey(arena);
+        }
+
         public static ArenaDefinition GetCurrentArena()
         {
             GameDB.EnsureLoaded();

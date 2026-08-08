@@ -264,7 +264,8 @@ namespace TR.UI
             
             if (currentArena != null && !string.IsNullOrEmpty(currentArena.DisplayName))
             {
-                TR.Infrastructure.SceneFader.Instance.SetNextTransitionMessage(currentArena.DisplayName, 1.0f);
+                TR.Infrastructure.SceneFader.Instance.SetNextTransitionMessage(
+                    currentArena.DisplayName, 1.0f, currentArena.LoadingScreenImage);
             }
             await SceneFader.Instance.LoadSceneWithFade(sceneName);
         }

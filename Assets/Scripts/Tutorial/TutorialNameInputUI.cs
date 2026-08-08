@@ -63,8 +63,10 @@ namespace TR.Tutorial
 
             if (inputField != null)
             {
-                
-                inputField.text = PlayerProfile.HasPlayerName() ? PlayerProfile.GetPlayerName() : string.Empty;
+                string currentName = PlayerProfile.HasPlayerName() ? PlayerProfile.GetPlayerName() : string.Empty;
+                if (string.IsNullOrEmpty(currentName) && FirebaseService.IsSignedIn && !string.IsNullOrEmpty(FirebaseService.DisplayName))
+                    currentName = FirebaseService.DisplayName;
+                inputField.text = currentName;
                 if (inputField.placeholder is TMP_Text ph && !string.IsNullOrEmpty(placeholder))
                 {
                     ph.text = placeholder;

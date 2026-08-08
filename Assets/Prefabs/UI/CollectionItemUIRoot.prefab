@@ -144,14 +144,14 @@ MonoBehaviour:
   m_text: Locked
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
-  m_sharedMaterial: {fileID: -2945076405667729338, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: c8a33f10c6e9a1b408bf85594ec651a9, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -179,6 +179,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -315,6 +316,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -375,7 +377,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6033000572926524293}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -383,7 +385,7 @@ RectTransform:
   - {fileID: 3237835143979032219}
   - {fileID: 441315950302076875}
   - {fileID: 8808342625156897478}
-  m_Father: {fileID: 6563935012176315447}
+  m_Father: {fileID: 7756383936801414021}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -736,7 +738,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6029592708053571572}
-  - {fileID: 1077264977555134756}
   m_Father: {fileID: 8393369000822811278}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -847,6 +848,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -983,6 +985,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1155,6 +1158,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5508571009002252031, guid: 385b00389731fca4d89f29286fb6c829, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1077264977555134756}
     - targetCorrespondingSourceObject: {fileID: 5508571009002252031, guid: 385b00389731fca4d89f29286fb6c829, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5188547125857813}

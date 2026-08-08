@@ -34,9 +34,9 @@ namespace TR.Net
         
         
         public event Action<string, int, Vector3, int, int> OnTowerPlacedReceived;
-        
-        
-        public event Action<int> OnTowerRemovedReceived;
+
+
+        public event Action<int, bool> OnTowerRemovedReceived;
         
         public event Action<int, float> OnTowerHpReceived;
 
@@ -503,16 +503,19 @@ namespace TR.Net
             OnCritReceived?.Invoke(worldPos, text);
         }
 
-        
-        public void BroadcastTowerRemoved(int placementId)
+
+
+
+        public void BroadcastTowerRemoved(int placementId, bool playDestroyFeedback)
         {
-            photonView.RPC(nameof(RpcTowerRemoved), RpcTarget.Others, placementId);
+            if (photonView == null || !PhotonNetwork.InRoom || placementId < 0) return;
+            photonView.RPC(nameof(RpcTowerRemoved), RpcTarget.Others, placementId, playDestroyFeedback);
         }
 
         [PunRPC]
-        private void RpcTowerRemoved(int placementId)
+        private void RpcTowerRemoved(int placementId, bool playDestroyFeedback)
         {
-            OnTowerRemovedReceived?.Invoke(placementId);
+            OnTowerRemovedReceived?.Invoke(placementId, playDestroyFeedback);
         }
 
         

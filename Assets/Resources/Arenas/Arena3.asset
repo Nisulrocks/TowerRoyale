@@ -15,6 +15,7 @@ MonoBehaviour:
   arenaId: 3
   displayName: Frozen Tundra
   arenaImage: {fileID: 21300000, guid: 354bd777c703099449e4608affb0981b, type: 3}
+  loadingScreenImage: {fileID: 21300000, guid: 888e7bd04fbb09a4a8142435aa528b2a, type: 3}
   trophyRequirement: 350
   startingMoney: 550
   waveCount: 10
@@ -77,10 +78,11 @@ MonoBehaviour:
   defeatTrophiesMin: 35
   defeatTrophiesMax: 40
   effectLimits: []
-  cardLimits:
-  - card: {fileID: 11400000, guid: 2ff463be4d1149a49bc0a19a4258525f, type: 2}
-    maxCount: 1
-  - card: {fileID: 11400000, guid: 1da1d4ce90c6e6445aa676a1cf3a024c, type: 2}
-    maxCount: 4
-  - card: {fileID: 11400000, guid: 73d341fad27b74441a09202e2050233b, type: 2}
+  cardLimits: []
+  rarityLimits:
+  - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
     maxCount: 8
+  - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
+    maxCount: 4
+  - rarity: {fileID: 11400000, guid: dddd7cbad3b09e34b92a356a757b65b9, type: 2}
+    maxCount: 0

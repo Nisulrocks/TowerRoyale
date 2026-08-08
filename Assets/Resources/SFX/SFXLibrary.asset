@@ -285,3 +285,11 @@ MonoBehaviour:
     pitchMax: 1
     cooldown: 0
     maxConcurrent: 0
+  - key: ui_click
+    clips:
+    - {fileID: 8300000, guid: d702f06ba8d095d46b2e3c23b7dca46b, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0

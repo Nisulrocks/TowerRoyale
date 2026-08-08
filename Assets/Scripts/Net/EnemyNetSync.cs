@@ -88,8 +88,14 @@ namespace TR.Net
 
         private void Update()
         {
-            if (IsSimulated) return;
-            
+            if (IsSimulated)
+            {
+                // We just became the authority (host migration). Anything still queued was aimed
+                // at the old host and must not be sent — we apply damage locally now.
+                _pendingDamage = 0f;
+                return;
+            }
+
             if (_hasNetState)
             {
                 
@@ -107,8 +113,12 @@ namespace TR.Net
             _flushTimer -= Time.deltaTime;
             if (_pendingDamage > 0f && _flushTimer <= 0f)
             {
-                
-                if (photonView != null && _enemy != null && _enemy.CurrentHealth > 0f)
+                // The enemy can die on the host inside the batching window, in which case the host
+                // has already destroyed this view and PUN warns about the arriving RPC. Checking
+                // the view is still alive and we are still in the room narrows that race; it
+                // cannot be closed entirely from this side.
+                if (photonView != null && photonView.ViewID != 0 && PhotonNetwork.InRoom
+                    && _enemy != null && _enemy.gameObject.activeInHierarchy && _enemy.CurrentHealth > 0f)
                 {
                     photonView.RPC(nameof(RpcApplyDamage), RpcTarget.MasterClient, _pendingDamage);
                 }
@@ -209,6 +219,21 @@ namespace TR.Net
         private void RpcStatusVfx(string key)
         {
             if (_enemy != null) _enemy.PlayStatusVfxLocal(key);
+        }
+
+
+        // Pulse abilities only tick on the simulation authority, so their visuals have to be
+        // replayed on the other client. The remote reads the parameters off its own definition.
+        public void BroadcastAbilityPulse(int kind)
+        {
+            if (!PhotonNetwork.IsMasterClient || photonView == null) return;
+            photonView.RPC(nameof(RpcAbilityPulse), RpcTarget.Others, kind);
+        }
+
+        [PunRPC]
+        private void RpcAbilityPulse(int kind)
+        {
+            if (_enemy != null) _enemy.PlayAbilityPulseFeedback(kind);
         }
 
         public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

@@ -42,10 +42,6 @@ namespace TR.Systems
         public int pendingCastleHealthTo = 0;
 
         
-        public int saveVersion = 1;               
-        public string integrityHash = "";        
-        public int tamperCount = 0;               
-        public long lastTamperUnix = 0;           
         public long banUntilUnix = 0;             
 
         
@@ -114,72 +110,96 @@ namespace TR.Systems
     {
         private static PlayerProfileDTO _data;
         public static PlayerProfileDTO Data => _data ?? (_data = LoadOrCreate());
-        private const string Pepper = "tr_pepper_v1_!@#Ch33rs"; 
-
-        
-        
-        
-        public static bool BanTestModeEnabled = false;
-        public static int BanTestStrike1Seconds = 10;
-        public static int BanTestStrike2Seconds = 20;
-        public static int BanTestStrike3Seconds = 30;
-
-        
-        public static void EnableBanTestMode(int strike1Seconds = 10, int strike2Seconds = 20, int strike3Seconds = 30)
-        {
-            BanTestModeEnabled = true;
-            BanTestStrike1Seconds = Mathf.Max(1, strike1Seconds);
-            BanTestStrike2Seconds = Mathf.Max(1, strike2Seconds);
-            BanTestStrike3Seconds = Mathf.Max(1, strike3Seconds);
-        }
-        public static void DisableBanTestMode()
-        {
-            BanTestModeEnabled = false;
-        }
-
-        
         public static event Action<int> OnSoftCurrencyChanged;
         public static event Action<int> OnTrophiesChanged;
         public static event Action<int, int> OnCastleLevelUp;
+        public static event Action OnCloudProfileLoaded;
+
+        private static bool _pendingTamperBan;
+
+        public static bool IsCloudLinked => FirebaseService.IsSignedIn;
+
+        // The account document can exist without a profile in it (SessionGuardService creates it
+        // when it claims the account, and presence writes to it too). That is NOT the same as a new
+        // player, so we keep whatever this device already has and push it up instead of replacing
+        // it with an empty profile.
+        public static void AdoptLocalProfileAsCloud()
+        {
+            _data = LoadOrCreate();
+            Debug.Log($"[PlayerProfile] No cloud profile found; keeping local data (trophies={_data.trophies}) and uploading it.");
+            Save();
+            OnCloudProfileLoaded?.Invoke();
+        }
+
+        public static void LoadFromCloud(string json)
+        {
+            // Never let an empty payload reach the reset path below — that wipes the account.
+            if (string.IsNullOrEmpty(json))
+            {
+                AdoptLocalProfileAsCloud();
+                return;
+            }
+
+            SaveSystem.Load();
+            if (SaveSystem.WasTampered || _pendingTamperBan)
+                _pendingTamperBan = true;
+
+            PlayerProfileDTO loaded = null;
+            try
+            {
+                loaded = JsonUtility.FromJson<PlayerProfileDTO>(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"TR Profile cloud load error: {ex}");
+            }
+
+            if (loaded == null)
+            {
+                // Unreadable cloud payload. Falling back to an empty profile here would destroy a
+                // real account, so keep the local one instead.
+                Debug.LogError("[PlayerProfile] Cloud profile could not be parsed; keeping local data.");
+                AdoptLocalProfileAsCloud();
+                return;
+            }
+
+            MigrateDecks(loaded);
+            _data = loaded;
+            Save();
+
+            if (_pendingTamperBan)
+            {
+                _pendingTamperBan = false;
+                Debug.LogWarning("[PlayerProfile] Applying 24h ban for tampered local data.");
+                Data.banUntilUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 86400L;
+                Save();
+            }
+
+            OnCloudProfileLoaded?.Invoke();
+        }
 
         public static PlayerProfileDTO LoadOrCreate()
         {
             try
             {
                 string json = SaveSystem.Load();
+                if (SaveSystem.WasTampered)
+                {
+                    Debug.LogWarning("[PlayerProfile] Tampered local data detected - flagging for ban.");
+                    _pendingTamperBan = true;
+                    var fresh = new PlayerProfileDTO();
+                    fresh.banUntilUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 86400L;
+                    _data = fresh;
+                    Save();
+                    return fresh;
+                }
                 if (!string.IsNullOrEmpty(json))
                 {
                     var dto = JsonUtility.FromJson<PlayerProfileDTO>(json);
                     if (dto != null)
                     {
-                        if (VerifyIntegrity(dto))
-                        {
-                            MigrateDecks(dto);
-                            return dto;
-                        }
-                        else
-                        {
-                            
-                            string bak = SaveSystem.LoadBackup();
-                            if (!string.IsNullOrEmpty(bak))
-                            {
-                                var backupDto = JsonUtility.FromJson<PlayerProfileDTO>(bak);
-                                if (backupDto != null && VerifyIntegrity(backupDto))
-                                {
-                                    
-                                    var moderated = HandleTamperAndModerate(backupDto);
-                                    MigrateDecks(_data);
-                                    Save();
-                                    return moderated;
-                                }
-                            }
-                            
-                            var fresh = new PlayerProfileDTO();
-                            var moderatedFresh = HandleTamperAndModerate(fresh);
-                            _data = moderatedFresh;
-                            Save();
-                            return _data;
-                        }
+                        MigrateDecks(dto);
+                        return dto;
                     }
                 }
             }
@@ -207,78 +227,22 @@ namespace TR.Systems
         {
             try
             {
-                
-                Data.saveVersion = Mathf.Max(1, Data.saveVersion);
-                Data.integrityHash = ComputeIntegrityHash(Data);
                 string json = JsonUtility.ToJson(Data, true);
                 SaveSystem.Save(json);
-                
-                SaveSystem.SaveBackup(json);
+
+                if (IsCloudLinked && CloudProfileService.Instance != null)
+                {
+                    CloudProfileService.Instance.SaveProfile(
+                        FirebaseService.UserId,
+                        json,
+                        Data.playerName ?? "",
+                        Data.trophies);
+                }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"TR Profile save error: {ex}");
             }
-        }
-
-        private static bool VerifyIntegrity(PlayerProfileDTO dto)
-        {
-            if (dto == null) return false;
-            if (string.IsNullOrEmpty(dto.integrityHash)) return false;
-            string expected = ComputeIntegrityHash(dto);
-            return string.Equals(dto.integrityHash, expected, StringComparison.Ordinal);
-        }
-
-        private static string ComputeIntegrityHash(PlayerProfileDTO dto)
-        {
-            try
-            {
-                
-                string originalHash = dto.integrityHash;
-                dto.integrityHash = string.Empty;
-                string canonical = JsonUtility.ToJson(dto, false);
-                dto.integrityHash = originalHash;
-
-                
-                string keyStr = Pepper + SystemInfo.deviceUniqueIdentifier;
-                var key = System.Text.Encoding.UTF8.GetBytes(keyStr);
-                var data = System.Text.Encoding.UTF8.GetBytes(canonical);
-
-                using (var hmac = new System.Security.Cryptography.HMACSHA256(key))
-                {
-                    var hash = hmac.ComputeHash(data);
-                    return System.BitConverter.ToString(hash).Replace("-", string.Empty);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Integrity hash failed: {ex}");
-                return string.Empty;
-            }
-        }
-
-        private static PlayerProfileDTO HandleTamperAndModerate(PlayerProfileDTO baseDto)
-        {
-            
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            int strikes = Mathf.Max(0, baseDto.tamperCount) + 1;
-            baseDto.tamperCount = strikes;
-            baseDto.lastTamperUnix = now;
-            long seconds;
-            if (BanTestModeEnabled)
-            {
-                seconds = strikes == 1 ? BanTestStrike1Seconds : (strikes == 2 ? BanTestStrike2Seconds : BanTestStrike3Seconds);
-            }
-            else
-            {
-                int hours = strikes == 1 ? 6 : (strikes == 2 ? 12 : 24);
-                seconds = hours * 3600L;
-            }
-            baseDto.banUntilUnix = now + seconds;
-
-            
-            _data = baseDto;
-            return _data;
         }
 
         public static bool IsBanned(out TimeSpan remaining)

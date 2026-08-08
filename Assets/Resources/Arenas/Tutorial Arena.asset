@@ -15,7 +15,9 @@ MonoBehaviour:
   arenaId: 0
   displayName: Training Arena
   arenaImage: {fileID: 21300000, guid: 1d0aded21ecea8d4f96a73d36f716546, type: 3}
+  loadingScreenImage: {fileID: 21300000, guid: 736de733df3fbc34e9f9fb101731694c, type: 3}
   trophyRequirement: 0
+  startingMoney: 500
   waveCount: 5
   waveInterval: 10
   mediumStartPercent: 0.25
@@ -65,3 +67,12 @@ MonoBehaviour:
   defeatTrophiesMax: 1
   effectLimits: []
   cardLimits: []
+  rarityLimits:
+  - rarity: {fileID: 11400000, guid: 26e8b405bc636a244851393557b4d0f9, type: 2}
+    maxCount: 0
+  - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
+    maxCount: 0
+  - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
+    maxCount: 0
+  - rarity: {fileID: 11400000, guid: dddd7cbad3b09e34b92a356a757b65b9, type: 2}
+    maxCount: 0

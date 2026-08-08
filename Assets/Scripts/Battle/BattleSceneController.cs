@@ -84,6 +84,9 @@ namespace TR.Battle
             SetupArenaFromContext();
             UpdateTopBar();
             SetupDeckAndPlacement();
+            // Must run after SetupDeckAndPlacement: TowerPlacementController.Configure is what
+            // subscribes to the sync response.
+            RequestDuoStateSyncIfRejoining();
             TR.Net.DuoRejoinService.IsRejoinAttempt = false;
             HookCastle();
             
@@ -291,11 +294,17 @@ namespace TR.Battle
             UpdateEnemiesRemainingText();
         }
 
+        // Raised when a match resolves, so systems outside the battle (the tutorial) can react to
+        // the outcome instead of assuming one.
+        public static event System.Action OnMatchVictory;
+        public static event System.Action OnMatchDefeat;
+
         private void ShowResultsVictory()
         {
-            
+
             TR.Net.DuoRejoinService.EndMatch();
             MarkRoomMatchEnded();
+            OnMatchVictory?.Invoke();
             var rewards = ArenaService.AwardMatchCompletion(_arena, _arena != null ? _arena.WaveCount : _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
@@ -317,9 +326,10 @@ namespace TR.Battle
 
         private void ShowResultsDefeat()
         {
-            
+
             TR.Net.DuoRejoinService.EndMatch();
             MarkRoomMatchEnded();
+            OnMatchDefeat?.Invoke();
             var rewards = ArenaService.AwardMatchDefeat(_arena, _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
@@ -402,22 +412,32 @@ namespace TR.Battle
             _coordinator.OnEnemyRespawnRequested += OnDuoEnemyRespawnRequested;
             _coordinator.OnCritReceived += OnDuoCritReceived;
 
-            
-            
+
+
             TR.Net.DuoRejoinService.SaveActiveMatch();
 
-            
-            if (TR.Net.DuoRejoinService.IsRejoinAttempt && _coordinator != null && !Photon.Pun.PhotonNetwork.IsMasterClient)
-            {
-                _coordinator.RequestTowerSync();
-                _coordinator.RequestEnemySync();
-            }
 
-            
             BroadcastLocalDeck();
             
             if (_coordinator.HasPartnerDeck)
                 OnDuoPartnerDeckReceived(_coordinator.PartnerDeckIds, _coordinator.PartnerDeckLevels);
+        }
+
+
+        private void RequestDuoStateSyncIfRejoining()
+        {
+            if (!MatchContext.IsDuo || _coordinator == null) return;
+            if (!TR.Net.DuoRejoinService.IsRejoinAttempt) return;
+
+            if (Photon.Pun.PhotonNetwork.IsMasterClient)
+            {
+                Debug.LogWarning("[BattleSceneController] Rejoined as host; no peer holds authoritative tower/enemy state to restore from.");
+                return;
+            }
+
+            _coordinator.RequestTowerSync();
+            _coordinator.RequestEnemySync();
+            Debug.Log("[BattleSceneController] Rejoin: requested tower + enemy sync from host.");
         }
 
         private void OnDestroy()
@@ -992,16 +1012,7 @@ namespace TR.Battle
             {
                 var t = towerList[i];
                 if (t == null || t.Definition == null) continue;
-                string vfxKey = t.Definition.GetDefeatDestroyVfxKey();
-                string sfxKey = t.Definition.GetDefeatDestroySfxKey();
-                if (!string.IsNullOrEmpty(vfxKey))
-                {
-                    ParticleManager.SpawnOneShot(vfxKey, t.transform.position);
-                }
-                if (!string.IsNullOrEmpty(sfxKey) && TR.Audio.SFXManager.Instance != null)
-                {
-                    TR.Audio.SFXManager.Instance.Play(sfxKey);
-                }
+                t.PlayDestroyFeedback();
                 Destroy(t.gameObject);
             }
             yield return null;

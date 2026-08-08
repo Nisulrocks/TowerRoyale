@@ -262,10 +262,10 @@ namespace TR.Net
             string arenaName = arena != null ? arena.DisplayName : null;
             string message = string.IsNullOrEmpty(arenaName) ? null : arenaName;
 
-            FadeToBattle(scene, message);
+            FadeToBattle(scene, message, arena != null ? arena.LoadingScreenImage : null);
         }
 
-        private async void FadeToBattle(string scene, string transitionMessage)
+        private async void FadeToBattle(string scene, string transitionMessage, Sprite loadingImage)
         {
             Photon.Pun.PhotonNetwork.IsMessageQueueRunning = false;
             try
@@ -273,7 +273,7 @@ namespace TR.Net
                 var fader = SceneFader.Instance;
                 if (!string.IsNullOrEmpty(transitionMessage))
                 {
-                    fader.SetNextTransitionMessage(transitionMessage, 1.0f);
+                    fader.SetNextTransitionMessage(transitionMessage, 1.0f, loadingImage);
                 }
                 await fader.LoadSceneWithFade(scene);
             }

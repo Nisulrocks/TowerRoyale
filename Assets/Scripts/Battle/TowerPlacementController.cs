@@ -433,18 +433,33 @@ namespace TR.Battle
 
         private int _placementIdBase = -1;
 
-        private int GeneratePlacementId()
+        private int GetPlacementIdBase()
         {
-            int actor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : 1;
             if (_placementIdBase < 0)
             {
+                int actor = PhotonNetwork.LocalPlayer != null ? PhotonNetwork.LocalPlayer.ActorNumber : 1;
                 long baseId = (long)actor * 1000000L;
                 _placementIdBase = (int)System.Math.Min(baseId, (long)int.MaxValue - 100000L);
             }
+            return _placementIdBase;
+        }
+
+        // A fresh controller restarts the counter at 1, so after a rejoin it would hand out ids
+        // that are still live on the partner. Push it past every id we already own.
+        private void ReserveLocalPlacementId(int placementId)
+        {
+            if (placementId < 0) return;
+            int offset = placementId - GetPlacementIdBase();
+            if (offset < 0 || offset >= 1000000) return;
+            if (offset >= _nextLocalPlacementId) _nextLocalPlacementId = offset + 1;
+        }
+
+        private int GeneratePlacementId()
+        {
             int id;
             do
             {
-                id = _placementIdBase + _nextLocalPlacementId++;
+                id = GetPlacementIdBase() + _nextLocalPlacementId++;
             } while (_towersByPlacementId.ContainsKey(id));
             return id;
         }
@@ -492,6 +507,51 @@ namespace TR.Battle
         public bool IsInsideAnyArea(Vector3 pos)
         {
             return GetAreaIndex(pos) >= 0;
+        }
+
+        // A world point inside a placement area that currently has room for a tower. Used by the
+        // tutorial to demonstrate where a card should be dragged.
+        public bool TryGetSuggestedPlacementPoint(out Vector3 worldPos, float radius = 0.4f)
+        {
+            worldPos = Vector3.zero;
+            for (int i = 0; i < _areas.Count; i++)
+            {
+                var col = _areas[i].Collider;
+                if (col == null || !col.enabled || !col.gameObject.activeInHierarchy) continue;
+
+                Vector3 center = col.bounds.center;
+                center.z = 0f;
+                if (IsPositionFree(center, radius))
+                {
+                    worldPos = center;
+                    return true;
+                }
+
+                // Centre is taken; probe a few offsets before giving up on this area.
+                Vector3 extents = col.bounds.extents;
+                for (int step = 1; step <= 3; step++)
+                {
+                    float t = step / 4f;
+                    Vector3[] probes =
+                    {
+                        center + new Vector3(extents.x * t, 0f, 0f),
+                        center - new Vector3(extents.x * t, 0f, 0f),
+                        center + new Vector3(0f, extents.y * t, 0f),
+                        center - new Vector3(0f, extents.y * t, 0f),
+                    };
+                    for (int p = 0; p < probes.Length; p++)
+                    {
+                        var probe = probes[p];
+                        probe.z = 0f;
+                        if (IsInsideAnyArea(probe) && IsPositionFree(probe, radius))
+                        {
+                            worldPos = probe;
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public bool IsPositionFree(Vector3 pos, float radius)
@@ -556,6 +616,18 @@ namespace TR.Battle
                 }
             }
 
+            if (TR.Systems.EffectLimitService.RarityCapsEnabled)
+            {
+                if (!TR.Systems.EffectLimitService.CanPlaceRarity(card, out var capRarity, out var curRarity, out var rarityName))
+                {
+                    // A cap of 0 is a ban, not a "you've used them all" situation.
+                    TR.UI.BattleToast.Show(capRarity <= 0
+                        ? $"{rarityName} towers can't be used in this arena"
+                        : $"Limit reached: {rarityName} ({curRarity}/{capRarity})");
+                    return false;
+                }
+            }
+
             if (_economy != null && !_economy.CanAfford(cost))
             {
                 var moneyUI = FindFirstObjectByType<TR.Battle.BattleEconomyUI>(FindObjectsInactive.Include);
@@ -590,6 +662,13 @@ namespace TR.Battle
             var towerBase = go.GetComponent<TowerBase>();
             towerBase?.SetOwner(ownerActor);
             towerBase?.SetPlacementId(placementId);
+
+            // Adopting one of our own towers (rejoin resync) must advance the local counter,
+            // otherwise the next placement reuses an id the partner still has bound.
+            if (PhotonNetwork.LocalPlayer != null && ownerActor == PhotonNetwork.LocalPlayer.ActorNumber)
+            {
+                ReserveLocalPlacementId(placementId);
+            }
             if (towerRadius > 0f) towerBase?.SetPlacementRadius(towerRadius);
 
             go.name = $"Tower_{def.DisplayName}_L{level}";
@@ -622,6 +701,14 @@ namespace TR.Battle
                 var binder = towerGO.GetComponent<CardLimitBinding>();
                 if (binder == null) binder = towerGO.AddComponent<CardLimitBinding>();
                 binder.SetCardId(card.CardId);
+            }
+
+            if (TR.Systems.EffectLimitService.RarityCapsEnabled)
+            {
+                TR.Systems.EffectLimitService.RegisterRarity(card);
+                var rarityBinder = towerGO.GetComponent<RarityLimitBinding>();
+                if (rarityBinder == null) rarityBinder = towerGO.AddComponent<RarityLimitBinding>();
+                rarityBinder.SetRarityKey(TR.Systems.EffectLimitService.GetRarityKey(card));
             }
         }
 
@@ -703,19 +790,22 @@ namespace TR.Battle
             Debug.Log($"[Placement] {(isLocalOwner ? "Local" : "Remote")} tower {card.DisplayName} L{level} at {pos} ID {placementId}.");
         }
 
-        private void OnRemoteTowerRemoved(int placementId)
+        private void OnRemoteTowerRemoved(int placementId, bool playDestroyFeedback)
         {
             if (_towersByPlacementId.TryGetValue(placementId, out var go))
             {
                 _towersByPlacementId.Remove(placementId);
                 if (go != null)
                 {
+                    // Mirror the destruction effect the remote side already played.
+                    if (playDestroyFeedback) go.GetComponent<TowerBase>()?.PlayDestroyFeedback();
+
                     var bind = go.GetComponent<TowerSnapBinding>();
                     bind?.Unbind();
                     Destroy(go);
                 }
             }
-            Debug.Log($"[Placement] Removed tower ID {placementId} (remote).");
+            Debug.Log($"[Placement] Removed tower ID {placementId} (remote, vfx={playDestroyFeedback}).");
         }
 
         private void OnRemoteTowerHp(int placementId, float hp)
@@ -765,6 +855,31 @@ namespace TR.Battle
             {
                 _coordinator.SendTowerSync(requesterActor, cardIds.ToArray(), levels.ToArray(), positions.ToArray(), placementIds.ToArray(), owners.ToArray(), hps.ToArray());
             }
+
+            RemirrorTowersOwnedBy(requesterActor);
+        }
+
+        // While a player is away the host takes over their towers (TakeOverTowerSimulation).
+        // Once they ask for a resync they are simulating those towers again, so drop back to
+        // mirroring them here — otherwise both clients simulate the same tower.
+        private void RemirrorTowersOwnedBy(int actorNumber)
+        {
+            if (actorNumber < 1 || PhotonNetwork.LocalPlayer == null) return;
+            if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber) return;
+
+            int mirrored = 0;
+            foreach (var tower in TowerBase.All)
+            {
+                if (tower == null || tower.OwnerActorNumber != actorNumber) continue;
+                if (tower.IsVisualOnly) continue;
+
+                MakeVisualOnly(tower.gameObject);
+                var bind = tower.GetComponent<TowerSnapBinding>();
+                if (bind != null) bind.SetMirror(true);
+                mirrored++;
+            }
+            if (mirrored > 0)
+                Debug.Log($"[Placement] Handed {mirrored} tower(s) back to actor {actorNumber} after rejoin.");
         }
 
         private void OnTowerSyncReceived(string[] cardIds, int[] levels, Vector3[] positions, int[] placementIds, int[] owners, float[] hps)
@@ -851,17 +966,22 @@ namespace TR.Battle
             RefreshSnapPointColors(pos);
         }
 
-        public void NotifyTowerDestroyed(int placementId, bool isMirror)
+        public void NotifyTowerDestroyed(int placementId, bool isMirror, bool playedDestroyFeedback = false)
         {
             if (_towersByPlacementId.ContainsKey(placementId))
             {
                 _towersByPlacementId.Remove(placementId);
             }
 
-            if (!isMirror && TR.Net.DuoRuntime.IsDuo && _coordinator != null && placementId >= 0)
-            {
-                _coordinator.BroadcastTowerRemoved(placementId);
-            }
+            if (!TR.Net.DuoRuntime.IsDuo || _coordinator == null || placementId < 0) return;
+
+            // The owner reports its own towers. The simulation authority also reports mirrors it
+            // destroyed, because enemy abilities (pulse nuke) only run on the authority and would
+            // otherwise leave the tower standing on the owner's client.
+
+            if (isMirror && !TR.Net.DuoRuntime.IsSimulationAuthority) return;
+
+            _coordinator.BroadcastTowerRemoved(placementId, playedDestroyFeedback);
         }
 
         private static void MakeVisualOnly(GameObject go)
@@ -907,7 +1027,7 @@ namespace TR.Battle
 
             if (broadcast && tb != null && !tb.IsVisualOnly && TR.Net.DuoRuntime.IsDuo && _coordinator != null)
             {
-                _coordinator.BroadcastTowerRemoved(placementId);
+                _coordinator.BroadcastTowerRemoved(placementId, tb.PlayedDestroyFeedback);
             }
         }
 

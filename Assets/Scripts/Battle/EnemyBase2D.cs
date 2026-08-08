@@ -227,33 +227,81 @@ namespace TR.Battle
         }
 
         private static readonly System.Collections.Generic.List<TowerBase> s_towerSnapshot = new System.Collections.Generic.List<TowerBase>(64);
+
+        public const int AbilityPulseNuke = 0;
+        public const int AbilityStunPulse = 1;
+
+        // Visual half of a pulse ability, split out so a remote client can replay it without
+        // re-running the gameplay effect (which stays on the simulation authority).
+        public void PlayAbilityPulseFeedback(int kind)
+        {
+            if (definition == null) return;
+            Vector3 origin = transform.position;
+
+            if (kind == AbilityPulseNuke)
+            {
+                string vfxKey = definition.PulseNukeVfxKey;
+                if (!string.IsNullOrEmpty(vfxKey))
+                {
+                    TR.VFX.ParticleManager.SpawnOneShot(vfxKey, origin);
+                }
+                else
+                {
+                    TR.VFX.PulseRipple.Spawn(origin,
+                                             Mathf.Max(0f, definition.PulseNukeRadius),
+                                             definition.PulseNukeRippleColor,
+                                             definition.PulseNukeRippleDuration,
+                                             definition.PulseNukeRippleLineWidth,
+                                             definition.PulseNukeRippleSegments);
+                }
+
+                string sfx = definition.PulseNukeSfxKey;
+                if (!string.IsNullOrEmpty(sfx) && TR.Audio.SFXManager.Instance != null)
+                {
+                    TR.Audio.SFXManager.Instance.Play(sfx);
+                }
+            }
+            else if (kind == AbilityStunPulse)
+            {
+                string vfxKey = definition.StunPulseVfxKey;
+                if (!string.IsNullOrEmpty(vfxKey))
+                {
+                    TR.VFX.ParticleManager.SpawnOneShot(vfxKey, origin);
+                }
+                else
+                {
+                    TR.VFX.PulseRipple.Spawn(origin,
+                                             Mathf.Max(0f, definition.StunPulseRadius),
+                                             definition.StunPulseRippleColor,
+                                             definition.StunPulseRippleDuration,
+                                             definition.StunPulseRippleLineWidth,
+                                             definition.StunPulseRippleSegments);
+                }
+
+                string sfx = definition.StunPulseSfxKey;
+                if (!string.IsNullOrEmpty(sfx) && TR.Audio.SFXManager.Instance != null)
+                {
+                    TR.Audio.SFXManager.Instance.Play(sfx);
+                }
+            }
+        }
+
+        private void PlayAndBroadcastAbilityPulse(int kind)
+        {
+            PlayAbilityPulseFeedback(kind);
+            if (DuoRuntime.IsDuo && DuoRuntime.IsSimulationAuthority)
+            {
+                _netSync?.BroadcastAbilityPulse(kind);
+            }
+        }
+
         private void DoPulseNuke()
         {
             float radius = Mathf.Max(0f, definition.PulseNukeRadius);
             Vector3 origin = transform.position;
-            
-            string vfxKey = definition.PulseNukeVfxKey;
-            if (!string.IsNullOrEmpty(vfxKey))
-            {
-                TR.VFX.ParticleManager.SpawnOneShot(vfxKey, origin);
-            }
-            else
-            {
-                TR.VFX.PulseRipple.Spawn(origin,
-                                         radius,
-                                         definition.PulseNukeRippleColor,
-                                         definition.PulseNukeRippleDuration,
-                                         definition.PulseNukeRippleLineWidth,
-                                         definition.PulseNukeRippleSegments);
-            }
-            
-            string sfx = definition.PulseNukeSfxKey;
-            if (!string.IsNullOrEmpty(sfx) && TR.Audio.SFXManager.Instance != null)
-            {
-                TR.Audio.SFXManager.Instance.Play(sfx);
-            }
 
-            
+            PlayAndBroadcastAbilityPulse(AbilityPulseNuke);
+
             s_towerSnapshot.Clear();
             foreach (var t in TowerBase.All) s_towerSnapshot.Add((TowerBase)t);
             for (int i = 0; i < s_towerSnapshot.Count; i++)
@@ -263,26 +311,13 @@ namespace TR.Battle
                 float d = Vector2.Distance((Vector2)origin, (Vector2)tb.transform.position);
                 if (d <= radius)
                 {
-                    
-                    var def = tb.Definition;
-                    if (def != null)
-                    {
-                        string towerVfxKey = def.GetDefeatDestroyVfxKey();
-                        if (!string.IsNullOrEmpty(towerVfxKey))
-                        {
-                            TR.VFX.ParticleManager.SpawnOneShot(towerVfxKey, tb.transform.position);
-                        }
-                        string towerSfxKey = def.GetDefeatDestroySfxKey();
-                        if (!string.IsNullOrEmpty(towerSfxKey) && TR.Audio.SFXManager.Instance != null)
-                        {
-                            TR.Audio.SFXManager.Instance.Play(towerSfxKey);
-                        }
-                    }
-                    
+                    // TowerSnapBinding.OnDestroy relays this to the owning client, including the
+                    // fact that the destroy feedback was played.
+                    tb.PlayDestroyFeedback();
                     Destroy(tb.gameObject);
                 }
             }
-            
+
             #if UNITY_EDITOR
             DebugDrawCircle(origin, radius, new Color(1f, 0.6f, 0.9f, 0.6f), 0.25f);
             #endif
@@ -312,28 +347,9 @@ namespace TR.Battle
         {
             float radius = Mathf.Max(0f, definition.StunPulseRadius);
             Vector3 origin = transform.position;
-            
-            string vfxKey2 = definition.StunPulseVfxKey;
-            if (!string.IsNullOrEmpty(vfxKey2))
-            {
-                TR.VFX.ParticleManager.SpawnOneShot(vfxKey2, origin);
-            }
-            else
-            {
-                TR.VFX.PulseRipple.Spawn(origin,
-                                         radius,
-                                         definition.StunPulseRippleColor,
-                                         definition.StunPulseRippleDuration,
-                                         definition.StunPulseRippleLineWidth,
-                                         definition.StunPulseRippleSegments);
-            }
-            
-            string sfx2 = definition.StunPulseSfxKey;
-            if (!string.IsNullOrEmpty(sfx2) && TR.Audio.SFXManager.Instance != null)
-            {
-                TR.Audio.SFXManager.Instance.Play(sfx2);
-            }
-            
+
+            PlayAndBroadcastAbilityPulse(AbilityStunPulse);
+
             float dur = Mathf.Max(0f, definition.StunPulseDuration);
             s_towerSnapshot2.Clear();
             foreach (var t in TowerBase.All) s_towerSnapshot2.Add((TowerBase)t);

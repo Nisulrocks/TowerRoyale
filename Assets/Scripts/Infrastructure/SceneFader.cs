@@ -43,6 +43,9 @@ namespace TR.Infrastructure
         private TMP_Text _centerText;
         private string _nextMessage;
         private float _nextMessageDuration;
+        private Sprite _nextBackdrop;
+        private Image _backdrop;
+        private bool _backdropActive;
         private bool _pendingFadeIn;
         private float _pendingFadeInDuration;
 
@@ -108,7 +111,40 @@ namespace TR.Infrastructure
                 _group.interactable = false;
             }
 
-            
+            // Arena artwork, parented to the Fade object so it fades with the same CanvasGroup and
+            // sits above the black fill but below the title text.
+            if (_backdrop == null && _image != null)
+            {
+                Transform bd = _image.transform.Find("Backdrop");
+                GameObject bgo;
+                if (bd == null)
+                {
+                    bgo = new GameObject("Backdrop");
+                    bgo.transform.SetParent(_image.transform, false);
+                }
+                else bgo = bd.gameObject;
+
+                _backdrop = bgo.GetComponent<Image>();
+                if (_backdrop == null) _backdrop = bgo.AddComponent<Image>();
+                _backdrop.raycastTarget = false;
+                _backdrop.preserveAspect = false;
+
+                var brt = _backdrop.rectTransform;
+                brt.anchorMin = Vector2.zero;
+                brt.anchorMax = Vector2.one;
+                brt.offsetMin = Vector2.zero;
+                brt.offsetMax = Vector2.zero;
+
+                // EnvelopeParent gives a "cover" fit: fills the screen and crops the overflow
+                // rather than letterboxing or stretching the art.
+                var fitter = bgo.GetComponent<AspectRatioFitter>();
+                if (fitter == null) fitter = bgo.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = 16f / 9f;
+
+                bgo.SetActive(false);
+            }
+
             if (_centerText == null)
             {
                 try
@@ -180,8 +216,12 @@ namespace TR.Infrastructure
             _isFading = false;
             
             bool transparent = _group.alpha <= 0.0001f;
-            _group.blocksRaycasts = !transparent; 
+            _group.blocksRaycasts = !transparent;
             _image.raycastTarget = !transparent;
+
+            // Fully faded back in: the loading screen is finished, so drop the artwork rather than
+            // leaving it to appear behind the next unrelated transition.
+            if (transparent && _backdropActive) ClearBackdrop();
         }
 
         
@@ -274,15 +314,24 @@ namespace TR.Infrastructure
         
         public void SetNextTransitionMessage(string message, float seconds = 1.0f)
         {
+            SetNextTransitionMessage(message, seconds, null);
+        }
+
+        // Passing a backdrop turns the next transition into an arena loading screen: the artwork
+        // fills the screen and the message becomes the arena title in the bottom-right.
+        public void SetNextTransitionMessage(string message, float seconds, Sprite backdrop)
+        {
             EnsureCanvas();
-            if (_centerText == null) return; 
+            if (_centerText == null) return;
             _nextMessage = message;
             _nextMessageDuration = Mathf.Max(0f, seconds);
+            _nextBackdrop = backdrop;
         }
 
         private void ShowCenterMessageImmediate(string message)
         {
             if (_centerText == null) return;
+            ApplyBackdrop();
             _centerText.text = message;
             var c = _centerText.color; c.a = 1f; _centerText.color = c;
         }
@@ -290,8 +339,77 @@ namespace TR.Infrastructure
         private void PrepareCenterMessage(string message, float alpha)
         {
             if (_centerText == null) return;
+            ApplyBackdrop();
             _centerText.text = message;
             SetTextAlpha(_centerText, alpha);
+        }
+
+        [Header("Arena Loading Screen")]
+        [Tooltip("Font size for the arena name when a loading image is shown.")]
+        [SerializeField] private float backdropTitleFontSize = 110f;
+        [Tooltip("Inset of the arena name from the bottom-right corner.")]
+        [SerializeField] private Vector2 backdropTitleMargin = new Vector2(80f, 60f);
+        [Tooltip("Width of the arena name area, as a fraction of the screen.")]
+        [Range(0.2f, 1f)] [SerializeField] private float backdropTitleWidth = 0.7f;
+
+        // Switches between the plain fade (centred text on black) and the arena loading screen
+        // (full-bleed art with the arena name in the bottom-right).
+        private void ApplyBackdrop()
+        {
+            EnsureCanvas();
+            _backdropActive = _nextBackdrop != null;
+
+            if (_backdrop != null)
+            {
+                if (_backdropActive)
+                {
+                    _backdrop.sprite = _nextBackdrop;
+                    _backdrop.color = Color.white;
+
+                    // Match the fitter to the art so it is cropped, never squashed.
+                    var fitter = _backdrop.GetComponent<AspectRatioFitter>();
+                    if (fitter != null && _nextBackdrop.rect.height > 0f)
+                        fitter.aspectRatio = _nextBackdrop.rect.width / _nextBackdrop.rect.height;
+                }
+                _backdrop.gameObject.SetActive(_backdropActive);
+            }
+
+            if (_centerText == null) return;
+            var rt = _centerText.rectTransform;
+
+            if (_backdropActive)
+            {
+                float w = Mathf.Clamp01(backdropTitleWidth);
+                rt.anchorMin = new Vector2(1f - w, 0f);
+                rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(1f, 0f);
+                rt.offsetMin = new Vector2(0f, backdropTitleMargin.y);
+                rt.offsetMax = new Vector2(-backdropTitleMargin.x, backdropTitleMargin.y + backdropTitleFontSize * 1.4f);
+                _centerText.alignment = TextAlignmentOptions.BottomRight;
+                _centerText.fontSize = backdropTitleFontSize;
+                _centerText.enableAutoSizing = true;
+                _centerText.fontSizeMin = backdropTitleFontSize * 0.4f;
+                _centerText.fontSizeMax = backdropTitleFontSize;
+            }
+            else
+            {
+                // Restore the original centred layout for non-arena transitions.
+                rt.anchorMin = new Vector2(0.1f, 0.4f);
+                rt.anchorMax = new Vector2(0.9f, 0.6f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                _centerText.alignment = TextAlignmentOptions.Center;
+                _centerText.enableAutoSizing = false;
+                _centerText.fontSize = 64;
+            }
+        }
+
+        private void ClearBackdrop()
+        {
+            _nextBackdrop = null;
+            _backdropActive = false;
+            if (_backdrop != null) _backdrop.gameObject.SetActive(false);
         }
 
         private void SetTextAlpha(TMP_Text txt, float a)

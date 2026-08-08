@@ -84,9 +84,80 @@ namespace TR.Net
             }
         }
 
-        
+        // ---- friend (private) matches ----
+        private bool _friendRoomMode;
+        private string _friendRoomName;
+        private bool _friendRoomIsHost;
+
+        public static string NewFriendRoomName() => $"duofriend_{System.Guid.NewGuid():N}";
+
+        // Same flow as StartMatchmaking, but targets one named invisible room instead of the
+        // random-matchmaking pool. The inviter hosts it; the invitee joins by name.
+        public void StartFriendMatch(string roomName, bool asHost, string arenaId, int trophies, int castleLevel,
+                                     string battleSceneName, string arenaDisplayName = null, string nickname = null)
+        {
+            if (string.IsNullOrEmpty(roomName)) { OnFailed?.Invoke("Invalid room."); return; }
+            BeginMatchmaking(roomName, asHost, arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName, nickname);
+        }
+
+        private void EnterFriendRoom()
+        {
+            if (_friendRoomIsHost)
+            {
+                var roomProps = new Hashtable
+                {
+                    { KEY_ARENA, _arenaId },
+                    { KEY_TROPHIES, _trophies },
+                };
+                var options = new RoomOptions
+                {
+                    MaxPlayers = 2,
+                    // Invisible so random matchmaking can never drop a stranger into a friend room.
+                    IsVisible = false,
+                    CustomRoomProperties = roomProps,
+                    CustomRoomPropertiesForLobby = new[] { KEY_ARENA, KEY_TROPHIES },
+                    CleanupCacheOnLeave = false,
+                    PlayerTtl = RejoinPlayerTtlMs,
+                    EmptyRoomTtl = 0,
+                };
+                SetState(MatchState.WaitingForPartner, "Waiting for your friend...");
+                PhotonNetwork.CreateRoom(_friendRoomName, options, DuoSqlLobby);
+            }
+            else
+            {
+                SetState(MatchState.WaitingForPartner, "Joining your friend...");
+                PhotonNetwork.JoinRoom(_friendRoomName);
+            }
+        }
+
+        public override void OnJoinRoomFailed(short returnCode, string message)
+        {
+            if (!_friendRoomMode || !_matchmakingActive || _cancelRequested) return;
+            _matchmakingActive = false;
+            _friendRoomMode = false;
+            SetState(MatchState.Failed, "Could not join your friend.");
+            OnFailed?.Invoke("That match is no longer available.");
+        }
+
+
         public void StartMatchmaking(string arenaId, int trophies, int castleLevel, string battleSceneName, string arenaDisplayName = null, string nickname = null)
         {
+            // Passing no room name clears friend-room state. This manager persists across matches,
+            // and previously _friendRoomMode stayed set after a friend match, so the next normal
+            // matchmaking attempt re-entered the old private room instead of the random pool —
+            // which is why two players could no longer find each other.
+            BeginMatchmaking(null, false, arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName, nickname);
+        }
+
+        // Single entry point for both flows, so friend-room state is always set explicitly and can
+        // never leak from one match into the next.
+        private void BeginMatchmaking(string friendRoomName, bool friendIsHost, string arenaId, int trophies,
+                                      int castleLevel, string battleSceneName, string arenaDisplayName, string nickname)
+        {
+            _friendRoomMode = !string.IsNullOrEmpty(friendRoomName);
+            _friendRoomName = friendRoomName;
+            _friendRoomIsHost = friendIsHost;
+
             _arenaId = arenaId ?? string.Empty;
             _arenaDisplayName = arenaDisplayName;
             _trophies = Mathf.Max(0, trophies);
@@ -157,6 +228,7 @@ namespace TR.Net
 
             _cancelRequested = true;
             _matchmakingActive = false;
+            _friendRoomMode = false;
             _pendingRejoinLeave = false;
             StopRejoinTimer();
             SetState(MatchState.Idle, "Cancelled");
@@ -185,8 +257,16 @@ namespace TR.Net
 
         private void TryJoinRandom()
         {
+            // Friend matches reach the room by name. Branching here keeps every existing caller
+            // (OnJoinedLobby, OnLeftRoom, OnConnectedToMaster) working unchanged.
+            if (_friendRoomMode)
+            {
+                EnterFriendRoom();
+                return;
+            }
+
             SetState(MatchState.Searching, "Searching for a partner...");
-            
+
             string sql = $"{KEY_ARENA} = '{EscapeSql(_arenaId)}'";
             PhotonNetwork.JoinRandomRoom(null, 2, MatchmakingMode.FillRoom, DuoSqlLobby, sql);
         }
@@ -435,6 +515,9 @@ namespace TR.Net
             if (_loadStarted) return;
             _loadStarted = true;
             _matchmakingActive = false;
+            // The room has served its purpose; nothing after this point should route back into it.
+            _friendRoomMode = false;
+            _friendRoomName = null;
             StopRejoinTimer();
             SetState(MatchState.Starting, "Match found! Loading...");
 
@@ -449,7 +532,9 @@ namespace TR.Net
             {
                 if (!string.IsNullOrEmpty(_arenaDisplayName) && SceneFader.Instance != null)
                 {
-                    SceneFader.Instance.SetNextTransitionMessage(_arenaDisplayName, 1.0f);
+                    var arenaDef = TR.Systems.GameDB.GetArenaById(_arenaId);
+                    SceneFader.Instance.SetNextTransitionMessage(
+                        _arenaDisplayName, 1.0f, arenaDef != null ? arenaDef.LoadingScreenImage : null);
                 }
                 if (SceneFader.Instance != null)
                 {
@@ -500,6 +585,8 @@ namespace TR.Net
                 return;
             }
             _matchmakingActive = false;
+            _friendRoomMode = false;
+            _friendRoomName = null;
             SetState(MatchState.Failed, $"Disconnected: {cause}");
             OnFailed?.Invoke(cause.ToString());
         }

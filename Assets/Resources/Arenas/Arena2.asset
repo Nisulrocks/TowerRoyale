@@ -15,6 +15,7 @@ MonoBehaviour:
   arenaId: 2
   displayName: Shifting Sands
   arenaImage: {fileID: 21300000, guid: 4b11175b5e8e5444aa85b975d9ca404f, type: 3}
+  loadingScreenImage: {fileID: 21300000, guid: 8214c1294b5b0fb469362f998f119a7e, type: 3}
   trophyRequirement: 50
   startingMoney: 400
   waveCount: 8
@@ -75,10 +76,11 @@ MonoBehaviour:
   defeatTrophiesMin: 15
   defeatTrophiesMax: 20
   effectLimits: []
-  cardLimits:
-  - card: {fileID: 11400000, guid: 2ff463be4d1149a49bc0a19a4258525f, type: 2}
-    maxCount: 1
-  - card: {fileID: 11400000, guid: 1da1d4ce90c6e6445aa676a1cf3a024c, type: 2}
+  cardLimits: []
+  rarityLimits:
+  - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
     maxCount: 4
-  - card: {fileID: 11400000, guid: 73d341fad27b74441a09202e2050233b, type: 2}
-    maxCount: 8
+  - rarity: {fileID: 11400000, guid: 94ab1ee3fd6204840b34763e02a21a99, type: 2}
+    maxCount: 2
+  - rarity: {fileID: 11400000, guid: dddd7cbad3b09e34b92a356a757b65b9, type: 2}
+    maxCount: 0

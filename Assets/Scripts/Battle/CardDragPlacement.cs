@@ -10,6 +10,10 @@ namespace TR.Battle
     public class CardDragPlacement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IInitializePotentialDragHandler, IPointerDownHandler
     {
         [SerializeField] private CardDefinition card;
+
+        // The most reliable way to find which card a battle deck slot represents: this component
+        // sits on the exact object that receives the drag.
+        public CardDefinition Card => card;
         [SerializeField] private TowerPlacementController placement;
 
         private GameObject _ghost;

@@ -217,15 +217,44 @@ namespace TR.Tutorial
                 
                 if (!string.IsNullOrEmpty(step.requiredSceneName))
                 {
-                    
+                    // Only the first step of a resumed run can be stranded: mid-flow, a scene
+                    // mismatch just means a load the player triggered is still in progress.
+                    bool resumedFirstStep = (i == startIdx) && startIdx > 0;
+                    float mismatchTimer = 0f;
+                    int rewindTo = -1;
+
                     while (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != step.requiredSceneName)
                     {
                         if (_blocker != null) _blocker.Disable();
                         if (_overlayCanvas != null && _overlayCanvas.gameObject.activeSelf) _overlayCanvas.gameObject.SetActive(false);
                         if (verboseLogs) Debug.Log($"[Tutorial] Waiting for scene '{step.requiredSceneName}', current: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+
+                        // Quitting mid-battle saves a step that belongs to the battle scene, but the
+                        // game restarts into the lobby. Nothing will ever satisfy that wait and the
+                        // player has no prompt to act on, so send them back to a step they can reach.
+                        if (resumedFirstStep)
+                        {
+                            mismatchTimer += Time.unscaledDeltaTime;
+                            if (mismatchTimer >= resumeRecoverDelay)
+                            {
+                                int back = FindStepForCurrentScene(i);
+                                if (back >= 0 && back != i) { rewindTo = back; break; }
+                                mismatchTimer = 0f; // nothing to fall back to yet; keep waiting
+                            }
+                        }
                         yield return null;
                     }
-                    
+
+                    if (rewindTo >= 0)
+                    {
+                        if (verboseLogs)
+                            Debug.Log($"[Tutorial] Resumed on step {i} for scene '{step.requiredSceneName}' but we are in " +
+                                      $"'{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}'. Rewinding to step {rewindTo}.");
+                        PlayerProfile.SetTutorialStep(rewindTo);
+                        i = rewindTo - 1; // for-loop increment lands on rewindTo
+                        continue;
+                    }
+
                     yield return null; 
                     float settle = 0.1f; while (settle > 0f) { settle -= Time.unscaledDeltaTime; yield return null; }
                     if (_overlayCanvas != null && !_overlayCanvas.gameObject.activeSelf) _overlayCanvas.gameObject.SetActive(true);
@@ -378,6 +407,11 @@ namespace TR.Tutorial
                             l.ResetFlag();
                             listeners.Add(l);
                         }
+                        RectTransform ghostSource = buttons.Count > 0 && buttons[0] != null
+                            ? buttons[0].transform as RectTransform
+                            : null;
+                        if (step.showGhostDrag) BeginGhostDrag(step, ghostSource);
+
                         bool dragged = false;
                         while (!dragged)
                         {
@@ -385,8 +419,10 @@ namespace TR.Tutorial
                             {
                                 if (listeners[i2] != null && listeners[i2].Dragged) { dragged = true; break; }
                             }
+                            if (step.showGhostDrag) UpdateGhostDrag(ghostSource);
                             yield return null;
                         }
+                        StopGhostDrag();
                     }
                     else
                     {
@@ -412,7 +448,13 @@ namespace TR.Tutorial
                                 yield return null;
                             }
                         }
-                        while (!listener.Dragged) { yield return null; }
+                        if (step.showGhostDrag) BeginGhostDrag(step, rt);
+                        while (!listener.Dragged)
+                        {
+                            if (step.showGhostDrag) UpdateGhostDrag(rt);
+                            yield return null;
+                        }
+                        StopGhostDrag();
                     }
                 }
                 else if (step.waitMode == StepWaitMode.WaitForNameInput)
@@ -461,13 +503,78 @@ namespace TR.Tutorial
 
                     if (_blocker != null) _blocker.Disable();
                 }
+                else if (step.waitMode == StepWaitMode.WaitForMatchVictory)
+                {
+                    _matchVictory = false;
+                    _matchDefeat = false;
+                    TR.Battle.BattleSceneController.OnMatchVictory += OnTutorialMatchVictory;
+                    TR.Battle.BattleSceneController.OnMatchDefeat += OnTutorialMatchDefeat;
+
+                    string battleScene = step.requiredSceneName;
+                    bool lost = false;
+
+                    while (!_matchVictory)
+                    {
+                        if (_matchDefeat) { lost = true; break; }
+
+                        // Quitting or surrendering never raises a defeat, so treat leaving the
+                        // battle scene without a win as a loss too.
+                        if (!string.IsNullOrEmpty(battleScene) &&
+                            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != battleScene)
+                        {
+                            lost = true;
+                            break;
+                        }
+                        yield return null;
+                    }
+
+                    TR.Battle.BattleSceneController.OnMatchVictory -= OnTutorialMatchVictory;
+                    TR.Battle.BattleSceneController.OnMatchDefeat -= OnTutorialMatchDefeat;
+
+                    if (lost)
+                    {
+                        int retry = ResolveRetryStepIndex(step, i);
+                        if (verboseLogs) Debug.Log($"[Tutorial] Match not won on step {i}; rewinding to step {retry}.");
+
+                        // Say nothing until the player is back where the retry begins.
+                        string retryScene = flow.steps[retry] != null ? flow.steps[retry].requiredSceneName : null;
+                        if (!string.IsNullOrEmpty(retryScene))
+                        {
+                            while (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != retryScene)
+                            {
+                                if (_blocker != null) _blocker.Disable();
+                                if (_overlayCanvas != null && _overlayCanvas.gameObject.activeSelf)
+                                    _overlayCanvas.gameObject.SetActive(false);
+                                yield return null;
+                            }
+                            yield return null;
+                            if (_overlayCanvas != null && !_overlayCanvas.gameObject.activeSelf)
+                                _overlayCanvas.gameObject.SetActive(true);
+                        }
+
+                        if (!string.IsNullOrEmpty(step.defeatDialogueText))
+                        {
+                            EnsureUI();
+                            if (_arrow != null) _arrow.gameObject.SetActive(false);
+                            Sprite guide = step.defeatGuideSprite != null ? step.defeatGuideSprite : step.guideSprite;
+                            if (_dialogue != null) _dialogue.Show(step.defeatDialogueText, step.typewriterCharDelay, guide);
+
+                            float d = Mathf.Max(0f, step.defeatMessageSeconds);
+                            while (d > 0f) { d -= Time.unscaledDeltaTime; yield return null; }
+                        }
+
+                        PlayerProfile.SetTutorialStep(retry);
+                        i = retry - 1; // the for-loop increment lands us on 'retry'
+                        continue;
+                    }
+                }
                 else
                 {
-                    
+
                     yield return null;
                 }
 
-                
+
                 PlayerProfile.SetTutorialStep(i + 1);
             }
             
@@ -482,6 +589,145 @@ namespace TR.Tutorial
         private void OnListenedButtonClicked()
         {
             _buttonClickedFlag = true;
+        }
+
+        private TutorialGhostDragUI _ghostDrag;
+
+        private void BeginGhostDrag(TutorialStep step, RectTransform source)
+        {
+            if (source == null) return;
+            EnsureUI();
+            if (_overlayCanvas == null) return;
+
+            if (_ghostDrag == null)
+                _ghostDrag = TutorialGhostDragUI.Create(_overlayCanvas.transform);
+
+            if (!TryGetGhostEndpoints(source, out Vector2 from, out Vector2 to)) return;
+
+            // Show what actually gets placed — the tower — rather than the card art.
+            Sprite sprite = step.ghostDragSprite;
+            if (sprite == null) sprite = ResolveTowerSprite(source);
+
+            _ghostDrag.Play(from, to, sprite);
+
+            // The arrow rides along with the ghost so the gesture reads as one motion.
+            if (_arrow != null && _ghostDrag.Rect != null)
+            {
+                _arrow.gameObject.SetActive(true);
+                _arrow.Follow(_ghostDrag.Rect, step.targetScreenOffset);
+            }
+        }
+
+        // The tower prefab is a world-space sprite, so pull the largest SpriteRenderer off it —
+        // that is the tower body rather than a muzzle point or decoration.
+        private Sprite ResolveTowerSprite(RectTransform source)
+        {
+            var def = ResolveCardFromSource(source);
+            var prefab = def != null ? def.TowerPrefab : null;
+            if (prefab == null) return null;
+
+            Sprite best = null;
+            float bestArea = -1f;
+            foreach (var sr in prefab.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (sr == null || sr.sprite == null) continue;
+                var b = sr.sprite.bounds.size;
+                float area = b.x * b.y;
+                if (area > bestArea)
+                {
+                    bestArea = area;
+                    best = sr.sprite;
+                }
+            }
+            return best;
+        }
+
+        // The battle deck bar attaches CardDragPlacement to the button's target graphic, so the
+        // owning CardItemUI is a PARENT of the tutorial's target, not a child. Search both
+        // directions and prefer the drag component, which is on the dragged object itself.
+        private TR.Data.CardDefinition ResolveCardFromSource(RectTransform source)
+        {
+            if (source == null) return null;
+
+            var drag = source.GetComponentInParent<TR.Battle.CardDragPlacement>();
+            if (drag == null) drag = source.GetComponentInChildren<TR.Battle.CardDragPlacement>(true);
+            if (drag != null && drag.Card != null) return drag.Card;
+
+            var cardItem = source.GetComponentInParent<TR.UI.CardItemUI>();
+            if (cardItem == null) cardItem = source.GetComponentInChildren<TR.UI.CardItemUI>(true);
+            if (cardItem != null && !string.IsNullOrEmpty(cardItem.CardId))
+                return GameDB.GetCardById(cardItem.CardId);
+
+            return null;
+        }
+
+        private void UpdateGhostDrag(RectTransform source)
+        {
+            if (_ghostDrag == null || source == null) return;
+            if (TryGetGhostEndpoints(source, out Vector2 from, out Vector2 to))
+                _ghostDrag.UpdateEndpoints(from, to);
+        }
+
+        private void StopGhostDrag()
+        {
+            if (_ghostDrag != null) _ghostDrag.StopAndHide();
+        }
+
+        // Both endpoints are recomputed every frame: the card can move with its bar, and the free
+        // placement spot changes as the player puts towers down.
+        private bool TryGetGhostEndpoints(RectTransform source, out Vector2 from, out Vector2 to)
+        {
+            from = RectTransformUtility.WorldToScreenPoint(null, source.position);
+            to = from;
+
+            var placement = FindFirstObjectByType<TR.Battle.TowerPlacementController>(FindObjectsInactive.Include);
+            var cam = Camera.main;
+            if (placement == null || cam == null) return false;
+            if (!placement.TryGetSuggestedPlacementPoint(out Vector3 worldPos)) return false;
+
+            to = cam.WorldToScreenPoint(worldPos);
+            return true;
+        }
+
+        private bool _matchVictory;
+        private bool _matchDefeat;
+        private void OnTutorialMatchVictory() { _matchVictory = true; }
+        private void OnTutorialMatchDefeat() { _matchDefeat = true; }
+
+        [Tooltip("Grace period before a resumed tutorial decides the step's scene will never load and rewinds. Long enough to cover Boot -> Lobby.")]
+        [SerializeField] private float resumeRecoverDelay = 2.5f;
+
+        // Most recent step at or before 'before' that runs in the scene we are actually in.
+        private int FindStepForCurrentScene(int before)
+        {
+            string current = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            for (int i = before - 1; i >= 0; i--)
+            {
+                var s = flow.steps[i];
+                if (s == null || string.IsNullOrEmpty(s.requiredSceneName)) continue;
+                if (string.Equals(s.requiredSceneName, current, System.StringComparison.OrdinalIgnoreCase))
+                    return i;
+            }
+            return -1;
+        }
+
+        // Where to send the player after a failed tutorial match. An explicit index wins; otherwise
+        // rewind to the most recent lobby step, which is the one that walks them into the arena.
+        // Deriving it survives steps being reordered in the flow asset.
+        private int ResolveRetryStepIndex(TutorialStep step, int currentIndex)
+        {
+            if (step.defeatRewindToStep >= 0 && step.defeatRewindToStep < flow.steps.Count)
+                return step.defeatRewindToStep;
+
+            for (int i = currentIndex - 1; i >= 0; i--)
+            {
+                var s = flow.steps[i];
+                if (s == null) continue;
+                if (string.IsNullOrEmpty(s.requiredSceneName)) continue;
+                if (!string.Equals(s.requiredSceneName, step.requiredSceneName, System.StringComparison.OrdinalIgnoreCase))
+                    return i;
+            }
+            return 0;
         }
 
         private void ShowStepUI(TutorialStep step)

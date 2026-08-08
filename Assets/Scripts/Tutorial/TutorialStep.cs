@@ -17,13 +17,24 @@ namespace TR.Tutorial
         WaitSeconds,
         WaitForTargetClick,
         WaitForTargetDrag,
-        WaitForNameInput
+        WaitForNameInput,
+        // Holds until the player actually wins the match. Losing or leaving rewinds the tutorial
+        // so they are guided back in, instead of advancing into steps that assume a victory.
+        WaitForMatchVictory
     }
 
     public enum DialogueAnchor
     {
         Left,
-        Right
+        Right,
+        // In-battle positions: the bottom is the deck bar and the top corners hold currency, so
+        // Left/Right always cover something. These sit clear of both.
+        Top,
+        Center,
+        Bottom,
+        // Appended so existing assets keep their saved values.
+        MiddleLeft,
+        MiddleRight
     }
 
     [System.Serializable]
@@ -69,6 +80,23 @@ public float waitSeconds = 0f;
         public bool skipIfNoTarget = false;
         [Tooltip("Seconds to wait before auto-advancing when the target is missing. Only used when Skip If No Target is true.")]
         public float noTargetSkipDelay = 3f;
+
+        [Header("Ghost Drag (waitMode = WaitForTargetDrag)")]
+        [Tooltip("Loops a phantom card from the target card to a free placement area, showing the player the drag they need to make.")]
+        public bool showGhostDrag = false;
+        [Tooltip("Optional sprite for the ghost. Leave empty to use the dragged card's own icon.")]
+        public Sprite ghostDragSprite;
+
+        [Header("Match Outcome (waitMode = WaitForMatchVictory)")]
+        [TextArea]
+        [Tooltip("Shown back in the lobby after a loss, before the tutorial sends the player to retry.")]
+        public string defeatDialogueText = "Not this time, Commander. Regroup and try that arena again.";
+        [Tooltip("Optional guide sprite for the defeat message. Falls back to the step's guide sprite.")]
+        public Sprite defeatGuideSprite;
+        [Tooltip("How long the defeat message is shown before the tutorial rewinds.")]
+        public float defeatMessageSeconds = 3f;
+        [Tooltip("Step index to rewind to after a loss. Leave at -1 to rewind automatically to the last step that runs in the lobby, i.e. the one that sends the player into the arena.")]
+        public int defeatRewindToStep = -1;
 
         [Header("Name Input (waitMode = WaitForNameInput)")]
         [Tooltip("Prompt label shown above the name input field.")]

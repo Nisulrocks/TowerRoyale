@@ -31,6 +31,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your Name
     namePlaceholderText: Your name...
     nameGreetingFormat: Highest of Greetings, Commander {0}!
@@ -52,6 +58,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -73,6 +85,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -94,6 +112,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -115,6 +139,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -137,6 +167,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -158,6 +194,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -170,7 +212,7 @@ MonoBehaviour:
     requiredSceneName: Arena0BattleScene
     autoClickObjectNameOnStart: 
     maxArrows: 12
-    dialogueText: Drag and place down a tower onto a snap point
+    dialogueText: Drag and place down a tower onto the map placement areas
     typewriterCharDelay: 0.04
     dialogueAnchor: 0
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
@@ -179,6 +221,12 @@ MonoBehaviour:
     blockOutside: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 1
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -200,6 +248,12 @@ MonoBehaviour:
     blockOutside: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -214,13 +268,19 @@ MonoBehaviour:
     maxArrows: 12
     dialogueText: 'Protect Your Castle From in Coming Enemies '
     typewriterCharDelay: 0.04
-    dialogueAnchor: 0
+    dialogueAnchor: 6
     guideSprite: {fileID: 21300000, guid: 27edfe5411b69a743b2eeed8e11714d7, type: 3}
-    waitMode: 1
+    waitMode: 5
     waitSeconds: 3
     blockOutside: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -243,6 +303,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: 
     namePlaceholderText: 
     nameGreetingFormat: 
@@ -264,6 +330,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -285,6 +357,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -306,6 +384,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -327,6 +411,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -349,6 +439,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 1
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -370,6 +466,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -382,8 +484,7 @@ MonoBehaviour:
     requiredSceneName: Lobby
     autoClickObjectNameOnStart: 
     maxArrows: 12
-    dialogueText: You have unlocked Multiplayer Mode, in whihc you can play with
-      other people!
+    dialogueText: You will Unlock Mutliplayer soon! Have fun playing with other people
     typewriterCharDelay: 0.04
     dialogueAnchor: 1
     guideSprite: {fileID: 21300000, guid: 1c2bcbad664dc9c4d84cb13f780976ec, type: 3}
@@ -392,6 +493,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -414,6 +521,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!
@@ -435,6 +548,12 @@ MonoBehaviour:
     blockOutside: 1
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
+    showGhostDrag: 0
+    ghostDragSprite: {fileID: 0}
+    defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
+    defeatGuideSprite: {fileID: 0}
+    defeatMessageSeconds: 3
+    defeatRewindToStep: -1
     namePromptText: Enter your name
     namePlaceholderText: Your name...
     nameGreetingFormat: Hello, {0}!

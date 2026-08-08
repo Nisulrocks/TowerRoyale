@@ -73,3 +73,14 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Firebase native libraries for platforms this project does not build for.
+# This is a Windows-only game, so the Windows .dll files are committed and used;
+# the macOS (.bundle) and Linux (.so) copies of the same libraries are dead weight.
+# FirebaseCppApp-*.bundle is 106MB and exceeds GitHub's hard 100MB per-file limit,
+# which blocks the push entirely. Re-import the Firebase Unity SDK if you ever
+# need to build for macOS or Linux.
+Assets/Firebase/Plugins/x86_64/*.bundle
+Assets/Firebase/Plugins/x86_64/*.bundle.meta
+Assets/Firebase/Plugins/x86_64/*.so
+Assets/Firebase/Plugins/x86_64/*.so.meta

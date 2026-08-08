@@ -30,9 +30,54 @@ namespace TR.Tutorial
         [SerializeField] private Vector2 anchoredPosition = new Vector2(0f, 40f);
         [SerializeField] private Vector2 size = new Vector2(720f, 140f);
 
-        [Header("Left / Right Presets")]
+        [Header("Anchor Presets")]
         [SerializeField] private AnchorPreset leftPreset = new AnchorPreset();
         [SerializeField] private AnchorPreset rightPreset = new AnchorPreset();
+
+        [Tooltip("Top-centre. Use in battle when the sides would cover the deck bar or currency.")]
+        [SerializeField] private AnchorPreset topPreset = new AnchorPreset
+        {
+            anchorMin = new Vector2(0.5f, 1f),
+            anchorMax = new Vector2(0.5f, 1f),
+            pivot = new Vector2(0.5f, 1f),
+            anchoredPosition = new Vector2(0f, -160f)
+        };
+
+        [Tooltip("Screen centre. Clear of every HUD edge, at the cost of covering the board.")]
+        [SerializeField] private AnchorPreset centerPreset = new AnchorPreset
+        {
+            anchorMin = new Vector2(0.5f, 0.5f),
+            anchorMax = new Vector2(0.5f, 0.5f),
+            pivot = new Vector2(0.5f, 0.5f),
+            anchoredPosition = Vector2.zero
+        };
+
+        [Tooltip("Bottom-centre, lifted above the deck bar.")]
+        [SerializeField] private AnchorPreset bottomPreset = new AnchorPreset
+        {
+            anchorMin = new Vector2(0.5f, 0f),
+            anchorMax = new Vector2(0.5f, 0f),
+            pivot = new Vector2(0.5f, 0f),
+            anchoredPosition = new Vector2(0f, 260f)
+        };
+
+        [Tooltip("Right edge, vertically centred. Clears the deck bar and the top-corner currency.")]
+        [SerializeField] private AnchorPreset middleRightPreset = new AnchorPreset
+        {
+            anchorMin = new Vector2(1f, 0.5f),
+            anchorMax = new Vector2(1f, 0.5f),
+            pivot = new Vector2(1f, 0.5f),
+            anchoredPosition = new Vector2(-140f, 0f)
+        };
+
+        [Tooltip("Left edge, vertically centred.")]
+        [SerializeField] private AnchorPreset middleLeftPreset = new AnchorPreset
+        {
+            anchorMin = new Vector2(0f, 0.5f),
+            anchorMax = new Vector2(0f, 0.5f),
+            pivot = new Vector2(0f, 0.5f),
+            anchoredPosition = new Vector2(40f, 0f)
+        };
 
         [Header("Animation")]
         [SerializeField] private float popDuration = 0.25f;
@@ -132,13 +177,73 @@ namespace TR.Tutorial
 
         private void ApplyAnchor(DialogueAnchor anchor)
         {
-            var preset = anchor == DialogueAnchor.Left ? leftPreset : rightPreset;
+            AnchorPreset preset;
+            switch (anchor)
+            {
+                case DialogueAnchor.Left: preset = leftPreset; break;
+                case DialogueAnchor.Right: preset = rightPreset; break;
+                case DialogueAnchor.Top: preset = topPreset; break;
+                case DialogueAnchor.Center: preset = centerPreset; break;
+                case DialogueAnchor.Bottom: preset = bottomPreset; break;
+                case DialogueAnchor.MiddleLeft: preset = middleLeftPreset; break;
+                case DialogueAnchor.MiddleRight: preset = middleRightPreset; break;
+                default: preset = leftPreset; break;
+            }
             if (preset == null || _dialogueTransform == null) return;
 
             _dialogueTransform.anchorMin = preset.anchorMin;
             _dialogueTransform.anchorMax = preset.anchorMax;
             _dialogueTransform.pivot = preset.pivot;
             _dialogueTransform.anchoredPosition = preset.anchoredPosition;
+
+            ClampInsideParent();
+        }
+
+        [Tooltip("Minimum gap kept between the dialogue box and the screen edge.")]
+        [SerializeField] private float screenEdgeMargin = 24f;
+
+        // A preset combined with the panel's own width can push the box past the screen edge, which
+        // clips the text. Nudge it back inside rather than relying on hand-tuned offsets that only
+        // hold for one panel size and resolution.
+        private void ClampInsideParent()
+        {
+            if (_dialogueTransform == null) return;
+            var parent = _dialogueTransform.parent as RectTransform;
+            if (parent == null) return;
+
+            Vector2 parentSize = parent.rect.size;
+            if (parentSize.x <= 0f || parentSize.y <= 0f) return;
+
+            Vector2 size = _dialogueTransform.rect.size;
+            Vector2 pivot = _dialogueTransform.pivot;
+            Vector2 anchor = _dialogueTransform.anchorMin;
+
+            // Only single-point anchors have a meaningful anchoredPosition to clamp.
+            if (anchor != _dialogueTransform.anchorMax) return;
+
+            // Panel bounds expressed in the parent's local space.
+            Vector2 anchorLocal = (anchor - parent.pivot) * parentSize;
+            Vector2 pos = _dialogueTransform.anchoredPosition;
+            Vector2 min = anchorLocal + pos - new Vector2(size.x * pivot.x, size.y * pivot.y);
+            Vector2 max = min + size;
+
+            Vector2 parentMin = -parent.pivot * parentSize + new Vector2(screenEdgeMargin, screenEdgeMargin);
+            Vector2 parentMax = (Vector2.one - parent.pivot) * parentSize - new Vector2(screenEdgeMargin, screenEdgeMargin);
+
+            Vector2 shift = Vector2.zero;
+            if (size.x <= parentMax.x - parentMin.x)
+            {
+                if (min.x < parentMin.x) shift.x = parentMin.x - min.x;
+                else if (max.x > parentMax.x) shift.x = parentMax.x - max.x;
+            }
+            if (size.y <= parentMax.y - parentMin.y)
+            {
+                if (min.y < parentMin.y) shift.y = parentMin.y - min.y;
+                else if (max.y > parentMax.y) shift.y = parentMax.y - max.y;
+            }
+
+            if (shift != Vector2.zero)
+                _dialogueTransform.anchoredPosition = pos + shift;
         }
 
         private void ApplyGuideSprite(Sprite guideSprite)

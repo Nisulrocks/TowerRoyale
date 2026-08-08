@@ -58,12 +58,65 @@ namespace TR.UI
             if (_def != null)
             {
                 HoverCardDetailsUI.Show(_def, _level);
+                ShowLivePreview();
             }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
             HoverCardDetailsUI.Hide();
+            HideLivePreview();
+        }
+
+        [Header("Live Preview")]
+        [Tooltip("Swap the icon for a live animation of the tower attacking while hovered.")]
+        [SerializeField] private bool useLivePreview = true;
+
+        private RawImage _previewImage;
+
+        private void ShowLivePreview()
+        {
+            if (!useLivePreview || icon == null || _def == null || _def.TowerPrefab == null) return;
+
+            var texture = TowerPreviewStage.Acquire(_def, Mathf.Max(1, _level));
+            if (texture == null) return;
+
+            EnsurePreviewImage();
+            _previewImage.texture = texture;
+            _previewImage.enabled = true;
+            icon.enabled = false;
+        }
+
+        private void HideLivePreview()
+        {
+            if (_previewImage != null) _previewImage.enabled = false;
+            if (icon != null) icon.enabled = true;
+            TowerPreviewStage.Release();
+        }
+
+        // Built at runtime as a stretched child of the icon so existing card prefabs need no edits.
+        private void EnsurePreviewImage()
+        {
+            if (_previewImage != null) return;
+
+            var go = new GameObject("LivePreview", typeof(RectTransform));
+            go.transform.SetParent(icon.transform, false);
+
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            _previewImage = go.AddComponent<RawImage>();
+            _previewImage.raycastTarget = false;
+            _previewImage.enabled = false;
+        }
+
+        private void OnDisable()
+        {
+            // A card can be hidden or destroyed while hovered (scrolling, tab switch, rebuild).
+            HideLivePreview();
         }
 
         

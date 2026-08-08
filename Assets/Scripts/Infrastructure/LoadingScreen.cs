@@ -10,6 +10,7 @@ using Photon.Realtime;
 using TR.Audio;
 using TR.Net;
 using TR.UI;
+using TR.Systems;
 
 namespace TR.Infrastructure
 {
@@ -36,6 +37,14 @@ namespace TR.Infrastructure
         public float gameSplashFadeIn = 0.4f;
         public float minTotalSplashTime = 2.0f;
 
+        [Header("Firebase / Cloud Login")]
+        [Tooltip("Assign the FirebaseConfig asset here.")]
+        public FirebaseConfig firebaseConfig;
+        [Tooltip("CloudLoginUI prefab shown during boot if not signed in.")]
+        public GameObject cloudLoginUIPrefab;
+        [Tooltip("Parent for the CloudLoginUI. If null, searches for a Canvas in the boot scene.")]
+        public RectTransform cloudLoginUIParent;
+
         [Header("Internet Check")]
         [Tooltip("If enabled, the loader tries to connect to Photon to verify internet/service access before entering the Lobby.")]
         public bool checkInternetBeforeLoad = true;
@@ -43,6 +52,10 @@ namespace TR.Infrastructure
         public float internetCheckTimeout = 8f;
         [Tooltip("Prefab to show when no internet is detected. If null, the message falls back to the progress text.")]
         public GameObject noInternetPopupPrefab;
+
+        [Header("UI Audio")]
+        [Tooltip("SFX Library key played when any UI button is clicked. Must match an entry key in Resources/SFX/SFXLibrary.")]
+        [SerializeField] private string uiClickSfxKey = "ui_click";
         [Tooltip("Optional parent for the popup. If null, the loader searches for a Canvas in the Boot scene.")]
         public RectTransform noInternetPopupParent;
         [TextArea] public string noInternetMessage = "No internet connection detected.\nPlease check your network and try again.";
@@ -165,6 +178,22 @@ namespace TR.Infrastructure
             // Keep watching the connection after boot so the same popup appears in Lobby / matches.
             NetworkConnectionMonitor.Initialize(noInternetPopupPrefab, SceneManager.GetActiveScene().name);
 
+            // One shared click sound for every UI button, in every scene.
+            TR.Audio.UIClickSfx.Initialize(uiClickSfxKey);
+
+            // Initialize Firebase and handle cloud login before proceeding to lobby.
+            // Anything that escapes here would abort the rest of Start(), so allowSceneActivation
+            // below would never run and the player would sit on the splash forever.
+            if (progressText != null) progressText.text = "Initializing cloud...";
+            try
+            {
+                await InitializeFirebaseAndLogin();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[LoadingScreen] Cloud init failed, continuing offline: {ex}");
+            }
+
             float elapsed = Time.unscaledTime - splashStart;
             if (elapsed < minTotalSplashTime)
             {
@@ -190,6 +219,185 @@ namespace TR.Infrastructure
         {
             if (progressBar != null) progressBar.value = p;
             if (progressText != null) progressText.text = Mathf.RoundToInt(p * 100f) + "%";
+        }
+
+        private async Task InitializeFirebaseAndLogin()
+        {
+            if (firebaseConfig == null)
+            {
+                Debug.LogWarning("[LoadingScreen] No FirebaseConfig assigned; skipping cloud login.");
+                return;
+            }
+
+            // Must exist before FirebaseService.Initialize(), because a restored session fires
+            // OnSignInComplete from inside that call and the guard has to catch it.
+            SessionGuardService.Initialize(noInternetPopupPrefab, "Boot");
+
+            if (FirebaseService.Instance == null)
+            {
+                var go = new GameObject("FirebaseService");
+                var svc = go.AddComponent<FirebaseService>();
+                var configField = typeof(FirebaseService).GetField("config",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (configField != null)
+                    configField.SetValue(svc, firebaseConfig);
+                svc.Initialize();
+            }
+
+            // FirebaseService keeps its signed-in state across a scene reload and will not fire
+            // OnSignInComplete a second time, so a reboot has to claim the account explicitly.
+            // ClaimSession ignores this when the account is already claimed for this session.
+            if (FirebaseService.IsSignedIn && !string.IsNullOrEmpty(FirebaseService.UserId))
+            {
+                SessionGuardService.Instance?.ClaimSession(FirebaseService.UserId);
+            }
+
+            if (CloudProfileService.Instance == null)
+            {
+                var go = new GameObject("CloudProfileService");
+                go.AddComponent<CloudProfileService>();
+            }
+
+            if (LeaderboardService.Instance == null)
+            {
+                var lbGo = new GameObject("LeaderboardService");
+                lbGo.AddComponent<LeaderboardService>();
+            }
+
+            if (FriendsService.Instance == null)
+            {
+                var frGo = new GameObject("FriendsService");
+                frGo.AddComponent<FriendsService>();
+            }
+
+            // Must exist outside the Friends panel so invites arrive on any screen.
+            TR.UI.DuoInviteListener.Initialize();
+
+            // Same reason as the session claim above: a reboot will not re-fire OnSignInComplete.
+            if (FirebaseService.IsSignedIn && !string.IsNullOrEmpty(FirebaseService.UserId))
+            {
+                FriendsService.Instance?.Initialize(FirebaseService.UserId);
+            }
+
+
+            await Task.Yield();
+
+            if (CloudProfileService.Instance != null)
+                CloudProfileService.Instance.Initialize();
+
+            // FirebaseFirestore.DefaultInstance throws (not returns null) when Firebase failed to
+            // initialize. Letting that escape aborts the rest of the loading flow, including the
+            // cloud login prompt below, so degrade to offline instead.
+            try
+            {
+                if (LeaderboardService.Instance != null
+                    && FirestoreProvider.TryGet(out var firestore))
+                {
+                    LeaderboardService.Instance.Initialize(firestore);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[LoadingScreen] Leaderboard unavailable: {ex.Message}");
+            }
+
+            await Task.Yield();
+
+            if (FirebaseService.IsSignedIn)
+            {
+                if (progressText != null) progressText.text = "Loading cloud profile...";
+                if (CloudProfileService.Instance != null && FirebaseService.UserId != null)
+                    CloudProfileService.Instance.LoadProfile(FirebaseService.UserId);
+
+                await WaitForCloudProfileLoad();
+            }
+            else
+            {
+                await ShowCloudLoginAndWait();
+            }
+        }
+
+        private async Task WaitForCloudProfileLoad()
+        {
+            bool loaded = false;
+            void OnLoaded() => loaded = true;
+            PlayerProfile.OnCloudProfileLoaded += OnLoaded;
+            try
+            {
+                float timeout = 10f;
+                while (!loaded && timeout > 0f)
+                {
+                    timeout -= Time.unscaledDeltaTime;
+                    await Task.Yield();
+                }
+            }
+            finally
+            {
+                PlayerProfile.OnCloudProfileLoaded -= OnLoaded;
+            }
+        }
+
+        private async Task ShowCloudLoginAndWait()
+        {
+            if (cloudLoginUIPrefab == null)
+            {
+                Debug.LogWarning("[LoadingScreen] No cloudLoginUIPrefab assigned; continuing as guest.");
+                return;
+            }
+
+            var parent = cloudLoginUIParent != null ? cloudLoginUIParent : GetDefaultCanvasParent();
+            var inst = Instantiate(cloudLoginUIPrefab, parent);
+            CanvasGroup loginCg = null;
+            if (inst != null)
+            {
+                if (inst.transform is RectTransform rect)
+                {
+                    rect.anchoredPosition = Vector2.zero;
+                    rect.localScale = Vector3.one;
+                }
+                loginCg = GetOrAddCanvasGroup(inst);
+                loginCg.alpha = 0f;
+                inst.SetActive(true);
+                await FadeCanvasGroup(loginCg, 0f, 1f, 0.4f);
+            }
+
+            bool loginResolved = false;
+            bool signedIn = false;
+            System.Action<string, string> onSignIn = (uid, name) => signedIn = true;
+            System.Action onLoaded = () => loginResolved = true;
+            System.Action onGuest = () => loginResolved = true;
+            System.Action<string> onProfileFailed = (error) => loginResolved = true;
+
+            FirebaseService.OnSignInComplete += onSignIn;
+            PlayerProfile.OnCloudProfileLoaded += onLoaded;
+            CloudProfileService.OnProfileLoadFailed += onProfileFailed;
+
+            var loginUI = inst != null ? inst.GetComponent<CloudLoginUI>() : null;
+            if (loginUI != null)
+                loginUI.OnContinueAsGuest += onGuest;
+
+            try
+            {
+                while (!loginResolved)
+                {
+                    await Task.Yield();
+                }
+            }
+            finally
+            {
+                FirebaseService.OnSignInComplete -= onSignIn;
+                PlayerProfile.OnCloudProfileLoaded -= onLoaded;
+                CloudProfileService.OnProfileLoadFailed -= onProfileFailed;
+                if (loginUI != null)
+                    loginUI.OnContinueAsGuest -= onGuest;
+            }
+
+            if (inst != null)
+            {
+                if (loginCg != null)
+                    await FadeCanvasGroup(loginCg, loginCg.alpha, 0f, 0.3f);
+                Destroy(inst);
+            }
         }
 
         private async Task Hold(float duration)

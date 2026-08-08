@@ -39,10 +39,25 @@ namespace TR.UI
 
         private void Awake()
         {
+            EnsureOverlayCanvas();
             EnsureCanvasGroup();
             if (arenaIconRoot == null && arenaIcon != null) arenaIconRoot = arenaIcon.transform;
             if (canvasGroup != null) canvasGroup.alpha = 0f;
             if (panelRoot != null) panelRoot.SetActive(false);
+        }
+
+        private void EnsureOverlayCanvas()
+        {
+            var c = GetComponent<Canvas>();
+            if (c == null) c = gameObject.AddComponent<Canvas>();
+            c.overrideSorting = true;
+            c.sortingOrder = 100;
+            c.renderMode = RenderMode.ScreenSpaceCamera;
+            var parentCanvas = GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.renderMode == RenderMode.ScreenSpaceCamera)
+                c.worldCamera = parentCanvas.worldCamera;
+            if (GetComponent<GraphicRaycaster>() == null)
+                gameObject.AddComponent<GraphicRaycaster>();
         }
 
         private void EnsureCanvasGroup()

@@ -229,6 +229,31 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 0}
     pivot: {x: 0.5, y: 0}
     anchoredPosition: {x: 525, y: 175}
+  topPreset:
+    anchorMin: {x: 0.5, y: 1}
+    anchorMax: {x: 0.5, y: 1}
+    pivot: {x: 0.5, y: 1}
+    anchoredPosition: {x: 0, y: -160}
+  centerPreset:
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 0}
+  bottomPreset:
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0}
+    anchoredPosition: {x: 0, y: 260}
+  middleRightPreset:
+    anchorMin: {x: 1, y: 0.5}
+    anchorMax: {x: 1, y: 0.5}
+    pivot: {x: 1, y: 0.5}
+    anchoredPosition: {x: -400, y: 0}
+  middleLeftPreset:
+    anchorMin: {x: 0, y: 0.5}
+    anchorMax: {x: 0, y: 0.5}
+    pivot: {x: 0, y: 0.5}
+    anchoredPosition: {x: 40, y: 0}
   popDuration: 0.25
   popScaleCurve:
     serializedVersion: 2
@@ -256,6 +281,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   guideImage: {fileID: 7325423649379170979}
   guideImageSize: {x: 0, y: 0}
+  screenEdgeMargin: 24
 --- !u!1 &8691037736790166534
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,6 +385,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

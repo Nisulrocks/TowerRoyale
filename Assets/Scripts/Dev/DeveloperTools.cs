@@ -86,6 +86,12 @@ namespace TR.Dev
                 DisconnectAndReboot();
             GUI.color = Color.white;
 
+            GUILayout.Space(4);
+            GUI.color = Color.cyan;
+            if (GUILayout.Button("SIGN OUT (Google)"))
+                SignOutGoogle();
+            GUI.color = Color.white;
+
             GUI.DragWindow();
         }
 
@@ -181,6 +187,20 @@ namespace TR.Dev
             }
             PlayerProfile.AddCastleXP(Mathf.Max(0, amount));
             _expInput = "0";
+        }
+
+        [ContextMenu("Sign Out (Google)")]
+        public void SignOutGoogle()
+        {
+            if (FirebaseService.Instance != null)
+            {
+                FirebaseService.Instance.SignOut();
+                Debug.Log("[Dev] Signed out of Google account.");
+            }
+            else
+            {
+                Debug.LogWarning("[Dev] FirebaseService not found.");
+            }
         }
 
         [ContextMenu("Disconnect & Reboot (Test Rejoin)")]

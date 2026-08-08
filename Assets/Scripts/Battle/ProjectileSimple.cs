@@ -20,6 +20,8 @@ namespace TR.Battle
         private bool _isCritShot;
         private bool _visualOnly;
 
+        private static readonly System.Collections.Generic.List<EnemyBase2D> _splashSnapshot = new System.Collections.Generic.List<EnemyBase2D>(64);
+
         public void Init(EnemyBase2D target, float speed, float damage, float splashRadius,
                          TowerBase owner, CardDefinition def, int level, string impactVfxKey = null, bool isCritShot = false,
                          bool visualOnly = false)
@@ -52,8 +54,10 @@ namespace TR.Battle
             float step = _speed * Time.deltaTime;
             if (dist <= step || dist <= 0.001f)
             {
-                Impact(dest);
-                Destroy(gameObject);
+                // Destroy unconditionally: if Impact throws, an undestroyed projectile would
+                // re-impact every frame and flood the log.
+                try { Impact(dest); }
+                finally { Destroy(gameObject); }
                 return;
             }
             transform.position = pos + to.normalized * step;
@@ -120,8 +124,13 @@ namespace TR.Battle
                     if (DuoRuntime.IsDuo)
                         DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
                 }
-                foreach (var e in EnemyBase2D.All)
+                // TakeDamage can kill the enemy, which removes it from EnemyBase2D.All mid-loop.
+                // Snapshot first, as the other splash sites do.
+                _splashSnapshot.Clear();
+                foreach (var e in EnemyBase2D.All) _splashSnapshot.Add(e);
+                for (int i = 0; i < _splashSnapshot.Count; i++)
                 {
+                    var e = _splashSnapshot[i];
                     if (e == null || !e.gameObject.activeInHierarchy || e.CurrentHealth <= 0f) continue;
                     float d = Vector2.Distance((Vector2)hitPos, (Vector2)e.transform.position);
                     if (d <= _splashRadius)
