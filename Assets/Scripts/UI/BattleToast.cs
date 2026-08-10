@@ -77,6 +77,36 @@ namespace TR.UI
             _group.alpha = 0f;
             _group.blocksRaycasts = false;
             _group.interactable = false;
+
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+            if (_instance == this) _instance = null;
+        }
+
+        private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene s, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            StopAllCoroutines();
+            _queue.Clear();
+            _isProcessing = false;
+            if (_group != null) _group.alpha = 0f;
+            if (_instance == this) _instance = null;
+            Destroy(gameObject);
+        }
+
+        public static void ClearAll()
+        {
+            if (_instance == null) return;
+            _instance.StopAllCoroutines();
+            _instance._queue.Clear();
+            _instance._isProcessing = false;
+            if (_instance._group != null) _instance._group.alpha = 0f;
+            var go = _instance.gameObject;
+            _instance = null;
+            if (go != null) Destroy(go);
         }
 
         

@@ -72,6 +72,22 @@ namespace TR.Battle
             Instance = this;
         }
 
+        private static void LeaveMatchRoomIfNeeded()
+        {
+            var duo = TR.Net.DuoNetworkManager.Instance;
+            if (duo != null)
+            {
+                duo.EndMatchAndReset();
+                return;
+            }
+
+            if (Photon.Pun.PhotonNetwork.InRoom)
+            {
+                Debug.Log("[BattleSceneController] Leaving Photon room on exit to lobby.");
+                Photon.Pun.PhotonNetwork.LeaveRoom();
+            }
+        }
+
         private void Start()
         {
             
@@ -378,6 +394,7 @@ namespace TR.Battle
                 Debug.Log("[BattleSceneController] Match has already ended; returning to lobby.");
                 _matchEndedReturnToLobby = true;
                 TR.Net.DuoRejoinService.EndMatch();
+                LeaveMatchRoomIfNeeded();
                 MatchContext.Reset();
                 if (SceneFader.Instance != null) _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
                 else UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
@@ -874,7 +891,12 @@ namespace TR.Battle
                 RecordMatchToLog(TR.Systems.MatchOutcome.Abandoned, 0, _wavesCleared);
 
             TR.Net.DuoRejoinService.ClearActiveMatch();
+            LeaveMatchRoomIfNeeded();
+            TR.UI.BattleToast.ClearAll();
             MatchContext.Reset();
+
+            if (Instance == this) Instance = null;
+            TR.Systems.FriendsService.Instance?.RefreshPresenceNow();
             _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
         }
 
@@ -1118,10 +1140,15 @@ namespace TR.Battle
             cg.alpha = 1f;
         }
 
+        private readonly System.Collections.Generic.HashSet<int> _waveSpawnDone = new();
+        private readonly System.Collections.Generic.HashSet<int> _wavePaid = new();
+
         private void ClearWaveTracking()
         {
             _waveRemainingEnemies.Clear();
             _waveKillMoney.Clear();
+            _waveSpawnDone.Clear();
+            _wavePaid.Clear();
         }
 
         public void RegisterWaveEnemy(int wave)
@@ -1138,12 +1165,9 @@ namespace TR.Battle
             if (wave <= 0) return;
             if (!TR.Net.DuoRuntime.IsSimulationAuthority) return;
             if (!_waveRemainingEnemies.ContainsKey(wave)) return;
+
             _waveRemainingEnemies[wave] = Mathf.Max(0, _waveRemainingEnemies[wave] - 1);
-            if (_waveRemainingEnemies[wave] == 0)
-            {
-                _waveRemainingEnemies.Remove(wave);
-                _waveKillMoney.Remove(wave);
-            }
+            TryPayWaveBonus(wave);
         }
 
         public void RecordWaveKill(int wave, int amount)
@@ -1156,33 +1180,29 @@ namespace TR.Battle
             _waveKillMoney[wave] = earned + amount;
 
             _waveRemainingEnemies.TryGetValue(wave, out int remaining);
-            remaining = Mathf.Max(0, remaining - 1);
-            _waveRemainingEnemies[wave] = remaining;
+            _waveRemainingEnemies[wave] = Mathf.Max(0, remaining - 1);
 
-            if (remaining == 0)
-            {
-                if (waveSpawner != null && waveSpawner.IsWaveSpawning(wave))
-                {
-                }
-                else
-                {
-                    int bonus = _waveKillMoney[wave];
-                    _waveKillMoney.Remove(wave);
-                    _waveRemainingEnemies.Remove(wave);
-                    if (bonus > 0) PayWaveBonus(wave, bonus);
-                }
-            }
+            TryPayWaveBonus(wave);
         }
 
         public void OnWaveSpawnComplete(int wave)
         {
             if (wave <= 0) return;
-            if (!_waveRemainingEnemies.ContainsKey(wave)) return;
-            if (_waveRemainingEnemies[wave] != 0) return;
+            _waveSpawnDone.Add(wave);
+            TryPayWaveBonus(wave);
+        }
 
-            int bonus = _waveKillMoney[wave];
+        private void TryPayWaveBonus(int wave)
+        {
+            if (_wavePaid.Contains(wave)) return;
+            if (!_waveSpawnDone.Contains(wave)) return;
+            if (!_waveRemainingEnemies.TryGetValue(wave, out int remaining) || remaining > 0) return;
+
+            _wavePaid.Add(wave);
+            _waveKillMoney.TryGetValue(wave, out int bonus);
             _waveKillMoney.Remove(wave);
             _waveRemainingEnemies.Remove(wave);
+
             if (bonus > 0) PayWaveBonus(wave, bonus);
         }
 

@@ -224,17 +224,17 @@ namespace TR.Systems
                });
         }
 
+        public void RefreshPresenceNow()
+        {
+            WritePresence();
+        }
+
         private static bool IsLocallyBusy()
         {
             if (TR.Battle.BattleSceneController.Instance != null) return true;
 
             var duo = TR.Net.DuoNetworkManager.Instance;
-            if (duo != null &&
-                duo.State != TR.Net.DuoNetworkManager.MatchState.Idle &&
-                duo.State != TR.Net.DuoNetworkManager.MatchState.Failed)
-                return true;
-
-            return false;
+            return duo != null && duo.IsEnteringMatch;
         }
 
         private static bool IsOnline(long onlineAt)

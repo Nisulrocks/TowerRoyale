@@ -26,7 +26,9 @@ namespace TR.Systems
             get
             {
                 if (TR.Battle.BattleSceneController.Instance != null) return true;
-                return Photon.Pun.PhotonNetwork.InRoom;
+
+                var duo = TR.Net.DuoNetworkManager.Instance;
+                return duo != null && duo.IsEnteringMatch;
             }
         }
 

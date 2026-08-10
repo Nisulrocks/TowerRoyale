@@ -36,6 +36,8 @@ namespace TR.Net
         public enum MatchState { Idle, Connecting, JoiningLobby, Searching, WaitingForPartner, PartnerFound, Starting, Failed }
         public MatchState State { get; private set; } = MatchState.Idle;
 
+        public bool IsEnteringMatch => State == MatchState.Starting;
+
         
         public System.Action<string> OnStatusChanged;   
         public System.Action OnCancelled;
@@ -221,6 +223,7 @@ namespace TR.Net
             _friendRoomMode = false;
             _pendingRejoinLeave = false;
             StopRejoinTimer();
+            StopFriendWaitTimeout();
             SetState(MatchState.Idle, "Cancelled");
 
             if (PhotonNetwork.InRoom)
@@ -228,6 +231,28 @@ namespace TR.Net
                 PhotonNetwork.LeaveRoom();
             }
             OnCancelled?.Invoke();
+        }
+
+        public void EndMatchAndReset()
+        {
+            _matchmakingActive = false;
+            _cancelRequested = false;
+            _friendRoomMode = false;
+            _friendRoomName = null;
+            _pendingStart = false;
+            _rejoiningToSearch = false;
+            _pendingRejoinLeave = false;
+            _loadStarted = false;
+            StopRejoinTimer();
+            StopFriendWaitTimeout();
+
+            SetState(MatchState.Idle, "Match ended");
+
+            if (PhotonNetwork.InRoom)
+            {
+                Debug.Log("[DuoNet] Leaving room after match end.");
+                PhotonNetwork.LeaveRoom();
+            }
         }
 
         public override void OnConnectedToMaster()
@@ -323,10 +348,40 @@ namespace TR.Net
 
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
             SetState(MatchState.WaitingForPartner, $"In room ({count}/2)...");
-            
-            
+
+
             if (count < 2) StartRejoinTimer();
+
+            if (_friendRoomMode && count < 2) StartFriendWaitTimeout();
+
             MarkReadyIfFull();
+        }
+
+        [SerializeField] private float friendInviteWaitSeconds = 60f;
+        private Coroutine _friendWaitCo;
+
+        private void StartFriendWaitTimeout()
+        {
+            StopFriendWaitTimeout();
+            _friendWaitCo = StartCoroutine(FriendWaitTimeout());
+        }
+
+        private void StopFriendWaitTimeout()
+        {
+            if (_friendWaitCo != null) { StopCoroutine(_friendWaitCo); _friendWaitCo = null; }
+        }
+
+        private System.Collections.IEnumerator FriendWaitTimeout()
+        {
+            yield return new WaitForSecondsRealtime(Mathf.Max(5f, friendInviteWaitSeconds));
+            _friendWaitCo = null;
+
+            if (_loadStarted || State == MatchState.Starting) yield break;
+            if (PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.PlayerCount >= 2) yield break;
+
+            Debug.Log("[DuoNet] Friend never joined; releasing the room and returning to idle.");
+            OnFailed?.Invoke("Your friend didn't join.");
+            EndMatchAndReset();
         }
 
         public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -334,8 +389,9 @@ namespace TR.Net
             if (_cancelRequested) return;
             
             if (!_matchmakingActive) return;
-            
+
             StopRejoinTimer();
+            StopFriendWaitTimeout();
             int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 1;
             SetState(MatchState.PartnerFound, $"Partner found ({count}/2)!");
             MarkReadyIfFull();
