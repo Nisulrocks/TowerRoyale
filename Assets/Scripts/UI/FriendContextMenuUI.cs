@@ -49,6 +49,7 @@ namespace TR.UI
             if (inviteLabel != null)
             {
                 if (!target.isOnline) inviteLabel.text = "Offline";
+                else if (target.isInMatch) inviteLabel.text = "In a match";
                 else if (!target.IsSameArenaAsLocal)
                     inviteLabel.text = string.IsNullOrEmpty(target.arenaName)
                         ? "Different arena"

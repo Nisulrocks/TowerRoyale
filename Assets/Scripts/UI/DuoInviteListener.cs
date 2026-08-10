@@ -27,11 +27,82 @@ namespace TR.UI
         private void OnEnable()
         {
             FriendsService.OnDuoInviteReceived += HandleInvite;
+            FriendsService.OnMissedInvite += HandleMissedInvite;
         }
 
         private void OnDisable()
         {
             FriendsService.OnDuoInviteReceived -= HandleInvite;
+            FriendsService.OnMissedInvite -= HandleMissedInvite;
+        }
+
+        private FriendsService.DuoInviteInfo _deferredMissed;
+
+        private void HandleMissedInvite(FriendsService.DuoInviteInfo missed)
+        {
+            if (missed == null) return;
+
+            if (IsInBattle())
+            {
+                _deferredMissed = missed;
+                return;
+            }
+
+            var popup = EnsurePopup();
+            if (popup == null)
+            {
+                Debug.Log($"[DuoInviteListener] Missed a Duo invite from {missed.fromName}.");
+                return;
+            }
+            popup.ShowMissed(missed, InviteBack);
+        }
+
+        // The original room is long gone, so "accept" on a missed invite means starting a fresh
+        // match and inviting them to it. The invite could be minutes or hours old, so check their
+        // live status first — hosting a room for someone who has since logged off would leave the
+        // player waiting alone for an invite nobody will ever see.
+        private void InviteBack(FriendsService.DuoInviteInfo missed)
+        {
+            if (missed == null || FriendsService.Instance == null) return;
+
+            FriendsService.Instance.FetchPlayerSummary(missed.fromUid, summary =>
+            {
+                var popup = EnsurePopup();
+
+                if (summary == null || !summary.isOnline)
+                {
+                    if (popup != null) popup.ShowNotice($"{missed.fromName} is offline right now.");
+                    else Debug.Log($"[DuoInviteListener] {missed.fromName} is offline; invite back skipped.");
+                    return;
+                }
+
+                if (summary.isInMatch)
+                {
+                    if (popup != null) popup.ShowNotice($"{missed.fromName} is already in a match.");
+                    return;
+                }
+
+                if (!summary.IsSameArenaAsLocal)
+                {
+                    string where = string.IsNullOrEmpty(summary.arenaName) ? "another arena" : summary.arenaName;
+                    if (popup != null) popup.ShowNotice($"{missed.fromName} is in {where} — you can only duo within the same arena.");
+                    return;
+                }
+
+                string roomName = DuoNetworkManager.NewFriendRoomName();
+                string arenaKey = LocalArenaKey();
+                if (string.IsNullOrEmpty(arenaKey)) return;
+
+                FriendsService.Instance.SendDuoInvite(missed.fromUid, roomName, arenaKey, (ok, error) =>
+                {
+                    if (!ok)
+                    {
+                        if (popup != null) popup.ShowNotice($"Couldn't invite {missed.fromName}: {error}");
+                        return;
+                    }
+                    JoinFriendMatch(roomName, asHost: true, arenaKey);
+                });
+            });
         }
 
         private void OnDestroy()
@@ -43,10 +114,23 @@ namespace TR.UI
 
         private void Update()
         {
-            if (_deferred == null || IsInBattle()) return;
-            var invite = _deferred;
-            _deferred = null;
-            HandleInvite(invite);
+            if (IsInBattle()) return;
+
+            if (_deferred != null)
+            {
+                var invite = _deferred;
+                _deferred = null;
+                HandleInvite(invite);
+                return;
+            }
+
+            // Live invites take priority; a missed one is only information.
+            if (_deferredMissed != null)
+            {
+                var missed = _deferredMissed;
+                _deferredMissed = null;
+                HandleMissedInvite(missed);
+            }
         }
 
         // Deliberately narrower than MatchContext.IsMatchInProgress, which is also true while merely

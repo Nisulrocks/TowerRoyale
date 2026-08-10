@@ -55,6 +55,12 @@ namespace TR.Battle
         [SerializeField] private string idleVfxKey = "";
 
         [SerializeField] private Transform idleVfxAnchor;
+
+        [Tooltip("Draw the idle effect behind the tower's sprites instead of on top of them.")]
+        [SerializeField] private bool idleVfxBehindTower = true;
+        [Tooltip("How far below the tower's lowest sprite the idle effect is sorted.")]
+        [SerializeField] private int idleVfxSortingOffset = -100;
+
         private ParticleSystem _idleVfx;
 
         [SerializeField] private string muzzleFlashVfxKey = "";
@@ -1161,21 +1167,88 @@ namespace TR.Battle
         }
         public float GetEffectiveSplashRadius() => Mathf.Max(0f, _stats.splashRadius * _splashMul);
 
+        private string ResolveIdleVfxKey()
+            => !string.IsNullOrEmpty(idleVfxKey) ? idleVfxKey
+             : (definition != null ? definition.GetIdleVfxKey() : string.Empty);
+
+        // TowerBase spawns, parents, sorts and releases the tower's idle effect. Anything else that
+        // reads the card's idle VFX key must defer to this, or the effect gets spawned twice.
+        public bool ManagesIdleVfx => !string.IsNullOrEmpty(ResolveIdleVfxKey());
+        public ParticleSystem IdleVfxInstance => _idleVfx;
+
         private void TrySpawnIdleVfx()
         {
-            
-            string key = !string.IsNullOrEmpty(idleVfxKey) ? idleVfxKey : (definition != null ? definition.GetIdleVfxKey() : string.Empty);
+            string key = ResolveIdleVfxKey();
             if (string.IsNullOrEmpty(key)) return;
-            if (_idleVfx != null) return;
+
+            // A pooled effect can return itself to the pool (PooledParticle.LateUpdate), which
+            // leaves this reference non-null while the object has been handed to someone else.
+            // Treat anything no longer parented to us as gone rather than trusting the reference.
+            if (_idleVfx != null)
+            {
+                bool stillOurs = _idleVfx.gameObject.activeInHierarchy &&
+                                 _idleVfx.transform.IsChildOf(transform);
+                if (stillOurs) return;
+                _idleVfx = null;
+            }
+
+            // A prefab can carry both TowerBase and a component derived from it (TowerPulse is a
+            // TowerBase). Both receive OnEnable and would each spawn their own copy, so the first
+            // to claim the effect owns it.
+            var siblings = GetComponents<TowerBase>();
+            if (siblings.Length > 1)
+            {
+                for (int i = 0; i < siblings.Length; i++)
+                {
+                    var other = siblings[i];
+                    if (other == null || other == this) continue;
+                    if (other._idleVfx != null) return;
+                }
+            }
+
             var pos = idleVfxAnchor != null ? idleVfxAnchor.position : transform.position;
             var parent = idleVfxAnchor != null ? idleVfxAnchor : transform;
-            _idleVfx = ParticleManager.Spawn(key, pos, Quaternion.identity, parent, true);
+            // Keep the effect's authored rotation, and let it follow the tower's orientation.
+            _idleVfx = ParticleManager.Spawn(key, pos, parent.rotation, parent, true, preservePrefabRotation: true);
             if (_idleVfx != null)
             {
                 var main = _idleVfx.main;
                 main.loop = true;
+                ApplyIdleVfxSorting();
                 _idleVfx.gameObject.SetActive(true);
                 _idleVfx.Play(true);
+            }
+        }
+
+        // The tower has a SortingGroup, so its children are sorted against each other by their own
+        // sorting order. Putting the effect below the tower's lowest sprite draws it behind.
+        // Pooled effects are reused, so this must be reapplied on every spawn.
+        private void ApplyIdleVfxSorting()
+        {
+            if (!idleVfxBehindTower || _idleVfx == null) return;
+
+            if (_cachedRenderers == null) _cachedRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+
+            int lowest = int.MaxValue;
+            int layerId = 0;
+            bool haveLayer = false;
+            for (int i = 0; i < _cachedRenderers.Length; i++)
+            {
+                var sr = _cachedRenderers[i];
+                if (sr == null) continue;
+                if (sr.sortingOrder < lowest) lowest = sr.sortingOrder;
+                if (!haveLayer) { layerId = sr.sortingLayerID; haveLayer = true; }
+            }
+            if (lowest == int.MaxValue) lowest = 0;
+
+            var psRenderers = _idleVfx.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            for (int i = 0; i < psRenderers.Length; i++)
+            {
+                var r = psRenderers[i];
+                if (r == null) continue;
+                // Sorting order only compares within the same sorting layer, so match the tower's.
+                if (haveLayer) r.sortingLayerID = layerId;
+                r.sortingOrder = lowest + idleVfxSortingOffset;
             }
         }
 

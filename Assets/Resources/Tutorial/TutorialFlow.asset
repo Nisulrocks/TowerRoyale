@@ -29,10 +29,14 @@ MonoBehaviour:
     waitMode: 4
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -56,10 +60,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -83,10 +91,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -110,10 +122,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -137,10 +153,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -165,10 +185,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -192,10 +216,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -219,10 +247,14 @@ MonoBehaviour:
     waitMode: 3
     waitSeconds: 0
     blockOutside: 0
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 1
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -246,10 +278,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 0
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -273,10 +309,14 @@ MonoBehaviour:
     waitMode: 5
     waitSeconds: 3
     blockOutside: 0
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -301,10 +341,14 @@ MonoBehaviour:
     waitMode: 1
     waitSeconds: 6
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -328,10 +372,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -355,10 +403,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -382,10 +434,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -409,10 +465,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -437,10 +497,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 1
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -464,10 +528,14 @@ MonoBehaviour:
     waitMode: 2
     waitSeconds: 0
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -491,10 +559,14 @@ MonoBehaviour:
     waitMode: 1
     waitSeconds: 5
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -519,10 +591,14 @@ MonoBehaviour:
     waitMode: 1
     waitSeconds: 5
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3
@@ -546,10 +622,14 @@ MonoBehaviour:
     waitMode: 1
     waitSeconds: 3
     blockOutside: 1
+    spotlight: 0
     skipIfNoTarget: 0
     noTargetSkipDelay: 3
     showGhostDrag: 0
     ghostDragSprite: {fileID: 0}
+    requireUnassistedRepeat: 0
+    repeatDialogueText: "Now you try \u2014 place one yourself."
+    repeatGuideSprite: {fileID: 0}
     defeatDialogueText: Not this time, Commander. Regroup and try that arena again.
     defeatGuideSprite: {fileID: 0}
     defeatMessageSeconds: 3

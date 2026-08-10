@@ -121,8 +121,19 @@ namespace TR.VFX
 
             if (useCardIdleVfxKey)
             {
-                
                 var tower = GetComponent<TR.Battle.TowerBase>();
+
+                // TowerBase already spawns this exact effect, parented to the tower and sorted
+                // behind it. ParticleManager.TryScanAndBindAll adds this component to every tower
+                // at runtime, so spawning here produced a second, unparented, unsorted copy.
+                // Bind to the tower's instance instead of creating our own.
+                if (tower != null && tower.ManagesIdleVfx)
+                {
+                    var owned = tower.IdleVfxInstance;
+                    vfxRoot = owned != null ? owned.gameObject : null;
+                    return;
+                }
+
                 var def = tower != null ? tower.Definition : null;
                 string key = def != null ? def.GetIdleVfxKey() : string.Empty;
                 if (!string.IsNullOrEmpty(key) && TR.VFX.ParticleQuality.AllowVfx())

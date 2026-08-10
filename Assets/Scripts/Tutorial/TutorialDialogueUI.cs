@@ -79,6 +79,18 @@ namespace TR.Tutorial
             anchoredPosition = new Vector2(40f, 0f)
         };
 
+        [Header("SFX")]
+        [Tooltip("SFX Library key played when the dialogue box pops in. Leave empty to disable.")]
+        [SerializeField] private string popupSfxKey = "ui_dialogue_popup";
+        [Tooltip("SFX Library key looped while text is being typed. Starts and stops with the typewriter.")]
+        [SerializeField] private string typingSfxKey = "ui_dialogue_typing";
+
+        [Header("Input")]
+        [Tooltip("Clicking (or pressing Space/Enter) while text is typing finishes the line instantly instead of making the player wait it out.")]
+        [SerializeField] private bool clickToCompleteTyping = true;
+        [Tooltip("Ignore clicks for this long after the box appears, so the same click that advanced the previous step does not skip this one's text too.")]
+        [SerializeField] private float completeInputGrace = 0.15f;
+
         [Header("Animation")]
         [SerializeField] private float popDuration = 0.25f;
         [SerializeField] private AnimationCurve popScaleCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
@@ -91,6 +103,14 @@ namespace TR.Tutorial
         private Coroutine _pop;
 
         private RectTransform _dialogueTransform;
+
+        // Full line for the current Show, so a skip can jump straight to it.
+        private string _pendingContent;
+        private float _shownAt;
+        private bool _hiding;
+
+        /// True while the pop-in or the typewriter is still running.
+        public bool IsBusy => _typing != null || (_pop != null && !_hiding);
 
         private void Awake()
         {
@@ -172,7 +192,11 @@ namespace TR.Tutorial
             ApplyAnchor(anchor);
             ApplyGuideSprite(guideSprite);
 
-            _pop = StartCoroutine(AnimateShow(content ?? string.Empty, charDelay > 0f ? charDelay : defaultCharDelay));
+            _pendingContent = content ?? string.Empty;
+            _shownAt = Time.unscaledTime;
+            _hiding = false;
+
+            _pop = StartCoroutine(AnimateShow(_pendingContent, charDelay > 0f ? charDelay : defaultCharDelay));
         }
 
         private void ApplyAnchor(DialogueAnchor anchor)
@@ -257,13 +281,43 @@ namespace TR.Tutorial
 
         private IEnumerator AnimateShow(string content, float delay)
         {
+            if (!string.IsNullOrEmpty(popupSfxKey))
+                TR.Audio.SFXManager.Instance?.Play(popupSfxKey);
+
             yield return Pop(true);
             _pop = null;
             _typing = StartCoroutine(Typewriter(content, delay));
         }
 
+        /// Jumps straight to the finished line: skips the pop-in and the remaining typing.
+        public void CompleteTyping()
+        {
+            if (_hiding) return;
+            if (_typing == null && _pop == null) return;
+
+            if (_typing != null) { StopCoroutine(_typing); _typing = null; }
+            if (_pop != null) { StopCoroutine(_pop); _pop = null; }
+
+            if (_dialogueTransform != null) _dialogueTransform.localScale = Vector3.one;
+            if (text != null && _pendingContent != null) text.text = _pendingContent;
+            StopTypingLoop();
+        }
+
+        private void Update()
+        {
+            if (!clickToCompleteTyping || _hiding) return;
+            if (_typing == null && _pop == null) return;
+            if (Time.unscaledTime - _shownAt < completeInputGrace) return;
+
+            // Raw input rather than the EventSystem: the tutorial blocker swallows pointer events
+            // everywhere except the target, and a skip has to work anywhere on screen.
+            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
+                CompleteTyping();
+        }
+
         public void Hide()
         {
+            _hiding = true;
             StopAnimations();
             if (gameObject.activeInHierarchy)
             {
@@ -280,9 +334,12 @@ namespace TR.Tutorial
             if (_typing != null) StopCoroutine(_typing);
             _typing = null;
             _pop = null;
+            StopTypingLoop(0f);
             if (text != null) text.text = string.Empty;
             ApplyGuideSprite(null);
             _dialogueTransform.localScale = Vector3.zero;
+            _pendingContent = null;
+            _hiding = false;
             gameObject.SetActive(false);
         }
 
@@ -292,16 +349,51 @@ namespace TR.Tutorial
             _typing = null;
             if (_pop != null) StopCoroutine(_pop);
             _pop = null;
+            // Stopping the coroutine skips its own cleanup, so the loop has to be cut here too.
+            StopTypingLoop(0f);
+        }
+
+        private int _typingLoop = -1;
+
+        private void StartTypingLoop(string content)
+        {
+            StopTypingLoop(0f);
+            if (string.IsNullOrEmpty(typingSfxKey) || string.IsNullOrEmpty(content)) return;
+
+            var sfx = TR.Audio.SFXManager.Instance;
+            if (sfx == null) return;
+            _typingLoop = sfx.PlayLoop(typingSfxKey, 1f);
+        }
+
+        private void StopTypingLoop(float fadeSeconds = 0.06f)
+        {
+            if (_typingLoop < 0) return;
+            TR.Audio.SFXManager.Instance?.StopLoop(_typingLoop, fadeSeconds);
+            _typingLoop = -1;
+        }
+
+        private void OnDisable()
+        {
+            // Never leave the loop running if the dialogue is switched off mid-type.
+            StopTypingLoop(0f);
         }
 
         private IEnumerator Typewriter(string content, float delay)
         {
             if (text != null) text.text = string.Empty;
+
+            // DialogueTyping is a continuous ~2.3s loop, not a per-key click. Firing it per
+            // character started a new 2.3s clip on every letter, which is why the sound ran on
+            // after the text finished. Run it as a loop for exactly as long as text is appearing.
+            StartTypingLoop(content);
+
             for (int i = 0; i < content.Length; i++)
             {
                 if (text != null) text.text = content.Substring(0, i + 1);
                 yield return new WaitForSecondsRealtime(delay);
             }
+
+            StopTypingLoop();
             _typing = null;
         }
 

@@ -287,7 +287,23 @@ MonoBehaviour:
     maxConcurrent: 0
   - key: ui_click
     clips:
-    - {fileID: 8300000, guid: d702f06ba8d095d46b2e3c23b7dca46b, type: 3}
+    - {fileID: 8300000, guid: 93cb70e9a7f3e92438cfb63d04b06214, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 0
+  - key: ui_dialogue_popup
+    clips:
+    - {fileID: 8300000, guid: 5ae11ca9f9aa52641887a1a886b15605, type: 3}
+    volume: 1
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0.05
+    maxConcurrent: 2
+  - key: ui_dialogue_typing
+    clips:
+    - {fileID: 8300000, guid: dcce1970f386c4d449c427cf8c8fd674, type: 3}
     volume: 1
     pitchMin: 1
     pitchMax: 1

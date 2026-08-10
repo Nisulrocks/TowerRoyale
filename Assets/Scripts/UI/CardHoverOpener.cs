@@ -36,7 +36,7 @@ namespace TR.UI
             _over = true;
             _hideAt = 0f;
             if (card == null) return;
-            HoverCardDetailsUI.Show(card, level);
+            HoverCardDetailsUI.Show(card, level, transform as RectTransform);
         }
 
         public void OnPointerExit(PointerEventData eventData)

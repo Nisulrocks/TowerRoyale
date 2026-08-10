@@ -107,7 +107,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileSpeed: 10
   projectileImpactVfxKey: 
-  idleVfxKey: BuffAura
+  idleVfxKey: idle_buff
   defeatDestroyVfxKey: 
   defeatDestroySfxKey: tower_destroy
   chainOnHit: 0

@@ -300,6 +300,11 @@ namespace TR.UI
                 SetStatus($"{target.playerName} is offline.");
                 return;
             }
+            if (target.isInMatch)
+            {
+                SetStatus($"{target.playerName} is already in a match.");
+                return;
+            }
             if (!target.IsSameArenaAsLocal)
             {
                 SetStatus($"{target.playerName} is in a different arena — you can only duo within the same arena.");

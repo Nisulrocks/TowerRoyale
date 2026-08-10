@@ -18,6 +18,9 @@ namespace TR.UI
         [SerializeField] private float animDuration = 0.18f;
         [SerializeField] private Vector3 battlePanelScale = new Vector3(0.5f, 0.5f, 0.5f);
 
+        [Tooltip("Slide in from whichever screen half the hovered card is NOT on, so the panel never covers the card it is describing (or its upgrade button). Only applies where the caller tells us what it hovered; everything else keeps the authored side.")]
+        [SerializeField] private bool flipToOppositeSide = true;
+
         [Header("Header")] 
         [SerializeField] private Image icon;
         [SerializeField] private Image rarityStripe;
@@ -41,6 +44,10 @@ namespace TR.UI
 
         private Coroutine _anim;
         private bool _visible;
+        // Which edge the panel is currently docked to. _defaultLeft mirrors however the prefab was
+        // authored, so callers that don't say what they hovered behave exactly as they always did.
+        private bool _onLeft;
+        private bool _defaultLeft;
         private float EaseOut(float t) => 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
         private TR.Battle.TowerBase _boundTower;
         
@@ -63,6 +70,8 @@ namespace TR.UI
             Instance = this;
             if (panel != null)
             {
+                _defaultLeft = panel.anchorMin.x < 0.5f;
+                _onLeft = _defaultLeft;
                 bool inBattle = FindFirstObjectByType<TR.Battle.BattleSceneController>(FindObjectsInactive.Include) != null;
                 panel.localScale = inBattle ? battlePanelScale : Vector3.one;
                 var p = panel.anchoredPosition;
@@ -73,7 +82,8 @@ namespace TR.UI
             if (root != null) root.SetActive(false);
         }
 
-        public static void Show(CardDefinition card, int level)
+        // source is the card being hovered, used only to pick which edge the panel slides in from.
+        public static void Show(CardDefinition card, int level, RectTransform source = null)
         {
             var inst = Instance ?? FindFirstObjectByType<HoverCardDetailsUI>(FindObjectsInactive.Include);
             if (inst == null)
@@ -81,7 +91,9 @@ namespace TR.UI
                 Debug.LogWarning("[HoverCardDetailsUI] No instance found. Add HoverCardDetailsUI to the scene and assign references.");
                 return;
             }
-            
+
+            inst.ChooseSide(source);
+
             inst.UnbindTower();
             
             var cp = TR.Systems.PlayerProfile.GetOrCreateCard(card.CardId);
@@ -220,6 +232,7 @@ namespace TR.UI
         {
             var inst = Instance ?? FindFirstObjectByType<HoverCardDetailsUI>(FindObjectsInactive.Include);
             if (inst == null) return;
+            inst.ChooseSide(null);
             inst.BindTower(tower);
             inst.SetVisible(true);
         }
@@ -814,6 +827,50 @@ namespace TR.UI
             _anim = StartCoroutine(AnimatePanel(show));
         }
 
+        // ---------- which edge to slide in from ----------
+
+        // source == null means the caller didn't tell us what was hovered (battle towers, pack
+        // opening), so fall back to the authored edge rather than leaving the panel wherever the
+        // last collection hover happened to put it.
+        private void ChooseSide(RectTransform source)
+        {
+            if (panel == null) return;
+            if (!flipToOppositeSide || source == null) { ApplySide(_defaultLeft); return; }
+
+            var canvas = panel.GetComponentInParent<Canvas>();
+            Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+            float sourceX = RectTransformUtility.WorldToScreenPoint(cam, source.position).x;
+
+            // Card on the right half -> panel docks left, and vice versa.
+            ApplySide(sourceX > Screen.width * 0.5f);
+        }
+
+        private void ApplySide(bool left)
+        {
+            if (panel == null || _onLeft == left) return;
+            _onLeft = left;
+
+            var amin = panel.anchorMin;
+            var amax = panel.anchorMax;
+            amin.x = amax.x = left ? 0f : 1f;
+            panel.anchorMin = amin;
+            panel.anchorMax = amax;
+
+            // Re-enter from the new edge instead of sliding the whole width of the screen. The
+            // hidden position is off-screen, so the snap itself is never visible.
+            var p = panel.anchoredPosition;
+            p.x = GetTargetX(false);
+            panel.anchoredPosition = p;
+
+            if (_visible)
+            {
+                if (_anim != null) { StopCoroutine(_anim); _anim = null; }
+                _visible = false; // lets the SetVisible(true) that follows run its slide-in again
+            }
+        }
+
         private float GetScaleOffsetX()
         {
             if (panel == null) return 0f;
@@ -834,7 +891,14 @@ namespace TR.UI
             return (0.5f - pivotX) * width * scaleDiff;
         }
 
-        private float GetTargetX(bool show) => (show ? showX : hiddenX) + GetScaleOffsetX();
+        // showX/hiddenX are authored for the right edge; docked left they mirror, which lands the
+        // panel the same distance from the left edge because GetScaleOffsetX flips sign too.
+        private float GetTargetX(bool show)
+        {
+            float x = show ? showX : hiddenX;
+            if (_onLeft) x = -x;
+            return x + GetScaleOffsetX();
+        }
 
         private IEnumerator AnimatePanel(bool show)
         {

@@ -330,20 +330,17 @@ namespace TR.Tutorial
                                 {
                                     if (rtTry != null)
                                     {
+                                        EnsureTargetVisible(rtTry);
                                         _arrow.gameObject.SetActive(true);
                                         _arrow.Follow(rtTry, step.targetScreenOffset);
-                                        if (_blocker != null)
-                                        {
-                                            if (step.blockOutside) _blocker.Enable(rtTry); else _blocker.Disable();
-                                        }
+                                        // restartSpotlight:false — this runs every frame until the
+                                        // button appears, and restarting would freeze the sweep at 0.
+                                        ApplyBlocker(step, null, rtTry, restartSpotlight: false);
                                     }
                                     else
                                     {
                                         _arrow.gameObject.SetActive(false);
-                                        if (_blocker != null)
-                                        {
-                                            if (step.blockOutside) _blocker.Enable(null); else _blocker.Disable();
-                                        }
+                                        ApplyBlocker(step, null, null, restartSpotlight: false);
                                     }
                                 }
 
@@ -423,6 +420,7 @@ namespace TR.Tutorial
                             yield return null;
                         }
                         StopGhostDrag();
+                        yield return WaitForUnassistedDrag(step);
                     }
                     else
                     {
@@ -455,6 +453,7 @@ namespace TR.Tutorial
                             yield return null;
                         }
                         StopGhostDrag();
+                        yield return WaitForUnassistedDrag(step);
                     }
                 }
                 else if (step.waitMode == StepWaitMode.WaitForNameInput)
@@ -589,6 +588,86 @@ namespace TR.Tutorial
         private void OnListenedButtonClicked()
         {
             _buttonClickedFlag = true;
+        }
+
+        // ---------- unassisted repeat ----------
+
+        // Listeners already cleared for the current repeat phase. The card the player just used can
+        // be consumed or rebuilt, so targets are re-resolved every frame rather than held from the
+        // guided drag; this set is what stops a re-resolved listener being re-armed forever.
+        private readonly System.Collections.Generic.HashSet<TutorialDragListener> _repeatArmed = new System.Collections.Generic.HashSet<TutorialDragListener>();
+
+        private IEnumerator WaitForUnassistedDrag(TutorialStep step)
+        {
+            if (step == null || !step.showGhostDrag || !step.requireUnassistedRepeat) yield break;
+
+            // No ghost and no arrow: doing it from memory is the whole point of this phase.
+            StopGhostDrag();
+            if (_arrow != null) _arrow.gameObject.SetActive(false);
+            for (int i = 0; i < _extraArrows.Count; i++)
+                if (_extraArrows[i] != null) _extraArrows[i].gameObject.SetActive(false);
+
+            if (_dialogue != null && !string.IsNullOrEmpty(step.repeatDialogueText))
+            {
+                Sprite guide = step.repeatGuideSprite != null ? step.repeatGuideSprite : step.guideSprite;
+                _dialogue.Show(step.repeatDialogueText, step.typewriterCharDelay, step.dialogueAnchor, guide);
+            }
+
+            _repeatArmed.Clear();
+            if (verboseLogs) Debug.Log("[Tutorial] Waiting for an unassisted repeat of the drag.");
+
+            while (!PollUnassistedDrag(step)) yield return null;
+
+            _repeatArmed.Clear();
+        }
+
+        private bool PollUnassistedDrag(TutorialStep step)
+        {
+            var hosts = new System.Collections.Generic.List<GameObject>();
+
+            if (step.targetMode == TargetMode.OwnedCollectionCards)
+            {
+                var buttons = ResolveButtonsListOwnedCards();
+                if (buttons != null)
+                {
+                    for (int i = 0; i < buttons.Count; i++)
+                        if (buttons[i] != null) hosts.Add(buttons[i].gameObject);
+                }
+            }
+            else
+            {
+                var rt = ResolveRect(step);
+                if (rt != null)
+                {
+                    var btn = rt.GetComponentInChildren<Button>(true);
+                    hosts.Add(btn != null ? btn.gameObject : rt.gameObject);
+                }
+            }
+
+            bool many = step.targetMode == TargetMode.OwnedCollectionCards;
+
+            for (int i = 0; i < hosts.Count; i++)
+            {
+                var host = hosts[i];
+                if (host == null) continue;
+
+                var listener = host.GetComponent<TutorialDragListener>();
+                if (listener == null) listener = host.AddComponent<TutorialDragListener>();
+
+                if (_repeatArmed.Add(listener))
+                {
+                    // First sight this phase: clear whatever the guided drag left on it. It cannot
+                    // have been dragged in the same frame it was armed, so skip the check.
+                    listener.minPixels = many ? 30f : 20f;
+                    listener.requireExitRect = many;
+                    listener.ResetFlag();
+                    continue;
+                }
+
+                if (listener.Dragged) return true;
+            }
+
+            return false;
         }
 
         private TutorialGhostDragUI _ghostDrag;
@@ -765,7 +844,10 @@ namespace TR.Tutorial
                     {
                         
                         int count = Mathf.Min(step.maxArrows <= 0 ? targets.Count : step.maxArrows, targets.Count);
-                        
+
+                        // Bring the first one into view; the rest of the grid follows it.
+                        EnsureTargetVisible(targets[0]);
+
                         _arrow.gameObject.SetActive(true);
                         _arrow.Follow(targets[0], step.targetScreenOffset);
                         
@@ -780,18 +862,12 @@ namespace TR.Tutorial
                             _extraArrows.Add(inst);
                         }
                         
-                        if (_blocker != null)
-                        {
-                            if (step.blockOutside) _blocker.EnableMany(targets); else _blocker.Disable();
-                        }
+                        ApplyBlocker(step, targets, null);
                     }
                     else
                     {
                         _arrow.gameObject.SetActive(false);
-                        if (_blocker != null)
-                        {
-                            if (step.blockOutside) _blocker.Enable(null); else _blocker.Disable();
-                        }
+                        ApplyBlocker(step, null, null);
                     }
                 }
                 else
@@ -799,23 +875,158 @@ namespace TR.Tutorial
                     var target = ResolveRect(step);
                     if (target != null)
                     {
+                        EnsureTargetVisible(target);
                         _arrow.gameObject.SetActive(true);
                         _arrow.Follow(target, step.targetScreenOffset);
-                        if (_blocker != null)
-                        {
-                            if (step.blockOutside) _blocker.Enable(target); else _blocker.Disable();
-                        }
+                        ApplyBlocker(step, null, target);
                     }
                     else
                     {
                         _arrow.gameObject.SetActive(false);
-                        if (_blocker != null)
-                        {
-                            if (step.blockOutside) _blocker.Enable(null); else _blocker.Disable();
-                        }
+                        ApplyBlocker(step, null, null);
                     }
                 }
             }
+        }
+
+        // Spotlighting a target means the player may only press that target, so it turns on the
+        // blocker even when the step did not ask for it — a dimmed button that still responds
+        // reads as a bug.
+        private static bool ShouldSpotlight(TutorialStep step, bool hasTarget)
+        {
+            if (step == null || !hasTarget) return false;
+            switch (step.spotlight)
+            {
+                case SpotlightMode.Always: return true;
+                case SpotlightMode.Never: return false;
+                default: return step.waitMode == StepWaitMode.WaitForTargetClick;
+            }
+        }
+
+        private void ApplyBlocker(TutorialStep step, System.Collections.Generic.List<RectTransform> many, RectTransform single, bool restartSpotlight = true)
+        {
+            if (_blocker == null) return;
+
+            bool hasTarget = single != null || (many != null && many.Count > 0);
+            bool spot = ShouldSpotlight(step, hasTarget);
+
+            if (!step.blockOutside && !spot)
+            {
+                _blocker.Disable();
+                return;
+            }
+
+            if (many != null) _blocker.EnableMany(many);
+            else _blocker.Enable(single);
+
+            _blocker.BlockInput = step.blockOutside || spot;
+            _blocker.SetSpotlight(spot, restartSpotlight);
+
+            // The blocker puts itself last so it sits over the game UI; the tutorial's own arrow
+            // and dialogue have to climb back above it or the dim swallows them.
+            RaiseTutorialUIAboveBlocker();
+        }
+
+        // ---------- keeping the target on screen ----------
+
+        [Header("Target Focus")]
+        [Tooltip("If the target sits inside a scroll view that is scrolled elsewhere, bring it into view before pointing at it. Without this the arrow points off-screen and the spotlight lands on nothing.")]
+        [SerializeField] private bool scrollTargetIntoView = true;
+        [Tooltip("How long the scroll takes to bring the target into view.")]
+        [SerializeField] private float scrollFocusSeconds = 0.35f;
+        [Tooltip("Extra margin kept between the target and the edge of the scroll viewport when deciding whether it is visible.")]
+        [SerializeField] private float scrollVisibleMargin = 8f;
+
+        private Coroutine _scrollFocus;
+
+        private void EnsureTargetVisible(RectTransform target)
+        {
+            if (!scrollTargetIntoView || target == null) return;
+            if (_scrollFocus != null) return; // a focus scroll is already in flight
+
+            var scroll = target.GetComponentInParent<ScrollRect>(true);
+            if (scroll == null || scroll.content == null) return;
+            if (!scroll.horizontal && !scroll.vertical) return;
+            if (IsFullyVisible(scroll, target)) return;
+
+            _scrollFocus = StartCoroutine(ScrollTargetIntoView(scroll, target));
+        }
+
+        private bool IsFullyVisible(ScrollRect scroll, RectTransform target)
+        {
+            var viewport = scroll.viewport != null ? scroll.viewport : scroll.transform as RectTransform;
+            if (viewport == null) return true;
+
+            var corners = new Vector3[4];
+            target.GetWorldCorners(corners);
+
+            Rect view = viewport.rect;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 lp = viewport.InverseTransformPoint(corners[i]);
+                if (lp.x < view.xMin + scrollVisibleMargin || lp.x > view.xMax - scrollVisibleMargin) return false;
+                if (lp.y < view.yMin + scrollVisibleMargin || lp.y > view.yMax - scrollVisibleMargin) return false;
+            }
+            return true;
+        }
+
+        private IEnumerator ScrollTargetIntoView(ScrollRect scroll, RectTransform target)
+        {
+            var viewport = scroll.viewport != null ? scroll.viewport : scroll.transform as RectTransform;
+            var content = scroll.content;
+
+            Canvas.ForceUpdateCanvases();
+            scroll.velocity = Vector2.zero;
+
+            Vector2 from = content.anchoredPosition;
+
+            // Shift the content by however far the target's centre is from the viewport's centre.
+            // Working in viewport-local space keeps this independent of the content's anchors and
+            // pivot, which vary between the scroll views this has to serve.
+            Vector2 targetInView = viewport.InverseTransformPoint(target.TransformPoint(target.rect.center));
+            Vector2 delta = viewport.rect.center - targetInView;
+            if (!scroll.horizontal) delta.x = 0f;
+            if (!scroll.vertical) delta.y = 0f;
+
+            // Let the ScrollRect clamp for us rather than doing the anchor maths by hand: write the
+            // raw destination, normalise it back into 0..1, then read what it settled on.
+            content.anchoredPosition = from + delta;
+            Canvas.ForceUpdateCanvases();
+            if (scroll.horizontal) scroll.horizontalNormalizedPosition = Mathf.Clamp01(scroll.horizontalNormalizedPosition);
+            if (scroll.vertical) scroll.verticalNormalizedPosition = Mathf.Clamp01(scroll.verticalNormalizedPosition);
+            Vector2 to = content.anchoredPosition;
+
+            content.anchoredPosition = from;
+
+            float t = 0f;
+            float dur = Mathf.Max(0.01f, scrollFocusSeconds);
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / dur;
+                float e = 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
+                content.anchoredPosition = Vector2.Lerp(from, to, e);
+                scroll.velocity = Vector2.zero; // keep inertia from fighting the lerp
+                yield return null;
+            }
+
+            content.anchoredPosition = to;
+            _scrollFocus = null;
+        }
+
+        private void RaiseTutorialUIAboveBlocker()
+        {
+            // Cheap early-out: this can be called every frame while polling for a target, and
+            // re-parenting order each time forces needless canvas rebuilds.
+            if (_dialogue != null && _blocker != null
+                && _dialogue.transform.parent == _blocker.transform.parent
+                && _dialogue.transform.GetSiblingIndex() > _blocker.transform.GetSiblingIndex())
+                return;
+
+            if (_arrow != null) _arrow.transform.SetAsLastSibling();
+            for (int i = 0; i < _extraArrows.Count; i++)
+                if (_extraArrows[i] != null) _extraArrows[i].transform.SetAsLastSibling();
+            if (_dialogue != null) _dialogue.transform.SetAsLastSibling();
+            if (_nameInput != null) _nameInput.transform.SetAsLastSibling();
         }
 
         private void HideAllUI()
@@ -829,6 +1040,11 @@ namespace TR.Tutorial
             _extraArrows.Clear();
             if (_dialogue != null) _dialogue.Hide();
             if (_blocker != null) _blocker.Disable();
+
+            // Leaving this set would make EnsureTargetVisible think a scroll is still running and
+            // silently refuse to focus anything for the rest of the session.
+            if (_scrollFocus != null) { StopCoroutine(_scrollFocus); _scrollFocus = null; }
+            _repeatArmed.Clear();
         }
 
         private RectTransform ResolveRect(TutorialStep step)

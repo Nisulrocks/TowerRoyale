@@ -476,7 +476,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &134840649
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -597,7 +597,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &238832334
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -703,7 +703,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1601432850241570714, guid: b6359932b3d2a234687be136007899b2, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4289896094
+      value: 4278190080
       objectReference: {fileID: 0}
     - target: {fileID: 1601432850241570714, guid: b6359932b3d2a234687be136007899b2, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -715,7 +715,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2817518530313689819, guid: b6359932b3d2a234687be136007899b2, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4289896094
+      value: 4278190080
       objectReference: {fileID: 0}
     - target: {fileID: 2817518530313689819, guid: b6359932b3d2a234687be136007899b2, type: 3}
       propertyPath: m_TextStyleHashCode
@@ -809,6 +809,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: FriendsPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 5777984196713708162, guid: b6359932b3d2a234687be136007899b2, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6115322644620971156, guid: b6359932b3d2a234687be136007899b2, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8772549351849901813, guid: b6359932b3d2a234687be136007899b2, type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
@@ -876,9 +884,9 @@ RectTransform:
   - {fileID: 1012692844}
   - {fileID: 1370279220}
   - {fileID: 1071458279}
-  - {fileID: 2147049247}
   - {fileID: 134840646}
   - {fileID: 238832331}
+  - {fileID: 2147049247}
   - {fileID: 2053254058}
   m_Father: {fileID: 1879076324}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1781,7 +1789,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &1012692847
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2247,7 +2255,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &1071458282
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2415,7 +2423,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &1370279223
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3313,6 +3321,7 @@ MonoBehaviour:
   dialoguePrefab: {fileID: 8033550831943161400, guid: 14d254f3f28496248a01ee9bc2ff04e5, type: 3}
   nameInputPrefab: {fileID: 7377149913621093293, guid: 2311d7483658db1419522af60cc4bbaf, type: 3}
   verboseLogs: 1
+  resumeRecoverDelay: 2.5
 --- !u!114 &1945811971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3398,6 +3407,26 @@ MonoBehaviour:
     prefab: {fileID: 2433282508523890284, guid: c62fd3a7b7fa9a44b92b541f49d3fa3b, type: 3}
     preloadCount: 0
     maxPoolSize: 0
+  - key: idle_astral
+    prefab: {fileID: 8740444564495733720, guid: c1afd03b9170722499b5079ec1a55f13, type: 3}
+    preloadCount: 0
+    maxPoolSize: 8
+  - key: idle_celestial
+    prefab: {fileID: 5884459072550730041, guid: b6eb12c9115ee674994a74107177f690, type: 3}
+    preloadCount: 0
+    maxPoolSize: 8
+  - key: idle_hellfire
+    prefab: {fileID: 2540659606860971339, guid: ecff641885e80b14a93632da8da8e2fc, type: 3}
+    preloadCount: 0
+    maxPoolSize: 8
+  - key: idle_hyperion
+    prefab: {fileID: 2929074040601996941, guid: 171981fa112b21c4f9c97167447e5da4, type: 3}
+    preloadCount: 0
+    maxPoolSize: 8
+  - key: idle_chrono
+    prefab: {fileID: 4908396139797567391, guid: ea3ac801744ec2f44bc03d818641d90d, type: 3}
+    preloadCount: 0
+    maxPoolSize: 8
 --- !u!1 &1973484768 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7752869003686319047, guid: 258f5fbee898deb4bacc66b34e61aad9, type: 3}
@@ -3520,7 +3549,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &2053254061
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3657,7 +3686,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5
 --- !u!222 &2147049250
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,8 @@ namespace TR.UI
     {
         [Header("Refs")]
         [SerializeField] private Transform collectionListRoot;
+        [Tooltip("Scroll view containing the collection list. Left empty, it is found from collectionListRoot's parents.")]
+        [SerializeField] private ScrollRect collectionScroll;
         [SerializeField] private CardItemUI collectionItemPrefab;
         [SerializeField] private Transform deckSlotsRoot;
         [SerializeField] private DeckSlotUI deckSlotPrefab;
@@ -32,6 +35,7 @@ namespace TR.UI
         private readonly List<CardItemUI> _collectionItems = new();
         private readonly List<DeckSlotUI> _deckSlots = new();
         private readonly List<DeckPresetNodeUI> _presetNodes = new();
+        private Coroutine _scrollReset;
 
         private void OnEnable()
         {
@@ -142,6 +146,50 @@ namespace TR.UI
                 
                 _collectionItems.Add(ui);
             }
+
+            ScrollCollectionToTop();
+        }
+
+        // The list is rebuilt from scratch every refresh, but Destroy() is deferred to the end of
+        // the frame, so the layout group still counts the old entries at this point. Snapping the
+        // scroll now lands it against a content size that is about to change, which is why the
+        // list opened part-way down. Snap immediately so nothing drifts on screen, then snap again
+        // once the old entries are actually gone and the layout has settled.
+        private void ScrollCollectionToTop()
+        {
+            // includeInactive matters: the panel can still be switching on when this first runs.
+            if (collectionScroll == null && collectionListRoot != null)
+                collectionScroll = collectionListRoot.GetComponentInParent<ScrollRect>(true);
+            if (collectionScroll == null) return;
+
+            SnapCollectionToTop();
+
+            if (!isActiveAndEnabled) return;
+            if (_scrollReset != null) StopCoroutine(_scrollReset);
+            _scrollReset = StartCoroutine(SnapCollectionToTopNextFrame());
+        }
+
+        private IEnumerator SnapCollectionToTopNextFrame()
+        {
+            yield return null;
+            SnapCollectionToTop();
+            _scrollReset = null;
+        }
+
+        private void SnapCollectionToTop()
+        {
+            if (collectionScroll == null || !collectionScroll.vertical) return;
+
+            var content = collectionScroll.content;
+            if (content != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+            }
+
+            // Kill any inertia too, or the list drifts away from the top right after we set it.
+            collectionScroll.velocity = Vector2.zero;
+            collectionScroll.verticalNormalizedPosition = 1f;
         }
 
         private void RefreshDeck()

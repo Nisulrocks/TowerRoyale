@@ -57,7 +57,7 @@ namespace TR.UI
             }
             if (_def != null)
             {
-                HoverCardDetailsUI.Show(_def, _level);
+                HoverCardDetailsUI.Show(_def, _level, transform as RectTransform);
                 ShowLivePreview();
             }
         }

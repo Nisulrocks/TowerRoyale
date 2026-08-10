@@ -15,9 +15,17 @@ namespace TR.Tutorial
         private Vector2 _startScreenPos;
         private RectTransform _rt;
 
+        // Only a gesture that BEGINS after arming counts. Dragged is raised mid-gesture, as soon as
+        // the pointer passes the threshold, so when a step re-arms a listener the player's finger is
+        // usually still down on the same card. Without this the in-flight drag immediately satisfies
+        // the next wait as well — and since ResetFlag clears _startScreenPos to zero, it measured
+        // from the screen corner and tripped no matter what the threshold was.
+        private bool _armed;
+
         public void ResetFlag()
         {
             Dragged = false;
+            _armed = false;
             _startScreenPos = Vector2.zero;
             if (_rt == null) _rt = GetComponent<RectTransform>();
         }
@@ -25,12 +33,13 @@ namespace TR.Tutorial
         public void OnBeginDrag(PointerEventData eventData)
         {
             Dragged = false;
+            _armed = true;
             _startScreenPos = eventData.position;
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (Dragged) return;
+            if (!_armed || Dragged) return;
             float dist = Vector2.Distance(_startScreenPos, eventData.position);
             if (dist < Mathf.Max(1f, minPixels)) return;
             if (requireExitRect && _rt != null)

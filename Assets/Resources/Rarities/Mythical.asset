@@ -27,3 +27,4 @@ MonoBehaviour:
   castleXpBase: 80
   castleXpPerLevel: 80
   confettiOnReveal: 1
+  revealTier: 2

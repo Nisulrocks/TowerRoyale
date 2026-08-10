@@ -43,15 +43,16 @@ namespace TR.UI
             if (statusText != null)
             {
                 if (!data.isOnline) statusText.text = "Offline";
+                else if (data.isInMatch) statusText.text = "In a match";
                 else if (!sameArena) statusText.text = "Different arena";
                 else statusText.text = "Online";
             }
 
             if (onlineDot != null)
             {
-                // Amber for "online but not playable together" so it reads differently from offline.
+                // Amber for "online but not playable right now" so it reads differently from offline.
                 onlineDot.color = !data.isOnline ? offlineColor
-                                : sameArena ? onlineColor
+                                : data.CanInviteToDuo ? onlineColor
                                 : mismatchColor;
             }
 
@@ -67,7 +68,12 @@ namespace TR.UI
             }
 
             if (inviteLabel != null)
-                inviteLabel.text = !data.isOnline ? "Offline" : sameArena ? "Invite" : "Locked";
+            {
+                if (!data.isOnline) inviteLabel.text = "Offline";
+                else if (data.isInMatch) inviteLabel.text = "Busy";
+                else if (!sameArena) inviteLabel.text = "Locked";
+                else inviteLabel.text = "Invite";
+            }
         }
 
         public void Invite()

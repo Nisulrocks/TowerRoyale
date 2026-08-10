@@ -31,6 +31,7 @@ namespace TR.Systems
         private const string FieldNameLower = "nameLower";
         private const string FieldTrophies = "trophies";
         private const string FieldOnlineAt = "onlineAt";
+        private const string FieldInMatch = "inMatch";
         private const string FieldFromName = "fromName";
         private const string FieldSentAt = "sentAt";
         private const string FieldRoomName = "roomName";
@@ -66,6 +67,9 @@ namespace TR.Systems
             public int trophies;
             public bool isOnline;
 
+            // Online but unavailable: in a battle, or already searching for a match.
+            public bool isInMatch;
+
             // Duo matches are arena-locked, so a friend's arena is derived from their trophies and
             // compared with ours. No extra Firestore field is needed for this.
             public string arenaKey;
@@ -75,7 +79,7 @@ namespace TR.Systems
                 !string.IsNullOrEmpty(arenaKey) && arenaKey == ArenaService.GetLocalArenaKey();
 
             // Everything that must be true before an invite can be sent.
-            public bool CanInviteToDuo => isOnline && IsSameArenaAsLocal;
+            public bool CanInviteToDuo => isOnline && !isInMatch && IsSameArenaAsLocal;
         }
 
         public class FriendRequestInfo
@@ -101,6 +105,10 @@ namespace TR.Systems
         public static event Action<List<PlayerSummary>> OnFriendsLoaded;
         public static event Action<List<FriendRequestInfo>> OnRequestsLoaded;
         public static event Action<DuoInviteInfo> OnDuoInviteReceived;
+
+        // An invite that expired while the player was offline. The room is long gone, so this is
+        // purely "you missed this" — it must never be treated as joinable.
+        public static event Action<DuoInviteInfo> OnMissedInvite;
         public static event Action<string> OnActionFailed;
         public static event Action<string> OnActionSucceeded;
 
@@ -156,6 +164,7 @@ namespace TR.Systems
 
         // Invites arrive on a Firestore callback thread; queue them for the main thread.
         private readonly Queue<DuoInviteInfo> _pendingInvites = new Queue<DuoInviteInfo>();
+        private readonly Queue<DuoInviteInfo> _pendingMissed = new Queue<DuoInviteInfo>();
         private readonly object _inviteLock = new object();
         private bool _requestsDirty;
 
@@ -242,7 +251,8 @@ namespace TR.Systems
             // Stamped by Firestore so every client's presence is on one clock.
             var data = new Dictionary<string, object>
             {
-                { FieldOnlineAt, FieldValue.ServerTimestamp }
+                { FieldOnlineAt, FieldValue.ServerTimestamp },
+                { FieldInMatch, IsLocallyBusy() }
             };
             _db.Collection(ProfilesCollection).Document(_uid).SetAsync(data, SetOptions.MergeAll)
                .ContinueWith(t =>
@@ -255,6 +265,22 @@ namespace TR.Systems
                    else if (verbosePresenceLogging)
                        Debug.Log("[FriendsService] presence heartbeat written (server timestamp).");
                });
+        }
+
+        // Deliberately narrower than MatchContext.IsMatchInProgress, which stays true while merely
+        // sitting in a Photon room back in the lobby — that would advertise us as busy forever.
+        // Being mid-search counts too: an invite then is just as futile as one sent mid-battle.
+        private static bool IsLocallyBusy()
+        {
+            if (TR.Battle.BattleSceneController.Instance != null) return true;
+
+            var duo = TR.Net.DuoNetworkManager.Instance;
+            if (duo != null &&
+                duo.State != TR.Net.DuoNetworkManager.MatchState.Idle &&
+                duo.State != TR.Net.DuoNetworkManager.MatchState.Failed)
+                return true;
+
+            return false;
         }
 
         private static bool IsOnline(long onlineAt)
@@ -365,15 +391,20 @@ namespace TR.Systems
             doc.TryGetValue<int>(FieldTrophies, out int trophies);
 
             long onlineAt = ReadUnixSeconds(doc, FieldOnlineAt);
+            doc.TryGetValue<bool>(FieldInMatch, out bool inMatch);
 
             var arena = ArenaService.GetArenaForTrophies(trophies);
+            bool online = IsOnline(onlineAt);
 
             return new PlayerSummary
             {
                 uid = doc.Id,
                 playerName = string.IsNullOrEmpty(name) ? "Player" : name,
                 trophies = trophies,
-                isOnline = IsOnline(onlineAt),
+                isOnline = online,
+                // Only meaningful while they are actually online; a stale flag on an offline
+                // player would otherwise read as "in a match" indefinitely.
+                isInMatch = online && inMatch,
                 arenaKey = ArenaService.ResolveArenaKey(arena),
                 arenaName = arena != null ? arena.DisplayName : null
             };
@@ -414,6 +445,27 @@ namespace TR.Systems
                 Debug.LogWarning($"[FriendsService] Could not read '{field}' on {doc.Id}: {ex.Message}");
                 return 0L;
             }
+        }
+
+        // One-shot read of a single player's live profile. Cached list data can be up to a refresh
+        // interval old, which is not good enough right before committing to hosting a match.
+        public void FetchPlayerSummary(string uid, Action<PlayerSummary> onComplete)
+        {
+            if (!_ready || string.IsNullOrEmpty(uid)) { onComplete?.Invoke(null); return; }
+            StartCoroutine(FetchPlayerSummaryCoroutine(uid, onComplete));
+        }
+
+        private IEnumerator FetchPlayerSummaryCoroutine(string uid, Action<PlayerSummary> onComplete)
+        {
+            var task = _db.Collection(ProfilesCollection).Document(uid).GetSnapshotAsync();
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            if (task.IsFaulted || task.Result == null || !task.Result.Exists)
+            {
+                onComplete?.Invoke(null);
+                yield break;
+            }
+            onComplete?.Invoke(ToSummary(task.Result));
         }
 
         // ---------- friend requests ----------
@@ -665,15 +717,34 @@ namespace TR.Systems
 
             long now = ServerNowSeconds();
             int removed = 0;
+            DuoInviteInfo mostRecent = null;
+
             foreach (var doc in task.Result.Documents)
             {
                 long sentAt = ReadUnixSeconds(doc, FieldSentAt);
                 if (sentAt <= 0) continue;
                 if (now - sentAt <= InviteLifetimeSeconds) continue;
+
+                doc.TryGetValue<string>(FieldFromName, out string fromName);
+                var missed = new DuoInviteInfo
+                {
+                    fromUid = doc.Id,
+                    fromName = string.IsNullOrEmpty(fromName) ? "A friend" : fromName,
+                    sentAt = sentAt
+                };
+                // Several friends may have tried while we were away; only the latest is worth
+                // interrupting the player about.
+                if (mostRecent == null || missed.sentAt > mostRecent.sentAt) mostRecent = missed;
+
                 doc.Reference.DeleteAsync();
                 removed++;
             }
-            if (removed > 0) Debug.Log($"[FriendsService] Swept {removed} expired invite(s).");
+
+            if (removed > 0)
+            {
+                Debug.Log($"[FriendsService] Swept {removed} expired invite(s).");
+                if (mostRecent != null) OnMissedInvite?.Invoke(mostRecent);
+            }
         }
 
         public void ClearInviteFrom(string fromUid)
@@ -728,6 +799,15 @@ namespace TR.Systems
                             {
                                 Debug.Log($"[FriendsService] Dropping expired invite from {doc.Id} " +
                                           $"(age {ServerNowSeconds() - sentAt}s).");
+                                lock (_inviteLock)
+                                {
+                                    _pendingMissed.Enqueue(new DuoInviteInfo
+                                    {
+                                        fromUid = doc.Id,
+                                        fromName = string.IsNullOrEmpty(fromName) ? "A friend" : fromName,
+                                        sentAt = sentAt
+                                    });
+                                }
                                 ClearInviteFrom(doc.Id);
                                 continue;
                             }
@@ -778,6 +858,17 @@ namespace TR.Systems
                 }
                 if (invite == null) break;
                 OnDuoInviteReceived?.Invoke(invite);
+            }
+
+            while (true)
+            {
+                DuoInviteInfo missed = null;
+                lock (_inviteLock)
+                {
+                    if (_pendingMissed.Count > 0) missed = _pendingMissed.Dequeue();
+                }
+                if (missed == null) break;
+                OnMissedInvite?.Invoke(missed);
             }
         }
 

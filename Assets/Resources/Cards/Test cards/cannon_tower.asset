@@ -107,7 +107,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 1212263692359996816, guid: 71afcf272140cee4d9556b449d85f97f, type: 3}
   projectileSpeed: 10
   projectileImpactVfxKey: 
-  idleVfxKey: 
+  idleVfxKey: idle_cannon_b
   defeatDestroyVfxKey: 
   defeatDestroySfxKey: tower_destroy
   chainOnHit: 0

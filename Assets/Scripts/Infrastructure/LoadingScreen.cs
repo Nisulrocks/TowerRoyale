@@ -29,6 +29,14 @@ namespace TR.Infrastructure
         [Header("Loading UI")]
         public Slider progressBar;
         public TMP_Text progressText;
+        [Tooltip("Optional second line showing '42%  ·  Loading audio'. If left empty the detail is folded into progressText instead.")]
+        public TMP_Text statusText;
+
+        [Header("Loading Bar Feel")]
+        [Tooltip("How long a stage with no measurable sub-progress takes to creep most of the way across its share of the bar. Network waits have no real percentage, so the fill eases forward instead of freezing.")]
+        [SerializeField] private float stageCreepSeconds = 2.5f;
+        [Tooltip("Minimum bar travel per second, so the fill is always visibly moving.")]
+        [SerializeField] private float barMinSpeed = 0.10f;
 
         [Header("Timings")]
         public float fadeOutDuration = 0.35f;
@@ -97,6 +105,8 @@ namespace TR.Infrastructure
             if (progressBar != null)
             {
                 EnsureActiveHierarchy(progressBar.gameObject);
+                progressBar.minValue = 0f;
+                progressBar.maxValue = 1f;
                 progressBar.value = 0f;
                 var cg = GetOrAddCanvasGroup(progressBar.gameObject);
                 cg.alpha = 0f;
@@ -107,6 +117,14 @@ namespace TR.Infrastructure
                 EnsureActiveHierarchy(progressText.gameObject);
                 progressText.text = "0%";
                 var cg = GetOrAddCanvasGroup(progressText.gameObject);
+                cg.alpha = 0f;
+            }
+
+            if (statusText != null)
+            {
+                EnsureActiveHierarchy(statusText.gameObject);
+                statusText.text = string.Empty;
+                var cg = GetOrAddCanvasGroup(statusText.gameObject);
                 cg.alpha = 0f;
             }
 
@@ -143,8 +161,11 @@ namespace TR.Infrastructure
                 blackOverlay.SetActive(false);
             }
 
+            // Starts streaming now and keeps going underneath every stage below, feeding the
+            // Lobby slice of the bar from Update() as it goes.
             var op = SceneManager.LoadSceneAsync(lobbySceneName, LoadSceneMode.Single);
             op.allowSceneActivation = false;
+            _sceneOp = op;
 
             if (gameSplashScreen != null)
             {
@@ -164,16 +185,22 @@ namespace TR.Infrastructure
                 await FadeCanvasGroup(cg, 0f, 1f, gameSplashFadeIn);
             }
 
-            if (checkInternetBeforeLoad && progressText != null)
+            if (statusText != null)
             {
-                progressText.text = "Checking connection...";
+                var cg = GetOrAddCanvasGroup(statusText.gameObject);
+                await FadeCanvasGroup(cg, 0f, 1f, gameSplashFadeIn);
             }
 
+            BeginStage(BootStage.Connection);
             if (checkInternetBeforeLoad && !await HasInternetConnection())
             {
+                _statusOverride = "No connection";
+                RefreshProgressUI();
+                _halted = true; // stop Update stomping the popup's fallback message
                 ShowNoInternetPopup();
                 return;
             }
+            CompleteStage(BootStage.Connection);
 
             // Keep watching the connection after boot so the same popup appears in Lobby / matches.
             NetworkConnectionMonitor.Initialize(noInternetPopupPrefab, SceneManager.GetActiveScene().name);
@@ -184,7 +211,6 @@ namespace TR.Infrastructure
             // Initialize Firebase and handle cloud login before proceeding to lobby.
             // Anything that escapes here would abort the rest of Start(), so allowSceneActivation
             // below would never run and the player would sit on the splash forever.
-            if (progressText != null) progressText.text = "Initializing cloud...";
             try
             {
                 await InitializeFirebaseAndLogin();
@@ -193,6 +219,19 @@ namespace TR.Infrastructure
             {
                 Debug.LogError($"[LoadingScreen] Cloud init failed, continuing offline: {ex}");
             }
+            // Whatever happened in there, those stages are done with.
+            CompleteStage(BootStage.Services);
+            CompleteStage(BootStage.Account);
+            CompleteStage(BootStage.Profile);
+
+            // Card/rarity/pack/arena tables. This used to happen in the Lobby's Awake, where it
+            // hitched the first frame; doing it here is both honest progress and a smoother entry.
+            BeginStage(BootStage.GameData);
+            await Task.Yield();
+            GameDB.EnsureLoaded();
+            CompleteStage(BootStage.GameData);
+
+            await PreloadAudio();
 
             float elapsed = Time.unscaledTime - splashStart;
             if (elapsed < minTotalSplashTime)
@@ -202,12 +241,13 @@ namespace TR.Infrastructure
                 while (t < wait) { t += Time.unscaledDeltaTime; await Task.Yield(); }
             }
 
-            while (op.progress < 0.9f)
-            {
-                OnProgress(Mathf.Clamp01(op.progress / 0.9f));
-                await Task.Yield();
-            }
-            OnProgress(1f);
+            BeginStage(BootStage.Lobby, measurable: true);
+            while (op.progress < 0.9f) await Task.Yield();
+            CompleteStage(BootStage.Lobby);
+
+            // Let the fill visibly finish its travel rather than cutting away part-way.
+            _statusOverride = "Ready";
+            await WaitForBarToReach(1f);
 
             if (fader != null) await fader.FadeOut(fadeOutDuration);
             if (fader != null) fader.ScheduleFadeInAfterSceneLoad(fadeInDuration);
@@ -215,10 +255,115 @@ namespace TR.Infrastructure
             while (!op.isDone) { await Task.Yield(); }
         }
 
-        private void OnProgress(float p)
+        // ---------- real progress ----------
+
+        // Every stage below is actual work the boot does. The bar is the weighted sum of how far
+        // each one has got, so it reflects what is really happening instead of sitting at zero and
+        // snapping to full at the end. Stages run concurrently where the work does: the Lobby
+        // scene streams in the whole time the cloud calls are in flight, and contributes as it goes.
+        private enum BootStage { Connection = 0, Services, Account, Profile, GameData, Audio, Lobby }
+
+        private static readonly string[] StageLabels =
         {
-            if (progressBar != null) progressBar.value = p;
-            if (progressText != null) progressText.text = Mathf.RoundToInt(p * 100f) + "%";
+            "Checking connection",
+            "Connecting to services",
+            "Checking account",
+            "Loading your profile",
+            "Loading game data",
+            "Loading audio",
+            "Loading lobby",
+        };
+
+        // Sums to 1.
+        private static readonly float[] StageWeights = { 0.16f, 0.14f, 0.12f, 0.14f, 0.14f, 0.14f, 0.16f };
+
+        private readonly float[] _stageProgress = new float[7];
+        private int _activeStage = -1;
+        private float _activeElapsed;
+        private bool _activeMeasurable;
+        private float _shown;
+        private AsyncOperation _sceneOp;
+        private string _statusOverride;
+        private bool _halted;
+
+        // Waiting on the player is not loading, so hold the fill still instead of creeping.
+        private void FreezeStageCreep() => _activeMeasurable = true;
+
+        private void BeginStage(BootStage stage, bool measurable = false)
+        {
+            _activeStage = (int)stage;
+            _activeElapsed = 0f;
+            _activeMeasurable = measurable;
+        }
+
+        private void ReportStage(BootStage stage, float fraction)
+        {
+            int i = (int)stage;
+            // Never let a stage walk backwards; the bar only ever moves forward.
+            _stageProgress[i] = Mathf.Max(_stageProgress[i], Mathf.Clamp01(fraction));
+        }
+
+        private void CompleteStage(BootStage stage)
+        {
+            _stageProgress[(int)stage] = 1f;
+            if (_activeStage == (int)stage) _activeMeasurable = true; // stop creeping
+        }
+
+        private void Update()
+        {
+            // Boot gave up (no internet); leave the bar and whatever message is on screen alone.
+            if (_halted) return;
+
+            // The scene keeps streaming in behind everything else, so poll it every frame.
+            if (_sceneOp != null) ReportStage(BootStage.Lobby, _sceneOp.progress / 0.9f);
+
+            if (_activeStage >= 0 && !_activeMeasurable)
+            {
+                _activeElapsed += Time.unscaledDeltaTime;
+                // A network round trip has no honest percentage, so ease toward — but never reach —
+                // the end of this stage's band. Only the stage actually finishing fills it.
+                float creep = 0.85f * (1f - Mathf.Exp(-_activeElapsed / Mathf.Max(0.1f, stageCreepSeconds)));
+                ReportStage((BootStage)_activeStage, creep);
+            }
+
+            float target = 0f;
+            for (int i = 0; i < _stageProgress.Length; i++) target += StageWeights[i] * _stageProgress[i];
+
+            // Gap-proportional so big jumps catch up fast, with a floor so the fill never stalls.
+            float speed = Mathf.Max(barMinSpeed, (target - _shown) * 4f);
+            _shown = Mathf.MoveTowards(_shown, target, speed * Time.unscaledDeltaTime);
+
+            RefreshProgressUI();
+        }
+
+        private void RefreshProgressUI()
+        {
+            // Floor, so it never reads 100% while there is still work left.
+            int pct = Mathf.Clamp(Mathf.FloorToInt(_shown * 100f), 0, 100);
+            string label = _statusOverride
+                        ?? (_activeStage >= 0 ? StageLabels[_activeStage] : "Starting up");
+
+            if (progressBar != null) progressBar.value = _shown;
+
+            if (statusText != null)
+            {
+                if (progressText != null) progressText.text = pct + "%";
+                statusText.text = pct + "%  ·  " + label;
+            }
+            else if (progressText != null)
+            {
+                progressText.text = pct + "%  ·  " + label;
+            }
+        }
+
+        // Lets the fill actually travel to its target instead of the scene cutting away mid-slide.
+        private async Task WaitForBarToReach(float value, float timeout = 2f)
+        {
+            while (_shown < value - 0.001f && timeout > 0f)
+            {
+                timeout -= Time.unscaledDeltaTime;
+                await Task.Yield();
+            }
         }
 
         private async Task InitializeFirebaseAndLogin()
@@ -228,6 +373,8 @@ namespace TR.Infrastructure
                 Debug.LogWarning("[LoadingScreen] No FirebaseConfig assigned; skipping cloud login.");
                 return;
             }
+
+            BeginStage(BootStage.Services);
 
             // Must exist before FirebaseService.Initialize(), because a restored session fires
             // OnSignInComplete from inside that call and the guard has to catch it.
@@ -302,19 +449,96 @@ namespace TR.Infrastructure
             }
 
             await Task.Yield();
+            CompleteStage(BootStage.Services);
 
+            BeginStage(BootStage.Account);
             if (FirebaseService.IsSignedIn)
             {
-                if (progressText != null) progressText.text = "Loading cloud profile...";
+                CompleteStage(BootStage.Account);
+
+                BeginStage(BootStage.Profile);
                 if (CloudProfileService.Instance != null && FirebaseService.UserId != null)
                     CloudProfileService.Instance.LoadProfile(FirebaseService.UserId);
 
                 await WaitForCloudProfileLoad();
+                CompleteStage(BootStage.Profile);
             }
             else
             {
+                // Sitting on the sign-in prompt is a wait on the player, not on us — say so rather
+                // than letting the bar creep as if something were still loading.
+                _statusOverride = "Waiting for sign-in";
+                FreezeStageCreep();
                 await ShowCloudLoginAndWait();
+                _statusOverride = null;
+                CompleteStage(BootStage.Account);
+                CompleteStage(BootStage.Profile);
             }
+        }
+
+        // Pulls every SFX and music clip into memory here rather than letting the first play in the
+        // Lobby hitch. Clip-by-clip, so this stage reports a genuine percentage.
+        private async Task PreloadAudio()
+        {
+            BeginStage(BootStage.Audio, measurable: true);
+
+            var clips = new System.Collections.Generic.List<AudioClip>();
+
+            var lib = Resources.Load<TR.Audio.SFXLibrary>("SFX/SFXLibrary");
+            if (lib != null && lib.entries != null)
+            {
+                foreach (var e in lib.entries)
+                {
+                    if (e == null || e.clips == null) continue;
+                    foreach (var c in e.clips)
+                        if (c != null && !clips.Contains(c)) clips.Add(c);
+                }
+            }
+
+            // Only an existing manager: constructing one here would start boot music playing.
+            var bgm = FindFirstObjectByType<TR.Audio.BGMManager>(FindObjectsInactive.Include);
+            if (bgm != null)
+            {
+                if (bgm.defaultClip != null && !clips.Contains(bgm.defaultClip)) clips.Add(bgm.defaultClip);
+                if (bgm.tracks != null)
+                {
+                    foreach (var t in bgm.tracks)
+                        if (t != null && t.clip != null && !clips.Contains(t.clip)) clips.Add(t.clip);
+                }
+            }
+
+            if (clips.Count == 0)
+            {
+                Debug.LogWarning("[LoadingScreen] No audio clips found to preload.");
+                CompleteStage(BootStage.Audio);
+                return;
+            }
+
+            for (int i = 0; i < clips.Count; i++)
+            {
+                if (clips[i].loadState == AudioDataLoadState.Unloaded) clips[i].LoadAudioData();
+                ReportStage(BootStage.Audio, (i + 1) / (float)clips.Count * 0.5f);
+                await Task.Yield();
+            }
+
+            // LoadAudioData is asynchronous for compressed clips, so the second half of this
+            // stage is them actually landing in memory.
+            float timeout = 5f;
+            while (timeout > 0f)
+            {
+                int ready = 0;
+                for (int i = 0; i < clips.Count; i++)
+                    if (clips[i].loadState != AudioDataLoadState.Loading) ready++;
+
+                ReportStage(BootStage.Audio, 0.5f + ready / (float)clips.Count * 0.5f);
+                if (ready >= clips.Count) break;
+
+                timeout -= Time.unscaledDeltaTime;
+                await Task.Yield();
+            }
+
+            CompleteStage(BootStage.Audio);
+            Debug.Log($"[LoadingScreen] Preloaded {clips.Count} audio clip(s).");
         }
 
         private async Task WaitForCloudProfileLoad()

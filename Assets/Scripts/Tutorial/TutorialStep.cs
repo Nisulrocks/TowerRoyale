@@ -23,6 +23,14 @@ namespace TR.Tutorial
         WaitForMatchVictory
     }
 
+    public enum SpotlightMode
+    {
+        // On for steps that ask the player to click something, off for everything else.
+        Auto,
+        Always,
+        Never
+    }
+
     public enum DialogueAnchor
     {
         Left,
@@ -75,6 +83,9 @@ public float waitSeconds = 0f;
         [Tooltip("If true, input outside the target is ignored (MVP: not enforced).")]
         public bool blockOutside = false;
 
+        [Tooltip("Darkens everything except the target, the darkness sweeping inward until only the target is lit. Auto turns it on for click steps only. A spotlight always blocks input outside the target, since dimming something the player can still press is confusing.")]
+        public SpotlightMode spotlight = SpotlightMode.Auto;
+
         [Header("Skip if target missing")]
         [Tooltip("If true and the target cannot be found, the step will auto-advance after No Target Skip Delay. Useful for optional upgrade/reward steps.")]
         public bool skipIfNoTarget = false;
@@ -86,6 +97,14 @@ public float waitSeconds = 0f;
         public bool showGhostDrag = false;
         [Tooltip("Optional sprite for the ghost. Leave empty to use the dragged card's own icon.")]
         public Sprite ghostDragSprite;
+
+        [Tooltip("After the guided drag, ask for one more with no ghost and no arrow, so the gesture is learned rather than copied. Only used when Show Ghost Drag is on.")]
+        public bool requireUnassistedRepeat = false;
+        [TextArea]
+        [Tooltip("Dialogue for the unassisted repeat.")]
+        public string repeatDialogueText = "Now you try — place one yourself.";
+        [Tooltip("Optional guide sprite for the repeat prompt. Falls back to the step's guide sprite.")]
+        public Sprite repeatGuideSprite;
 
         [Header("Match Outcome (waitMode = WaitForMatchVictory)")]
         [TextArea]

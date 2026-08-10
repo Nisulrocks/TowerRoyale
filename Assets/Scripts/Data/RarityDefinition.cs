@@ -49,6 +49,11 @@ namespace TR.Data
         public int MaxLevel => maxLevel;
         public bool ConfettiOnReveal => confettiOnReveal;
 
+        [Header("Pack Reveal")]
+        [Tooltip("0 = no celebration, 1 = grand reveal (rays, shockwave, slow-mo), 2 = mythic reveal (everything, dialled up).")]
+        [Range(0, 2)] [SerializeField] private int revealTier = 0;
+        public int RevealTier => revealTier;
+
         
         public int GetPointsRequiredForLevel(int targetLevel)
         {

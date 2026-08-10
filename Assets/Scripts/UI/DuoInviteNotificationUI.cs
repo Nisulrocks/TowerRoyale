@@ -14,6 +14,11 @@ namespace TR.UI
         [SerializeField] private Button acceptButton;
         [SerializeField] private Button declineButton;
 
+        [Tooltip("Optional. Lets the accept button read 'Invite Back' for a missed invite.")]
+        [SerializeField] private TMP_Text acceptLabel;
+        [SerializeField] private string acceptText = "Accept";
+        [SerializeField] private string inviteBackText = "Invite Back";
+
         [Tooltip("Seconds before the invite expires on its own.")]
         [SerializeField] private float lifetimeSeconds = 30f;
 
@@ -41,10 +46,62 @@ namespace TR.UI
             if (messageText != null)
                 messageText.text = $"{invite.fromName} invited you to a Duo match!";
 
+            if (timerText != null) timerText.gameObject.SetActive(true);
+            if (acceptLabel != null) acceptLabel.text = acceptText;
+
+            // ShowNotice hides accept, so restore it for the interactive modes.
+            if (acceptButton != null) acceptButton.gameObject.SetActive(true);
             SetButtons(true);
 
             if (_countdown != null) StopCoroutine(_countdown);
             _countdown = StartCoroutine(CountdownRoutine());
+        }
+
+        // An invite that expired while the player was away. The room no longer exists, so accepting
+        // sends a fresh invite back rather than trying to join something dead. No countdown either,
+        // since there is nothing left to expire.
+        public void ShowMissed(FriendsService.DuoInviteInfo invite, System.Action<FriendsService.DuoInviteInfo> onInviteBack)
+        {
+            _invite = invite;
+            _onAccept = onInviteBack;
+            if (invite == null) return;
+
+            gameObject.SetActive(true);
+            transform.SetAsLastSibling();
+
+            if (messageText != null)
+                messageText.text = $"{invite.fromName} invited you to a Duo match while you were away.";
+
+            if (timerText != null) timerText.gameObject.SetActive(false);
+            if (acceptLabel != null) acceptLabel.text = inviteBackText;
+
+            // ShowNotice hides accept, so restore it for the interactive modes.
+            if (acceptButton != null) acceptButton.gameObject.SetActive(true);
+            SetButtons(true);
+
+            if (_countdown != null) { StopCoroutine(_countdown); _countdown = null; }
+        }
+
+        // Information only, with nothing to accept — used when an invite back cannot go anywhere
+        // (the friend went offline, or moved to another arena).
+        public void ShowNotice(string message)
+        {
+            _invite = null;
+            _onAccept = null;
+
+            gameObject.SetActive(true);
+            transform.SetAsLastSibling();
+
+            if (messageText != null) messageText.text = message;
+            if (timerText != null) timerText.gameObject.SetActive(false);
+            if (acceptButton != null) acceptButton.gameObject.SetActive(false);
+            if (declineButton != null)
+            {
+                declineButton.gameObject.SetActive(true);
+                declineButton.interactable = true;
+            }
+
+            if (_countdown != null) { StopCoroutine(_countdown); _countdown = null; }
         }
 
         private IEnumerator CountdownRoutine()
