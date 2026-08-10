@@ -41,6 +41,7 @@ namespace TR.Systems
         private void OnDestroy()
         {
             OnProfileLoaded -= HandleProfileLoaded;
+            if (Instance == this) Instance = null;
         }
 
         private void HandleProfileLoaded(string json)
@@ -64,6 +65,8 @@ namespace TR.Systems
 
         public void LoadProfile(string uid)
         {
+            PlayerProfile.BeginCloudSync();
+
             if (!_dbReady)
             {
                 OnProfileLoadFailed?.Invoke("Firestore not initialized.");
@@ -75,15 +78,27 @@ namespace TR.Systems
         private IEnumerator LoadProfileCoroutine(string uid)
         {
             var docRef = _db.Collection(CollectionName).Document(uid);
-            var loadTask = docRef.GetSnapshotAsync();
+
+            bool fromServer = true;
+            var loadTask = docRef.GetSnapshotAsync(Source.Server);
             yield return new WaitUntil(() => loadTask.IsCompleted);
 
             if (loadTask.IsFaulted)
             {
+                fromServer = false;
                 string error = loadTask.Exception?.Message ?? "Unknown error";
-                Debug.LogError($"[CloudProfileService] Load failed: {error}");
-                OnProfileLoadFailed?.Invoke(error);
-                yield break;
+                Debug.LogWarning($"[CloudProfileService] Server read failed ({error}); retrying from cache.");
+
+                loadTask = docRef.GetSnapshotAsync(Source.Default);
+                yield return new WaitUntil(() => loadTask.IsCompleted);
+
+                if (loadTask.IsFaulted)
+                {
+                    string err2 = loadTask.Exception?.Message ?? "Unknown error";
+                    Debug.LogError($"[CloudProfileService] Load failed: {err2}");
+                    OnProfileLoadFailed?.Invoke(err2);
+                    yield break;
+                }
             }
 
             var snapshot = loadTask.Result;
@@ -115,11 +130,21 @@ namespace TR.Systems
 
             if (!hasProfile)
             {
-                Debug.Log($"[CloudProfileService] Document for {uid} has no profile yet. Fresh start.");
+                if (!fromServer || snapshot.Metadata.IsFromCache)
+                {
+                    Debug.LogError($"[CloudProfileService] Document for {uid} has no profile, but this snapshot is " +
+                                   $"not authoritative (fromServer={fromServer}, fromCache={snapshot.Metadata.IsFromCache}). " +
+                                   "Refusing to treat it as a new account.");
+                    OnProfileLoadFailed?.Invoke("Could not confirm the account's cloud profile.");
+                    yield break;
+                }
+
+                Debug.Log($"[CloudProfileService] Server confirms {uid} has no profile yet. New account.");
                 OnProfileLoaded?.Invoke(null);
                 yield break;
             }
 
+            Debug.Log($"[CloudProfileService] Loaded profile for {uid} ({profileJson.Length} bytes).");
             OnProfileLoaded?.Invoke(profileJson);
         }
 
@@ -157,11 +182,12 @@ namespace TR.Systems
             if (setTask.IsFaulted)
             {
                 string error = setTask.Exception?.Message ?? "Unknown error";
-                Debug.LogError($"[CloudProfileService] Save failed: {error}");
+                Debug.LogError($"[CloudProfileService] Save failed for {uid}: {error}");
                 OnProfileSaveFailed?.Invoke(error);
                 yield break;
             }
 
+            Debug.Log($"[CloudProfileService] Profile uploaded for {uid} ({json.Length} bytes, trophies={trophies}).");
             OnProfileSaved?.Invoke();
         }
     }

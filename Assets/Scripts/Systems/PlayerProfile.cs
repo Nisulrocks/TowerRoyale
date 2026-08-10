@@ -127,12 +127,47 @@ namespace TR.Systems
 
         private static bool _pendingTamperBan;
 
+        private static bool _cloudSyncReady;
+
         public static bool IsCloudLinked => FirebaseService.IsSignedIn;
 
-        public static void AdoptLocalProfileAsCloud()
+        public static void BeginCloudSync()
+        {
+            _cloudSyncReady = false;
+        }
+
+        public static bool IsEmptyProfile(PlayerProfileDTO d)
+        {
+            if (d == null) return true;
+            if (!string.IsNullOrEmpty(d.playerName)) return false;
+            if (d.trophies > 0 || d.softCurrency > 0) return false;
+            if (d.castleLevel > 1 || d.castleXP > 0) return false;
+            if (d.lifetimeMatches > 0) return false;
+            if (d.matchLog != null && d.matchLog.Count > 0) return false;
+            if (d.cards != null)
+            {
+                for (int i = 0; i < d.cards.Count; i++)
+                    if (d.cards[i] != null && d.cards[i].ownedCount > 0) return false;
+            }
+            return true;
+        }
+
+        public static void AdoptLocalProfileAsCloud(bool serverConfirmedNew = false)
         {
             _data = LoadOrCreate();
-            Debug.Log($"[PlayerProfile] No cloud profile found; keeping local data (trophies={_data.trophies}) and uploading it.");
+
+            if (!serverConfirmedNew && IsEmptyProfile(_data))
+            {
+                Debug.LogWarning("[PlayerProfile] Cloud profile unconfirmed AND the local profile is empty. " +
+                                 "Not uploading — refusing to overwrite the account with an empty profile.");
+                _cloudSyncReady = false;
+                OnCloudProfileLoaded?.Invoke();
+                return;
+            }
+
+            Debug.Log($"[PlayerProfile] No cloud profile for this account; uploading local data " +
+                      $"(trophies={_data.trophies}, serverConfirmedNew={serverConfirmedNew}).");
+            _cloudSyncReady = true;
             Save();
             OnCloudProfileLoaded?.Invoke();
         }
@@ -141,7 +176,7 @@ namespace TR.Systems
         {
             if (string.IsNullOrEmpty(json))
             {
-                AdoptLocalProfileAsCloud();
+                AdoptLocalProfileAsCloud(serverConfirmedNew: true);
                 return;
             }
 
@@ -168,6 +203,7 @@ namespace TR.Systems
 
             MigrateDecks(loaded);
             _data = loaded;
+            _cloudSyncReady = true; 
             Save();
 
             if (_pendingTamperBan)
@@ -233,14 +269,25 @@ namespace TR.Systems
                 string json = JsonUtility.ToJson(Data, true);
                 SaveSystem.Save(json);
 
-                if (IsCloudLinked && CloudProfileService.Instance != null)
+                if (!IsCloudLinked) return;
+
+                if (!_cloudSyncReady)
                 {
-                    CloudProfileService.Instance.SaveProfile(
-                        FirebaseService.UserId,
-                        json,
-                        Data.playerName ?? "",
-                        Data.trophies);
+                    Debug.LogWarning("[PlayerProfile] Local save only — cloud profile not loaded yet for this account.");
+                    return;
                 }
+
+                if (CloudProfileService.Instance == null)
+                {
+                    Debug.LogWarning("[PlayerProfile] Local save only — CloudProfileService is missing.");
+                    return;
+                }
+
+                CloudProfileService.Instance.SaveProfile(
+                    FirebaseService.UserId,
+                    json,
+                    Data.playerName ?? "",
+                    Data.trophies);
             }
             catch (Exception ex)
             {
@@ -295,6 +342,7 @@ namespace TR.Systems
         
         public static void WipeAllData()
         {
+            _cloudSyncReady = false;
             _data = new PlayerProfileDTO();
             Save();
             OnSoftCurrencyChanged?.Invoke(_data.softCurrency);
