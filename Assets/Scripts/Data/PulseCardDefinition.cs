@@ -13,7 +13,6 @@ namespace TR.Data
         [SerializeField] private float pulseRadiusBase = 3.5f; [SerializeField] private float pulseRadiusPerLevel = 0f;
 
         [SerializeField] private float pulseDamageBase = 20f; [SerializeField] private float pulseDamagePerLevel = 0f;
-        [Tooltip("If true, on-hit effects (burn/poison/slow/stun) are applied on pulse hits as well")] 
         [SerializeField] private bool pulseAppliesOnHitEffects = true;
 
         [Header("Pulse VFX/SFX")] 
@@ -23,11 +22,9 @@ namespace TR.Data
         [SerializeField] private string sfxPulseKey = "pulse_fire";
 
         [SerializeField] private float rippleDuration = 0.25f;
-        [Tooltip("Fallback ripple line thickness (world units)")]
         [SerializeField] private float rippleLineWidth = 0.05f;
 
         [SerializeField] private Color rippleColor = new Color(0.7f, 0.9f, 1f, 0.6f);
-        [Tooltip("Fallback ripple circle smoothness (segments)")]
         [SerializeField] private int rippleSegments = 64;
 
         public float GetPulseInterval(int level)

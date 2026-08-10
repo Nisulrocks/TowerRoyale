@@ -10,7 +10,6 @@ namespace TR.UI
         [SerializeField] private LobbyArenaUnlockNotifier arenaNotifier;
         [SerializeField] private LobbyCastleLevelUpNotifier levelUpNotifier;
 
-        [Tooltip("If true, arena unlocks are shown before castle level-ups.")]
         [SerializeField] private bool arenaFirst = true;
 
         private bool _processing;

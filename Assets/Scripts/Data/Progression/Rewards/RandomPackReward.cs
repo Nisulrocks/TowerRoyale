@@ -8,7 +8,6 @@ namespace TR.Data.Progression
     [CreateAssetMenu(fileName = "RandomPackReward", menuName = "TR/Rewards/Random Pack Reward")] 
     public class RandomPackReward : RewardDefinition
     {
-        [Tooltip("Candidate packs to choose from (one will be selected at random when claimed)")]
         [SerializeField] private List<PackDefinition> candidatePacks = new();
         [Min(1)] public int count = 1;
         [SerializeField] private Sprite icon;

@@ -7,9 +7,6 @@ using TR.UI;
 
 namespace TR.Systems
 {
-    // Enforces one active session per account. Each sign-in claims the account by writing a fresh
-    // session id to the user's profile document; every client watches that field and shuts itself
-    // down when it no longer matches, so the newest login always wins.
     public class SessionGuardService : MonoBehaviour
     {
         public static SessionGuardService Instance { get; private set; }
@@ -19,8 +16,6 @@ namespace TR.Systems
         private const string FieldSessionAt = "activeSessionAt";
         private const string FieldSessionDevice = "activeSessionDevice";
 
-        // Blocks cloud writes once we lose the account, so a kicked client can never overwrite the
-        // progress of the device that took over.
         public static bool IsKicked { get; private set; }
 
         public static event Action OnSessionTakenOver;
@@ -33,11 +28,8 @@ namespace TR.Systems
         private string _uid;
         private ListenerRegistration _listener;
 
-        // Set from the Firestore listener callback and consumed in Update, so the popup is always
-        // built on the main thread regardless of which thread the SDK calls back on.
         private volatile bool _takeoverPending;
         private bool _popupShown;
-        // Written from the SetAsync continuation (background thread), read in the listener callback.
         private volatile bool _claimed;
 
         public static void Initialize(GameObject popup, string bootScene)
@@ -85,11 +77,8 @@ namespace TR.Systems
             IsKicked = false;
         }
 
-        // Claims the account for this device, then starts watching for someone else claiming it.
         public void ClaimSession(string uid)
         {
-            // OnSignInComplete can fire more than once (restored session, then OAuth). Re-claiming
-            // would swap _sessionId out from under an in-flight write and self-kick.
             if (_uid == uid && _sessionId != null)
             {
                 Debug.Log("[SessionGuard] Session already claimed for this account; ignoring repeat claim.");
@@ -122,8 +111,6 @@ namespace TR.Systems
                     Debug.LogWarning($"[SessionGuard] Could not claim session: {task.Exception?.Message}");
                     return;
                 }
-                // Only start comparing once our own id is on the server, otherwise the first
-                // snapshot would still hold a previous id and we would kick ourselves.
                 _claimed = true;
             });
 
@@ -141,18 +128,12 @@ namespace TR.Systems
                     if (snapshot == null || !snapshot.Exists) return;
                     if (!_claimed || IsKicked) return;
 
-                    // Ignore anything that is not confirmed server state. A cached snapshot can
-                    // still hold the previous device's id, and a snapshot with our own unconfirmed
-                    // write in it tells us nothing about who owns the account.
                     var meta = snapshot.Metadata;
                     if (meta != null && (meta.IsFromCache || meta.HasPendingWrites)) return;
 
                     if (!snapshot.TryGetValue<string>(FieldSessionId, out string remoteSession)) return;
                     if (string.IsNullOrEmpty(remoteSession)) return;
 
-                    // Our claim was server-acknowledged, so the document held our id at that point.
-                    // A server snapshot showing a different id therefore means somebody wrote after
-                    // us — a real takeover. No timestamps, so device clock skew cannot misfire it.
                     if (remoteSession != _sessionId)
                     {
                         _takeoverPending = true;
@@ -195,8 +176,6 @@ namespace TR.Systems
             ShowPopup();
         }
 
-        // Drop out of matchmaking / the current room so the other device is not left facing a
-        // client that is about to be shut down.
         private void LeaveAnyActiveMatch()
         {
             try
@@ -241,10 +220,7 @@ namespace TR.Systems
             if (popup != null)
             {
                 popup.SetMessage(message);
-                // Retry doubles as "reboot": Boot re-runs sign-in, which reclaims the account.
                 popup.RetrySceneName = bootSceneName;
-                // timeScale survives scene loads, so it must be restored before rebooting or the
-                // fresh Boot scene comes up frozen.
                 popup.OnRetry += HandleRebootRequested;
                 popup.OnQuit += RestoreTimeScale;
             }
@@ -265,9 +241,6 @@ namespace TR.Systems
             Time.timeScale = _savedTimeScale <= 0f ? 1f : _savedTimeScale;
         }
 
-        // Rebooting means "give this device the account back". This service survives the scene
-        // reload, so its kicked state has to be cleared by hand or the reboot would come back with
-        // no claim and no listener at all — unkickable, and unable to kick anyone else.
         private void HandleRebootRequested()
         {
             RestoreTimeScale();
@@ -281,8 +254,6 @@ namespace TR.Systems
             _sessionId = null;
             IsKicked = false;
 
-            // Re-claim right away: FirebaseService keeps its signed-in state across the reload and
-            // will not fire OnSignInComplete again, so nothing else would trigger this.
             if (!string.IsNullOrEmpty(uid))
             {
                 Debug.Log("[SessionGuard] Reboot requested; reclaiming the account for this device.");

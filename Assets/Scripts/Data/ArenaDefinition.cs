@@ -10,14 +10,12 @@ namespace TR.Data
         [SerializeField] private string displayName = "Arena";
         [SerializeField] private Sprite arenaImage;
 
-        [Tooltip("Full-screen artwork shown on the loading screen when entering this arena. Leave empty to use the plain fade instead.")]
         [SerializeField] private Sprite loadingScreenImage;
 
         [Header("Progression")]
         [SerializeField] private int trophyRequirement = 0; 
 
         [Header("Economy")]
-        [Tooltip("Amount of battle currency players start with in this arena.")]
         [Min(0)] [SerializeField] private int startingMoney = 500;
 
         [Header("Waves")]
@@ -25,9 +23,7 @@ namespace TR.Data
         [SerializeField] private float waveInterval = 60f; 
 
         [Header("Enemy Mix Weights (0..1)")]
-        [Tooltip("Wave progress (0..1) at which Medium enemies start to be considered.")]
         [Range(0f, 1f)] [SerializeField] private float mediumStartPercent = 0.25f;
-        [Tooltip("Wave progress (0..1) at which Hard enemies start to be considered.")]
         [Range(0f, 1f)] [SerializeField] private float hardStartPercent = 0.6f;
 
         [Header("Enemies by Tier")] 
@@ -53,14 +49,10 @@ namespace TR.Data
         [SerializeField] private bool spawnBossOnSpecificWave = false;
 
         [Min(1)] [SerializeField] private int bossSpecificWave = 1;
-        [Tooltip("If 'Spawn on Specific wave no.' is disabled, spawn a boss every X waves (e.g., 5 means waves 5,10,15...).")]
         [Min(1)] [SerializeField] private int bossEveryXWaves = 5;
         [Header("Boss Per-Spawn Scaling (Periodic Mode)")]
-        [Tooltip("Health multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
         [Min(0f)] [SerializeField] private float bossHealthMultPerSpawn = 1.0f;
-        [Tooltip("Damage multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
         [Min(0f)] [SerializeField] private float bossDamageMultPerSpawn = 1.0f;
-        [Tooltip("Move speed multiplier applied per boss spawn in periodic mode. Final = base * (mult^spawnIndex-1)")]
         [Min(0f)] [SerializeField] private float bossSpeedMultPerSpawn = 1.0f;
 
         [Header("Kill Rewards (Money Range)")]
@@ -110,7 +102,6 @@ namespace TR.Data
         }
 
         [Header("Effect Limits (per battle)")]
-        [Tooltip("Optional caps per effect type (e.g., Slow=2 means at most 2 towers that apply Slow). Leave empty for no caps.")]
         [SerializeField] private EffectLimit[] effectLimits;
 
         [System.Serializable]
@@ -121,7 +112,6 @@ namespace TR.Data
         }
 
         [Header("Card Limits (per battle)")]
-        [Tooltip("Optional caps per specific card (e.g., Only 1 Freeze Tower). Leave empty for no caps.")]
         [SerializeField] private CardLimit[] cardLimits;
 
         [System.Serializable]
@@ -132,7 +122,6 @@ namespace TR.Data
         }
 
         [Header("Rarity Limits (per battle)")]
-        [Tooltip("Optional caps per rarity (e.g., Legendary=1 means at most one Legendary tower placed). Leave empty for no caps.")]
         [SerializeField] private RarityLimit[] rarityLimits;
 
         public string ArenaId => arenaId;

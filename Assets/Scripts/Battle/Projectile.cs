@@ -7,7 +7,6 @@ namespace TR.Battle
     public class Projectile : MonoBehaviour
     {
         [Header("Click/Physics Settings")]
-        [Tooltip("Layer to assign at runtime so this projectile never blocks clicks (2 = Ignore Raycast)")]
         [SerializeField] private int nonBlockingLayer = 2;
         [SerializeField] private float speed = 10f;
         [SerializeField] private float damage = 1f;

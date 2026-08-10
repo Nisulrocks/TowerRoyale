@@ -5,21 +5,11 @@ using TR.Battle;
 
 namespace TR.UI
 {
-    // Renders a live, looping "tower is attacking" animation into a RenderTexture so card UI can
-    // swap a static icon for the real tower prefab on hover.
-    //
-    // Two deliberate constraints:
-    //  * The preview instance never runs combat. Every TR.Battle behaviour on it is disabled and
-    //    the firing visuals are driven here instead. Letting TowerBase.Update run would deal
-    //    damage, play SFX, hit the network and register in the static tower/enemy sets.
-    //  * The stage sits far from the origin instead of on a dedicated layer, so no TagManager
-    //    edits are needed and no other camera can see it.
     public class TowerPreviewStage : MonoBehaviour
     {
         private static readonly Vector3 StageOrigin = new Vector3(0f, -10000f, 0f);
         private const int TextureSize = 256;
 
-        // Real fire rates can be far too fast or slow to read in a small hover thumbnail.
         private const float MinInterval = 0.45f;
         private const float MaxInterval = 1.4f;
 
@@ -66,10 +56,9 @@ namespace TR.UI
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = new Color(0f, 0f, 0f, 0f);
             _camera.targetTexture = _texture;
-            _camera.enabled = false; // only render while something is being previewed
+            _camera.enabled = false; 
         }
 
-        // Starts (or reuses) a preview and hands back the texture to display.
         public static RenderTexture Acquire(CardDefinition card, int level)
         {
             if (card == null || card.TowerPrefab == null) return null;
@@ -102,7 +91,6 @@ namespace TR.UI
             _currentDef = null;
             _currentLevel = -1;
 
-            // Projectiles and VFX are parented to the stage, so drop any left mid-flight.
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var child = transform.GetChild(i);
@@ -118,10 +106,8 @@ namespace TR.UI
 
             _current = Instantiate(card.TowerPrefab, transform);
             _current.transform.localPosition = Vector3.zero;
-            // Keep the prefab's authored rotation — previews always show the tower at rest.
             _current.name = "Preview_" + card.CardId;
 
-            // Read the prefab's VFX wiring before the components are switched off.
             var towerBase = _current.GetComponent<TowerBase>();
             _muzzleVfxKey = towerBase != null ? towerBase.MuzzleFlashVfxKey : null;
             _muzzleAnchor = towerBase != null ? towerBase.MuzzleFlashAnchor : null;
@@ -134,9 +120,6 @@ namespace TR.UI
             _loop = StartCoroutine(AttackLoop(card, Mathf.Max(1, level)));
         }
 
-        // Disables simulation only. TR.VFX components (pooled particles, quality binders) must keep
-        // running or the prefab's own effects never play — disabling everything under "TR." was
-        // what previously killed the muzzle/trail VFX.
         private static void DisableGameplayBehaviours(GameObject root)
         {
             foreach (var mb in root.GetComponentsInChildren<MonoBehaviour>(true))
@@ -148,7 +131,6 @@ namespace TR.UI
                     mb.enabled = false;
             }
 
-            // Silence the preview without touching the VFX side.
             foreach (var src in root.GetComponentsInChildren<AudioSource>(true))
             {
                 src.playOnAwake = false;
@@ -175,8 +157,6 @@ namespace TR.UI
             }
             if (!any) return;
 
-            // Frame the tower dead centre. The firing arc is drawn symmetrically around it, so no
-            // off-centre bias is needed to leave the projectile room.
             float extent = Mathf.Max(b.extents.x, b.extents.y);
             _camera.orthographicSize = Mathf.Clamp(extent * 2.4f, 0.6f, 6f);
             _camera.transform.position = new Vector3(b.center.x, b.center.y, StageOrigin.z - 10f);
@@ -186,8 +166,6 @@ namespace TR.UI
         {
             Vector3 pivot = _current.transform.position;
 
-            // The tower is never turned to face anything, so it shoots along whatever direction it
-            // already faces. TowerBase treats local -up as the firing axis, so use the same.
             Vector3 dir = -_current.transform.up;
             if (dir.sqrMagnitude < 1e-6f) dir = Vector3.down;
             dir.Normalize();
@@ -195,8 +173,6 @@ namespace TR.UI
             Vector3 target = pivot + dir * (_camera.orthographicSize * 0.75f);
             Vector3 muzzle = _muzzleAnchor != null ? _muzzleAnchor.position : pivot;
 
-            // Beam towers (Inferno) never "fire" — InfernoTower holds a continuous BeamController,
-            // and disabling it left nothing to see. Drive an equivalent beam instead.
             if (card is InfernoCardDefinition infernoDef)
             {
                 yield return BeamLoop(infernoDef, muzzle, target);
@@ -206,7 +182,6 @@ namespace TR.UI
             float fireRate = Mathf.Max(0.01f, card.GetStatsForLevel(level).fireRate);
             float interval = Mathf.Clamp(1f / fireRate, MinInterval, MaxInterval);
 
-            // Unscaled so previews still animate on paused/menu screens.
             var wait = new WaitForSecondsRealtime(interval);
             yield return new WaitForSecondsRealtime(0.15f);
 
@@ -237,7 +212,6 @@ namespace TR.UI
                            def.UseBeamJitter(), def.GetBeamJitterAmplitude());
             beam.SetEndpoints(muzzle, target);
 
-            // Ramp intensity up and hold, mirroring how the real beam charges on a target.
             float t = 0f;
             while (_current != null && beam != null)
             {
@@ -262,7 +236,6 @@ namespace TR.UI
 
         private void FireOnce(CardDefinition card, Vector3 muzzle, Vector3 target)
         {
-            // The prefab's own muzzle flash, which lives on TowerBase rather than the definition.
             if (!string.IsNullOrEmpty(_muzzleVfxKey))
                 TR.VFX.ParticleManager.SpawnOneShot(_muzzleVfxKey, muzzle);
 
@@ -288,7 +261,6 @@ namespace TR.UI
             var prefab = card.GetProjectilePrefab();
             if (prefab == null)
             {
-                // Nothing to fire: give a small recoil so the card still reads as "active".
                 StartCoroutine(Recoil());
                 return;
             }
@@ -322,7 +294,6 @@ namespace TR.UI
 
         private void SpawnImpact(CardDefinition card, Vector3 at)
         {
-            // TowerBase's key wins when set, matching how FireAt picks the impact effect.
             string key = !string.IsNullOrEmpty(_impactVfxOverride)
                 ? _impactVfxOverride
                 : card.GetProjectileImpactVfxKey();

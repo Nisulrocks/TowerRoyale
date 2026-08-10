@@ -14,24 +14,17 @@ namespace TR.Battle
     public class DuoChatUI : MonoBehaviour
     {
         [Header("Placement")]
-        [Tooltip("Optional parent Canvas for the generated chat UI. If null, a Canvas is created automatically.")]
         [SerializeField] private Canvas targetCanvas;
-        [Tooltip("Anchored size of the chat panel (width x height) in pixels.")]
         [SerializeField] private Vector2 panelSize = new Vector2(420f, 260f);
-        [Tooltip("Offset from the bottom-left corner of the screen, in pixels.")]
         [SerializeField] private Vector2 bottomLeftOffset = new Vector2(20f, 20f);
 
         [Header("Behaviour")]
-        [Tooltip("Max number of message lines kept in the log.")]
         [SerializeField] private int maxLines = 50;
-        [Tooltip("Whether the chat log starts visible.")]
         [SerializeField] private bool startVisible = false;
-        [Tooltip("The chat toggle button GameObject. Hidden automatically in single player.")]
         [SerializeField] private GameObject toggleButton;
 
         [Header("Notification Badge")]
         [SerializeField] private float badgeSize = 28f;
-        [Tooltip("Anchored position of the badge relative to the toggle button's top-right corner.")]
         [SerializeField] private Vector2 badgeOffset = new Vector2(-4f, -4f);
         [SerializeField] private Color badgeColor = new Color(1f, 0.2f, 0.2f, 1f);
         [SerializeField] private Color badgeTextColor = Color.white;

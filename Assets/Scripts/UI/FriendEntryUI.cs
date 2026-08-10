@@ -6,7 +6,6 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // One row in the friends list. Right-clicking opens the context menu (invite / remove).
     public class FriendEntryUI : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private TMP_Text nameText;
@@ -15,9 +14,7 @@ namespace TR.UI
         [SerializeField] private Image onlineDot;
         [SerializeField] private Button inviteButton;
 
-        [Tooltip("Optional. Shows which arena the friend is in.")]
         [SerializeField] private TMP_Text arenaText;
-        [Tooltip("Optional. Label inside the invite button, so it can read 'Invite' / 'Locked'.")]
         [SerializeField] private TMP_Text inviteLabel;
 
         [SerializeField] private Color onlineColor = new Color(0.3f, 0.9f, 0.4f, 1f);
@@ -50,7 +47,6 @@ namespace TR.UI
 
             if (onlineDot != null)
             {
-                // Amber for "online but not playable right now" so it reads differently from offline.
                 onlineDot.color = !data.isOnline ? offlineColor
                                 : data.CanInviteToDuo ? onlineColor
                                 : mismatchColor;
@@ -61,7 +57,6 @@ namespace TR.UI
 
             if (inviteButton != null)
             {
-                // Duo is arena-locked, and inviting someone offline would only time out.
                 inviteButton.interactable = data.CanInviteToDuo;
                 inviteButton.onClick.RemoveAllListeners();
                 inviteButton.onClick.AddListener(Invite);

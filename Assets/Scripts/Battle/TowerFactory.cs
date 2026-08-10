@@ -39,9 +39,6 @@ namespace TR.Battle
             if (sg == null) sg = go.AddComponent<SortingGroup>();
             sg.sortingOrder = 5;
 
-            // TowerPulse derives from TowerBase, so it must exist before we resolve TowerBase.
-            // Adding a plain TowerBase first and TowerPulse afterwards leaves TWO TowerBase
-            // components on the tower, and each one spawns its own idle VFX.
             if (def is TR.Data.PulseCardDefinition && go.GetComponent<TowerPulse>() == null)
             {
                 go.AddComponent<TowerPulse>();
@@ -93,9 +90,6 @@ namespace TR.Battle
             
             if (specialized)
             {
-                // A prefab can carry a plain TowerBase alongside a derived one (TowerPulse), and
-                // both run the combat Update. Disabling only the component we happened to resolve
-                // would leave the other one still firing.
                 foreach (var tb in go.GetComponents<TowerBase>())
                 {
                     if (tb != null) tb.SetCombatEnabled(false);

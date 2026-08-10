@@ -14,7 +14,6 @@ namespace TR.UI
         [Header("Prefab & Parent")]
 
         [SerializeField] private GameObject banPopupPrefab;
-        [Tooltip("Optional parent RectTransform (Canvas). If null, auto-find a Canvas in scene.")]
         [SerializeField] private RectTransform parent;
 
         [Header("Backdrop (Optional)")]
@@ -35,7 +34,6 @@ namespace TR.UI
         [SerializeField] private float initialDelay = 0.75f;
         [SerializeField] private float fadeInTime = 0.25f;
         [SerializeField] private float fadeOutTime = 0.25f;
-        [Tooltip("How long to keep the popup visible before auto-dismissing (even if the ban is still active). 0 = never auto-dismiss")]
         [SerializeField] private float visibleHoldTime = 2.5f;
         [SerializeField] private Vector2 slideOffset = new Vector2(0f, -40f);
 

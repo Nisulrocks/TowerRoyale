@@ -51,7 +51,6 @@ namespace TR.Systems
         public void Initialize()
         {
             if (_dbReady) return;
-            // Must go through FirestoreProvider so persistence is disabled before the first call.
             if (FirestoreProvider.TryGet(out _db))
             {
                 _dbReady = true;
@@ -95,9 +94,6 @@ namespace TR.Systems
                 yield break;
             }
 
-            // The document can exist without a profile in it — SessionGuardService creates it when
-            // it claims the account, which happens before a new player has ever saved. Treat a
-            // missing field the same as a missing document: fresh start, not an error.
             string profileJson = null;
             bool hasProfile = false;
             string readError = null;
@@ -134,7 +130,6 @@ namespace TR.Systems
                 OnProfileSaveFailed?.Invoke("Firestore not initialized.");
                 return;
             }
-            // Another device owns this account now; writing would clobber its progress.
             if (SessionGuardService.IsKicked)
             {
                 Debug.LogWarning("[CloudProfileService] Save blocked: session was taken over by another device.");
@@ -152,8 +147,6 @@ namespace TR.Systems
                 { FieldProfileJson, json },
                 { FieldLastSavedAt, DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
                 { FieldPlayerName, playerName ?? "" },
-                // Firestore has no case-insensitive query, so friend search matches on a
-                // lowercased copy of the name. Kept in sync on every save.
                 { FieldNameLower, (playerName ?? "").ToLowerInvariant() },
                 { FieldTrophies, trophies }
             };

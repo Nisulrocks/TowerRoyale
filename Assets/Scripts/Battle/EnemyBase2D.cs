@@ -34,13 +34,9 @@ namespace TR.Battle
         private string _speedFloatParam;
         
         [Header("Facing")]
-        [Tooltip("For side-view enemies when Rotate To Movement is disabled. True if the sprite art faces right.")]
         [SerializeField] private bool defaultFacingRight = true;
-        [Tooltip("If true, rotate the visual root to face the direction it is moving.")]
         [SerializeField] private bool rotateToMovement = true;
-        [Tooltip("Which direction the sprite art is drawn facing when rotation is identity.")]
         [SerializeField] private SpriteFacing defaultSpriteFacing = SpriteFacing.Down;
-        [Tooltip("How fast the sprite rotates toward the movement direction (deg/sec). 0 = instant.")]
         [SerializeField] private float rotateSpeedDegPerSec = 720f;
 
         private Transform _visualRoot;
@@ -76,7 +72,6 @@ namespace TR.Battle
         private bool _hovered;
 
         [Header("Boss UI (Screen Space)")]
-        [Tooltip("Either assign a BossHealthUI prefab (if BossHealthUI is on the root), or assign a GameObject prefab where BossHealthUI exists on a child.")]
         [SerializeField] private BossHealthUI bossHealthUIPrefab; 
         [SerializeField] private GameObject bossHealthUIPrefabGO; 
         private BossHealthUI _bossUIInstance;
@@ -88,26 +83,22 @@ namespace TR.Battle
         [SerializeField] private string deathVfxKey = "";
 
         [SerializeField] private Transform deathVfxAnchor;
-        [Tooltip("Anchor for status VFX (burn/poison); if null uses enemy position")] [SerializeField] private Transform statusVfxAnchor;
+         [SerializeField] private Transform statusVfxAnchor;
 [SerializeField] private string burnTickVfxKey = "";
-        [Tooltip("Seconds between burn tick VFX (rate limit)")] [SerializeField] private float burnTickVfxInterval = 0.3f;
+         [SerializeField] private float burnTickVfxInterval = 0.3f;
 [SerializeField] private string poisonTickVfxKey = "";
-        [Tooltip("Seconds between poison tick VFX (rate limit)")] [SerializeField] private float poisonTickVfxInterval = 0.3f;
+         [SerializeField] private float poisonTickVfxInterval = 0.3f;
 [SerializeField] private string slowTickVfxKey = "";
-        [Tooltip("Seconds between slow tick VFX (rate limit)")] [SerializeField] private float slowTickVfxInterval = 0.35f;
-        [Tooltip("Seconds between regen VFX (rate limit)")] [SerializeField] private float regenVfxInterval = 0.5f;
-        [Tooltip("One-shot particle key to play when this enemy is hit for damage (optional)")]
+         [SerializeField] private float slowTickVfxInterval = 0.35f;
+         [SerializeField] private float regenVfxInterval = 0.5f;
         [SerializeField] private string hitVfxKey = "";
 [SerializeField]
         private Transform hitVfxAnchor;
-        [Tooltip("Minimum seconds between repeated hit VFX spawns (prevents spam for beams/DoTs)")]
         [SerializeField] private float hitVfxInterval = 0.12f;
         private float _nextHitVfxTime = 0f;
-        [Tooltip("Minimum seconds between hit VFX when damage comes from status ticks (burn/poison/frostbite)")]
         [SerializeField] private float statusHitVfxInterval = 0.45f;
         private float _nextStatusHitVfxTime = 0f;
         [Header("SFX")]
-        [Tooltip("SFX key to play on death (SFXManager). Leave empty to disable.")]
         [SerializeField] private string deathSfxKey = "enemy_death";
 
         
@@ -231,8 +222,6 @@ namespace TR.Battle
         public const int AbilityPulseNuke = 0;
         public const int AbilityStunPulse = 1;
 
-        // Visual half of a pulse ability, split out so a remote client can replay it without
-        // re-running the gameplay effect (which stays on the simulation authority).
         public void PlayAbilityPulseFeedback(int kind)
         {
             if (definition == null) return;
@@ -311,8 +300,6 @@ namespace TR.Battle
                 float d = Vector2.Distance((Vector2)origin, (Vector2)tb.transform.position);
                 if (d <= radius)
                 {
-                    // TowerSnapBinding.OnDestroy relays this to the owning client, including the
-                    // fact that the destroy feedback was played.
                     tb.PlayDestroyFeedback();
                     Destroy(tb.gameObject);
                 }
@@ -686,7 +673,7 @@ namespace TR.Battle
         
         private float _stunTime;      
 [SerializeField] private string stunTickVfxKey = "";
-        [Tooltip("Seconds between stun tick VFX (rate limit)")] [SerializeField] private float stunTickVfxInterval = 0.35f;
+         [SerializeField] private float stunTickVfxInterval = 0.35f;
         private float _stunVfxTimer;
 
         private void Update()

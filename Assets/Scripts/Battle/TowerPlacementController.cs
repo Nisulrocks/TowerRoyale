@@ -444,8 +444,6 @@ namespace TR.Battle
             return _placementIdBase;
         }
 
-        // A fresh controller restarts the counter at 1, so after a rejoin it would hand out ids
-        // that are still live on the partner. Push it past every id we already own.
         private void ReserveLocalPlacementId(int placementId)
         {
             if (placementId < 0) return;
@@ -489,7 +487,6 @@ namespace TR.Battle
 
         public void RefreshSnapPointColors(Vector3 worldPos)
         {
-            // Highlighting disabled: base color is used for all areas.
         }
 
         private int GetAreaIndex(Vector3 pos)
@@ -509,8 +506,6 @@ namespace TR.Battle
             return GetAreaIndex(pos) >= 0;
         }
 
-        // A world point inside a placement area that currently has room for a tower. Used by the
-        // tutorial to demonstrate where a card should be dragged.
         public bool TryGetSuggestedPlacementPoint(out Vector3 worldPos, float radius = 0.4f)
         {
             worldPos = Vector3.zero;
@@ -527,7 +522,6 @@ namespace TR.Battle
                     return true;
                 }
 
-                // Centre is taken; probe a few offsets before giving up on this area.
                 Vector3 extents = col.bounds.extents;
                 for (int step = 1; step <= 3; step++)
                 {
@@ -620,7 +614,6 @@ namespace TR.Battle
             {
                 if (!TR.Systems.EffectLimitService.CanPlaceRarity(card, out var capRarity, out var curRarity, out var rarityName))
                 {
-                    // A cap of 0 is a ban, not a "you've used them all" situation.
                     TR.UI.BattleToast.Show(capRarity <= 0
                         ? $"{rarityName} towers can't be used in this arena"
                         : $"Limit reached: {rarityName} ({curRarity}/{capRarity})");
@@ -663,8 +656,6 @@ namespace TR.Battle
             towerBase?.SetOwner(ownerActor);
             towerBase?.SetPlacementId(placementId);
 
-            // Adopting one of our own towers (rejoin resync) must advance the local counter,
-            // otherwise the next placement reuses an id the partner still has bound.
             if (PhotonNetwork.LocalPlayer != null && ownerActor == PhotonNetwork.LocalPlayer.ActorNumber)
             {
                 ReserveLocalPlacementId(placementId);
@@ -797,7 +788,6 @@ namespace TR.Battle
                 _towersByPlacementId.Remove(placementId);
                 if (go != null)
                 {
-                    // Mirror the destruction effect the remote side already played.
                     if (playDestroyFeedback) go.GetComponent<TowerBase>()?.PlayDestroyFeedback();
 
                     var bind = go.GetComponent<TowerSnapBinding>();
@@ -859,9 +849,6 @@ namespace TR.Battle
             RemirrorTowersOwnedBy(requesterActor);
         }
 
-        // While a player is away the host takes over their towers (TakeOverTowerSimulation).
-        // Once they ask for a resync they are simulating those towers again, so drop back to
-        // mirroring them here — otherwise both clients simulate the same tower.
         private void RemirrorTowersOwnedBy(int actorNumber)
         {
             if (actorNumber < 1 || PhotonNetwork.LocalPlayer == null) return;
@@ -906,7 +893,6 @@ namespace TR.Battle
                 return;
             }
 
-            // Remove any existing entry for this placement ID if it does not match exactly.
             if (_towersByPlacementId.TryGetValue(placementId, out var syncedStaleGO) && syncedStaleGO != null)
             {
                 var syncedStaleBase = syncedStaleGO.GetComponent<TowerBase>();
@@ -914,14 +900,12 @@ namespace TR.Battle
                     syncedStaleBase.Definition != null && syncedStaleBase.Definition.CardId == cardId &&
                     Vector3.Distance(syncedStaleBase.transform.position, pos) <= 0.01f)
                 {
-                    // Already in sync; just refresh HP and bail.
                     ApplyTowerHp(syncedStaleGO, hp);
                     return;
                 }
                 RemoveTower(placementId, broadcast: false, refund: false);
             }
 
-            // The sync is authoritative: clear any other tower occupying this position.
             GameObject existingAtPos = FindTowerAt(pos, radius);
             if (existingAtPos != null)
             {
@@ -975,9 +959,6 @@ namespace TR.Battle
 
             if (!TR.Net.DuoRuntime.IsDuo || _coordinator == null || placementId < 0) return;
 
-            // The owner reports its own towers. The simulation authority also reports mirrors it
-            // destroyed, because enemy abilities (pulse nuke) only run on the authority and would
-            // otherwise leave the tower standing on the owner's client.
 
             if (isMirror && !TR.Net.DuoRuntime.IsSimulationAuthority) return;
 

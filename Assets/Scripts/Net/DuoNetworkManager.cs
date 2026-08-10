@@ -12,8 +12,8 @@ namespace TR.Net
         public static DuoNetworkManager Instance { get; private set; }
 
         
-        public const string KEY_ARENA = "C0";    // SQL-filterable arena id (hard match filter)
-        public const string KEY_TROPHIES = "C1"; // SQL-filterable trophies (kept for future ranking, NOT used to block)
+        public const string KEY_ARENA = "C0";    
+        public const string KEY_TROPHIES = "C1"; 
 
         
         public const string PROP_NICK = "nick";
@@ -37,9 +37,9 @@ namespace TR.Net
         public MatchState State { get; private set; } = MatchState.Idle;
 
         
-        public System.Action<string> OnStatusChanged;   // human-readable status text
+        public System.Action<string> OnStatusChanged;   
         public System.Action OnCancelled;
-        public System.Action<string> OnFailed;          // error message
+        public System.Action<string> OnFailed;          
 
         private string _arenaId;
         private string _arenaDisplayName;
@@ -79,20 +79,17 @@ namespace TR.Net
             if (peer != null)
             {
                 
-                peer.DisconnectTimeout = 15000;   // ms without ACK before disconnect (default 10000)
-                peer.SentCountAllowance = 10;     // resend attempts before considering the peer lost (default 7)
+                peer.DisconnectTimeout = 15000;   
+                peer.SentCountAllowance = 10;     
             }
         }
 
-        // ---- friend (private) matches ----
         private bool _friendRoomMode;
         private string _friendRoomName;
         private bool _friendRoomIsHost;
 
         public static string NewFriendRoomName() => $"duofriend_{System.Guid.NewGuid():N}";
 
-        // Same flow as StartMatchmaking, but targets one named invisible room instead of the
-        // random-matchmaking pool. The inviter hosts it; the invitee joins by name.
         public void StartFriendMatch(string roomName, bool asHost, string arenaId, int trophies, int castleLevel,
                                      string battleSceneName, string arenaDisplayName = null, string nickname = null)
         {
@@ -112,7 +109,6 @@ namespace TR.Net
                 var options = new RoomOptions
                 {
                     MaxPlayers = 2,
-                    // Invisible so random matchmaking can never drop a stranger into a friend room.
                     IsVisible = false,
                     CustomRoomProperties = roomProps,
                     CustomRoomPropertiesForLobby = new[] { KEY_ARENA, KEY_TROPHIES },
@@ -142,15 +138,9 @@ namespace TR.Net
 
         public void StartMatchmaking(string arenaId, int trophies, int castleLevel, string battleSceneName, string arenaDisplayName = null, string nickname = null)
         {
-            // Passing no room name clears friend-room state. This manager persists across matches,
-            // and previously _friendRoomMode stayed set after a friend match, so the next normal
-            // matchmaking attempt re-entered the old private room instead of the random pool —
-            // which is why two players could no longer find each other.
             BeginMatchmaking(null, false, arenaId, trophies, castleLevel, battleSceneName, arenaDisplayName, nickname);
         }
 
-        // Single entry point for both flows, so friend-room state is always set explicitly and can
-        // never leak from one match into the next.
         private void BeginMatchmaking(string friendRoomName, bool friendIsHost, string arenaId, int trophies,
                                       int castleLevel, string battleSceneName, string arenaDisplayName, string nickname)
         {
@@ -257,8 +247,6 @@ namespace TR.Net
 
         private void TryJoinRandom()
         {
-            // Friend matches reach the room by name. Branching here keeps every existing caller
-            // (OnJoinedLobby, OnLeftRoom, OnConnectedToMaster) working unchanged.
             if (_friendRoomMode)
             {
                 EnterFriendRoom();
@@ -515,7 +503,6 @@ namespace TR.Net
             if (_loadStarted) return;
             _loadStarted = true;
             _matchmakingActive = false;
-            // The room has served its purpose; nothing after this point should route back into it.
             _friendRoomMode = false;
             _friendRoomName = null;
             StopRejoinTimer();

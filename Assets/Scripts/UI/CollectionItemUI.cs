@@ -18,7 +18,6 @@ namespace TR.UI
         [Header("Upgrade Dot")]
         [SerializeField] private Image upgradeDot;
         [SerializeField] private TMP_Text upgradeDotText;
-        [Tooltip("Optional transform to parent the dot to. If null, the dot is parented to this object.")]
         [SerializeField] private RectTransform upgradeDotParent;
         [SerializeField] private Color upgradeDotColor = new Color(1f, 0.92f, 0.016f, 1f);
         [SerializeField] private Color upgradeDotTextColor = Color.black;
@@ -26,7 +25,6 @@ namespace TR.UI
         [SerializeField] private Vector2 upgradeDotOffset = new Vector2(-8f, -8f);
         [SerializeField] private Vector2 upgradeDotSize = new Vector2(20f, 20f);
         [Header("Arena Lock Overlay")]
-        [Tooltip("Root GameObject for the arena lock overlay (e.g., a panel with text/icon)")]
         [SerializeField] private GameObject arenaLockOverlayRoot;
 
         [SerializeField] private TMP_Text arenaLockOverlayText;

@@ -14,8 +14,6 @@ namespace TR.Systems
         private static Dictionary<string, int> _cardCaps;
         private static Dictionary<string, int> _cardCounts;
 
-        // Rarity caps are keyed by the rarity asset's name so a card only needs its Rarity
-        // reference to be checked — no per-card configuration required.
         private static Dictionary<string, int> _rarityCaps;
         private static Dictionary<string, int> _rarityCounts;
         private static Dictionary<string, string> _rarityDisplayNames;
@@ -79,14 +77,12 @@ namespace TR.Systems
             }
         }
 
-        // RarityId is the stable identifier; fall back to the asset name if it was left blank.
         private static string RarityKey(RarityDefinition rarity)
         {
             if (rarity == null) return null;
             return !string.IsNullOrEmpty(rarity.RarityId) ? rarity.RarityId : rarity.name;
         }
 
-        // Prefer a designer-facing display name if the rarity asset has one.
         private static string RarityLabel(RarityDefinition rarity)
         {
             if (rarity == null) return "Rarity";
@@ -162,8 +158,6 @@ namespace TR.Systems
             string key = RarityKey(def.Rarity);
             if (string.IsNullOrEmpty(key)) return true;
 
-            // Only an ABSENT entry means "unlimited". A configured cap of 0 means this rarity is
-            // banned from the arena, so it must block rather than be treated as no cap.
             if (!_rarityCaps.TryGetValue(key, out var max)) return true;
 
             int cnt = _rarityCounts.TryGetValue(key, out var c) ? c : 0;
@@ -188,7 +182,6 @@ namespace TR.Systems
                 _rarityCounts[rarityKey] = Mathf.Max(0, c - 1);
         }
 
-        // Key a placed tower needs to remember so it can decrement the right counter when removed.
         public static string GetRarityKey(CardDefinition def) => def != null ? RarityKey(def.Rarity) : null;
 
         public static void Register(CardDefinition def, int level)

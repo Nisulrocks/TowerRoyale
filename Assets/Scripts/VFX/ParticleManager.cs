@@ -156,7 +156,7 @@ public int maxPoolSize = 0;
                 
                 if (ParticleQuality.Current > 0)
                 {
-                    if (!owner.activeInHierarchy) { /* do not activate parents implicitly */ }
+                    if (!owner.activeInHierarchy) {  }
                     else
                     {
                         var em = ps.emission; em.enabled = true;
@@ -291,8 +291,6 @@ public int maxPoolSize = 0;
         {
             if (!_registry.ContainsKey(key)) return null;
             var pool = _pools[key];
-            // Drain any destroyed entries rather than giving up after one: a single dead entry
-            // used to force a brand new instance while the rest of the pool stayed unusable.
             while (pool.Count > 0)
             {
                 var ps = pool.Dequeue();
@@ -308,9 +306,6 @@ public int maxPoolSize = 0;
             if (ps == null) return;
             ps.gameObject.SetActive(false);
 
-            // Detach before pooling. Effects are parented to whatever spawned them, and short-lived
-            // hosts (a drag ghost, a hover preview, a destroyed tower) take their children with them
-            // when destroyed — which would destroy this system while it sits in the pool queue.
             if (ps.transform.parent != transform)
                 ps.transform.SetParent(transform, worldPositionStays: false);
             if (!_pools.ContainsKey(key)) _pools[key] = new Queue<ParticleSystem>();
@@ -324,8 +319,6 @@ public int maxPoolSize = 0;
         }
 
         
-        // Diagnostic: set to a substring (e.g. "idle") and every matching spawn logs its call stack.
-        // Off by default; invaluable for finding a system that spawns an effect twice.
         public static string DebugLogSpawnKeyContains = "";
 
         public static ParticleSystem Spawn(string key, Vector3 position)
@@ -337,10 +330,6 @@ public int maxPoolSize = 0;
         public static ParticleSystem Spawn(string key, Vector3 position, Quaternion rotation, Transform parent, bool play = true)
             => Spawn(key, position, rotation, parent, play, false);
 
-        // preservePrefabRotation keeps the effect's authored orientation relative to its parent
-        // instead of overwriting it with 'rotation'. Needed for attached effects such as a tower's
-        // idle VFX, where forcing a world rotation ignores both the prefab's own rotation and the
-        // rotation of the tower it is parented to.
         public static ParticleSystem Spawn(string key, Vector3 position, Quaternion rotation, Transform parent,
                                            bool play, bool preservePrefabRotation)
         {
@@ -352,8 +341,6 @@ public int maxPoolSize = 0;
                 Debug.LogWarning($"[ParticleManager] Unknown key '{key}'.");
                 return null;
             }
-            // TEMPORARY DIAGNOSTIC: logs who spawns effects whose key contains DebugLogSpawnKeyContains.
-            // Set to null/empty to silence. Prints the call stack so the caller is identifiable.
             if (!string.IsNullOrEmpty(DebugLogSpawnKeyContains) &&
                 key.IndexOf(DebugLogSpawnKeyContains, System.StringComparison.OrdinalIgnoreCase) >= 0)
             {

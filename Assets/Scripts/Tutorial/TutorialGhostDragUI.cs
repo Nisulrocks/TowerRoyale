@@ -3,9 +3,6 @@ using UnityEngine.UI;
 
 namespace TR.Tutorial
 {
-    // A looping "phantom hand" that slides from a card to a placement spot, demonstrating the drag
-    // the player is being asked to perform. Purely cosmetic: it never touches input, so the real
-    // drag listener still decides when the step is satisfied.
     public class TutorialGhostDragUI : MonoBehaviour
     {
         [SerializeField] private Image ghostImage;
@@ -18,13 +15,11 @@ namespace TR.Tutorial
         [Header("Look")]
         [SerializeField] private float ghostSize = 96f;
         [SerializeField] private Color ghostTint = new Color(1f, 1f, 1f, 0.85f);
-        [Tooltip("Extra lift applied mid-flight so the ghost arcs rather than sliding flat.")]
         [SerializeField] private float arcHeight = 40f;
 
         private RectTransform _rect;
         private Canvas _canvas;
 
-        // Exposed so the tutorial arrow can follow the ghost while it travels.
         public RectTransform Rect => _rect;
         private bool _playing;
         private float _t;
@@ -45,7 +40,7 @@ namespace TR.Tutorial
             ghost._canvas = go.GetComponentInParent<Canvas>();
 
             var img = go.AddComponent<Image>();
-            img.raycastTarget = false;   // must never intercept the player's real drag
+            img.raycastTarget = false;   
             ghost.ghostImage = img;
 
             ghost._rect.sizeDelta = new Vector2(ghost.ghostSize, ghost.ghostSize);
@@ -53,7 +48,6 @@ namespace TR.Tutorial
             return ghost;
         }
 
-        // sprite may be null, in which case a plain translucent marker is shown.
         public void Play(Vector2 fromScreen, Vector2 toScreen, Sprite sprite)
         {
             _from = fromScreen;
@@ -63,8 +57,6 @@ namespace TR.Tutorial
             {
                 ghostImage.sprite = sprite;
                 ghostImage.color = ghostTint;
-                // An Image with no sprite renders as a solid white box, which looks like a bug.
-                // Better to move an invisible ghost and let the arrow carry the motion.
                 ghostImage.enabled = sprite != null;
                 ghostImage.preserveAspect = true;
             }
@@ -109,7 +101,6 @@ namespace TR.Tutorial
 
                 case Phase.Hold:
                     _phaseTimer += Time.unscaledDeltaTime;
-                    // Fade out where the tower should land, so the endpoint reads as the goal.
                     Apply(1f, Mathf.Clamp01(1f - _phaseTimer / Mathf.Max(0.05f, holdAtEndSeconds)));
                     if (_phaseTimer >= holdAtEndSeconds)
                     {
@@ -135,7 +126,6 @@ namespace TR.Tutorial
             if (_rect == null) return;
 
             Vector2 screen = Vector2.Lerp(_from, _to, progress);
-            // sin() peaks mid-flight and is zero at both ends, keeping the arc anchored.
             screen.y += Mathf.Sin(progress * Mathf.PI) * arcHeight;
 
             var parent = _rect.parent as RectTransform;

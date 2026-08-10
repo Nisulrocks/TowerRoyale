@@ -16,8 +16,6 @@ namespace TR.Systems
 
         public static bool IsSignedIn { get; private set; }
 
-        // Guests never authenticate at all, so there is no uid to key cloud data by. Anything that
-        // needs an account (friends, cloud saves, leaderboard placement) must check this.
         public static bool IsGuest => !IsSignedIn || string.IsNullOrEmpty(UserId);
         public static string UserId { get; private set; }
         public static string DisplayName { get; private set; }
@@ -75,10 +73,6 @@ namespace TR.Systems
             }
         }
 
-        // On platforms where the Firebase plugin bundles google-services.json (Android/iOS),
-        // DefaultInstance resolves on its own. On desktop there is no such file, and
-        // DefaultInstance *throws* rather than returning null — so the AppOptions path below
-        // has to be reached via catch, not via a null check.
         private FirebaseApp ResolveDefaultApp()
         {
             try
@@ -129,7 +123,6 @@ namespace TR.Systems
 
         public void SignInWithGoogle()
         {
-            // Signing in restarts from Boot, which would tear down a running match.
             if (MatchContext.IsMatchInProgress)
             {
                 Debug.LogWarning("[FirebaseService] Sign-in blocked: a match is in progress.");
@@ -205,10 +198,6 @@ namespace TR.Systems
             Debug.Log($"[FirebaseService] Signed in as {DisplayName} ({UserId})");
             OnSignInComplete?.Invoke(UserId, DisplayName);
 
-            // Signing in from inside the game (guest -> account) leaves everything still running on
-            // the guest's local profile: the cloud profile was never downloaded, and services that
-            // key off a uid were started without one. Boot is what performs that load, so re-run it.
-            // During boot itself the login flow is already in progress, so nothing to do.
             if (SceneManager.GetActiveScene().name != BootSceneName)
             {
                 Debug.Log("[FirebaseService] Mid-session sign-in; restarting from Boot to load the account.");
@@ -219,8 +208,6 @@ namespace TR.Systems
 
         private const string BootSceneName = "Boot";
 
-        // Returns false when the sign-out was refused. Guarding here rather than only in the UI
-        // means every caller is covered, including DeveloperTools.
         public bool SignOut()
         {
             if (MatchContext.IsMatchInProgress)

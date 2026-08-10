@@ -96,8 +96,6 @@ namespace TR.UI
 
             if (yourRankText != null)
             {
-                // Guests are never uploaded, so they can read the board but never appear on it.
-                // Say why, rather than showing a bare "Unranked".
                 if (FirebaseService.IsGuest)
                     yourRankText.text = "Sign in to appear on the leaderboard";
                 else if (myRank > 0)
@@ -111,8 +109,6 @@ namespace TR.UI
         {
             if (statusText == null) return;
 
-            // A permission error here almost always means the Firestore rules require an
-            // authenticated reader, which a guest is not. Say something a player can act on.
             bool looksLikePermissions = !string.IsNullOrEmpty(error) &&
                 (error.IndexOf("permission", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
                  error.IndexOf("PERMISSION_DENIED", System.StringComparison.OrdinalIgnoreCase) >= 0);

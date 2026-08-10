@@ -69,11 +69,8 @@ namespace TR.Systems
 
         public List<string> unlockedPackIds = new();
 
-        // Battle log. Newest first, capped by BattleLogService.MaxEntries — this blob is signed and
-        // uploaded on every save, so it cannot grow without bound.
         public List<MatchRecord> matchLog = new();
 
-        // Lifetime totals are counted separately because the log above gets truncated.
         public int lifetimeMatches = 0;
         public int lifetimeWins = 0;
         public int lifetimeLosses = 0;
@@ -132,10 +129,6 @@ namespace TR.Systems
 
         public static bool IsCloudLinked => FirebaseService.IsSignedIn;
 
-        // The account document can exist without a profile in it (SessionGuardService creates it
-        // when it claims the account, and presence writes to it too). That is NOT the same as a new
-        // player, so we keep whatever this device already has and push it up instead of replacing
-        // it with an empty profile.
         public static void AdoptLocalProfileAsCloud()
         {
             _data = LoadOrCreate();
@@ -146,7 +139,6 @@ namespace TR.Systems
 
         public static void LoadFromCloud(string json)
         {
-            // Never let an empty payload reach the reset path below — that wipes the account.
             if (string.IsNullOrEmpty(json))
             {
                 AdoptLocalProfileAsCloud();
@@ -169,8 +161,6 @@ namespace TR.Systems
 
             if (loaded == null)
             {
-                // Unreadable cloud payload. Falling back to an empty profile here would destroy a
-                // real account, so keep the local one instead.
                 Debug.LogError("[PlayerProfile] Cloud profile could not be parsed; keeping local data.");
                 AdoptLocalProfileAsCloud();
                 return;

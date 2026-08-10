@@ -111,8 +111,6 @@ namespace TR.Infrastructure
                 _group.interactable = false;
             }
 
-            // Arena artwork, parented to the Fade object so it fades with the same CanvasGroup and
-            // sits above the black fill but below the title text.
             if (_backdrop == null && _image != null)
             {
                 Transform bd = _image.transform.Find("Backdrop");
@@ -135,8 +133,6 @@ namespace TR.Infrastructure
                 brt.offsetMin = Vector2.zero;
                 brt.offsetMax = Vector2.zero;
 
-                // EnvelopeParent gives a "cover" fit: fills the screen and crops the overflow
-                // rather than letterboxing or stretching the art.
                 var fitter = bgo.GetComponent<AspectRatioFitter>();
                 if (fitter == null) fitter = bgo.AddComponent<AspectRatioFitter>();
                 fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
@@ -219,8 +215,6 @@ namespace TR.Infrastructure
             _group.blocksRaycasts = !transparent;
             _image.raycastTarget = !transparent;
 
-            // Fully faded back in: the loading screen is finished, so drop the artwork rather than
-            // leaving it to appear behind the next unrelated transition.
             if (transparent && _backdropActive) ClearBackdrop();
         }
 
@@ -317,8 +311,6 @@ namespace TR.Infrastructure
             SetNextTransitionMessage(message, seconds, null);
         }
 
-        // Passing a backdrop turns the next transition into an arena loading screen: the artwork
-        // fills the screen and the message becomes the arena title in the bottom-right.
         public void SetNextTransitionMessage(string message, float seconds, Sprite backdrop)
         {
             EnsureCanvas();
@@ -345,15 +337,10 @@ namespace TR.Infrastructure
         }
 
         [Header("Arena Loading Screen")]
-        [Tooltip("Font size for the arena name when a loading image is shown.")]
         [SerializeField] private float backdropTitleFontSize = 110f;
-        [Tooltip("Inset of the arena name from the bottom-right corner.")]
         [SerializeField] private Vector2 backdropTitleMargin = new Vector2(80f, 60f);
-        [Tooltip("Width of the arena name area, as a fraction of the screen.")]
         [Range(0.2f, 1f)] [SerializeField] private float backdropTitleWidth = 0.7f;
 
-        // Switches between the plain fade (centred text on black) and the arena loading screen
-        // (full-bleed art with the arena name in the bottom-right).
         private void ApplyBackdrop()
         {
             EnsureCanvas();
@@ -366,7 +353,6 @@ namespace TR.Infrastructure
                     _backdrop.sprite = _nextBackdrop;
                     _backdrop.color = Color.white;
 
-                    // Match the fitter to the art so it is cropped, never squashed.
                     var fitter = _backdrop.GetComponent<AspectRatioFitter>();
                     if (fitter != null && _nextBackdrop.rect.height > 0f)
                         fitter.aspectRatio = _nextBackdrop.rect.width / _nextBackdrop.rect.height;
@@ -393,7 +379,6 @@ namespace TR.Infrastructure
             }
             else
             {
-                // Restore the original centred layout for non-arena transitions.
                 rt.anchorMin = new Vector2(0.1f, 0.4f);
                 rt.anchorMax = new Vector2(0.9f, 0.6f);
                 rt.pivot = new Vector2(0.5f, 0.5f);

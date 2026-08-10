@@ -17,8 +17,6 @@ namespace TR.VFX
             _ps = ps;
         }
 
-        // The rotation this effect was authored with on its prefab. Captured before anything
-        // repositions the instance, so a spawn can restore it instead of forcing identity.
         public Quaternion OriginalLocalRotation { get; private set; } = Quaternion.identity;
 
         private void Awake()

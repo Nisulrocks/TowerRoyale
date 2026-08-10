@@ -183,7 +183,6 @@ namespace TR.Battle
         }
 
         
-        [Tooltip("Multiplier applied to enemy health and damage in duo co-op mode.")]
         public const float CoopEnemyStatMultiplier = 2f;
 
         

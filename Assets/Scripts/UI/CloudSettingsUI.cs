@@ -91,11 +91,8 @@ namespace TR.UI
             if (signInButton != null)
             {
                 signInButton.gameObject.SetActive(!signedIn);
-                // Signing in restarts from Boot, so it is blocked mid-match just like signing out.
                 signInButton.interactable = !matchRunning;
             }
-            // Leaving mid-match would strand a duo partner and wipe the profile the match is
-            // still writing to, so dim rather than hide (hiding reads as a bug).
             if (signOutButton != null)
             {
                 signOutButton.gameObject.SetActive(signedIn);

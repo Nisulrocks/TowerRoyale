@@ -22,7 +22,6 @@ namespace TR.Tutorial
         [SerializeField] private float defaultCharDelay = 0.03f;
 
         [Header("Screen Transform")]
-        [Tooltip("If true, overrides the prefab RectTransform with the values below on Awake.")]
         [SerializeField] private bool applyTransformOnAwake = true;
         [SerializeField] private Vector2 anchorMin = new Vector2(0.5f, 0f);
         [SerializeField] private Vector2 anchorMax = new Vector2(0.5f, 0f);
@@ -34,7 +33,6 @@ namespace TR.Tutorial
         [SerializeField] private AnchorPreset leftPreset = new AnchorPreset();
         [SerializeField] private AnchorPreset rightPreset = new AnchorPreset();
 
-        [Tooltip("Top-centre. Use in battle when the sides would cover the deck bar or currency.")]
         [SerializeField] private AnchorPreset topPreset = new AnchorPreset
         {
             anchorMin = new Vector2(0.5f, 1f),
@@ -43,7 +41,6 @@ namespace TR.Tutorial
             anchoredPosition = new Vector2(0f, -160f)
         };
 
-        [Tooltip("Screen centre. Clear of every HUD edge, at the cost of covering the board.")]
         [SerializeField] private AnchorPreset centerPreset = new AnchorPreset
         {
             anchorMin = new Vector2(0.5f, 0.5f),
@@ -52,7 +49,6 @@ namespace TR.Tutorial
             anchoredPosition = Vector2.zero
         };
 
-        [Tooltip("Bottom-centre, lifted above the deck bar.")]
         [SerializeField] private AnchorPreset bottomPreset = new AnchorPreset
         {
             anchorMin = new Vector2(0.5f, 0f),
@@ -61,7 +57,6 @@ namespace TR.Tutorial
             anchoredPosition = new Vector2(0f, 260f)
         };
 
-        [Tooltip("Right edge, vertically centred. Clears the deck bar and the top-corner currency.")]
         [SerializeField] private AnchorPreset middleRightPreset = new AnchorPreset
         {
             anchorMin = new Vector2(1f, 0.5f),
@@ -70,7 +65,6 @@ namespace TR.Tutorial
             anchoredPosition = new Vector2(-140f, 0f)
         };
 
-        [Tooltip("Left edge, vertically centred.")]
         [SerializeField] private AnchorPreset middleLeftPreset = new AnchorPreset
         {
             anchorMin = new Vector2(0f, 0.5f),
@@ -80,15 +74,11 @@ namespace TR.Tutorial
         };
 
         [Header("SFX")]
-        [Tooltip("SFX Library key played when the dialogue box pops in. Leave empty to disable.")]
         [SerializeField] private string popupSfxKey = "ui_dialogue_popup";
-        [Tooltip("SFX Library key looped while text is being typed. Starts and stops with the typewriter.")]
         [SerializeField] private string typingSfxKey = "ui_dialogue_typing";
 
         [Header("Input")]
-        [Tooltip("Clicking (or pressing Space/Enter) while text is typing finishes the line instantly instead of making the player wait it out.")]
         [SerializeField] private bool clickToCompleteTyping = true;
-        [Tooltip("Ignore clicks for this long after the box appears, so the same click that advanced the previous step does not skip this one's text too.")]
         [SerializeField] private float completeInputGrace = 0.15f;
 
         [Header("Animation")]
@@ -104,12 +94,10 @@ namespace TR.Tutorial
 
         private RectTransform _dialogueTransform;
 
-        // Full line for the current Show, so a skip can jump straight to it.
         private string _pendingContent;
         private float _shownAt;
         private bool _hiding;
 
-        /// True while the pop-in or the typewriter is still running.
         public bool IsBusy => _typing != null || (_pop != null && !_hiding);
 
         private void Awake()
@@ -223,12 +211,8 @@ namespace TR.Tutorial
             ClampInsideParent();
         }
 
-        [Tooltip("Minimum gap kept between the dialogue box and the screen edge.")]
         [SerializeField] private float screenEdgeMargin = 24f;
 
-        // A preset combined with the panel's own width can push the box past the screen edge, which
-        // clips the text. Nudge it back inside rather than relying on hand-tuned offsets that only
-        // hold for one panel size and resolution.
         private void ClampInsideParent()
         {
             if (_dialogueTransform == null) return;
@@ -242,10 +226,8 @@ namespace TR.Tutorial
             Vector2 pivot = _dialogueTransform.pivot;
             Vector2 anchor = _dialogueTransform.anchorMin;
 
-            // Only single-point anchors have a meaningful anchoredPosition to clamp.
             if (anchor != _dialogueTransform.anchorMax) return;
 
-            // Panel bounds expressed in the parent's local space.
             Vector2 anchorLocal = (anchor - parent.pivot) * parentSize;
             Vector2 pos = _dialogueTransform.anchoredPosition;
             Vector2 min = anchorLocal + pos - new Vector2(size.x * pivot.x, size.y * pivot.y);
@@ -289,7 +271,6 @@ namespace TR.Tutorial
             _typing = StartCoroutine(Typewriter(content, delay));
         }
 
-        /// Jumps straight to the finished line: skips the pop-in and the remaining typing.
         public void CompleteTyping()
         {
             if (_hiding) return;
@@ -309,8 +290,6 @@ namespace TR.Tutorial
             if (_typing == null && _pop == null) return;
             if (Time.unscaledTime - _shownAt < completeInputGrace) return;
 
-            // Raw input rather than the EventSystem: the tutorial blocker swallows pointer events
-            // everywhere except the target, and a skip has to work anywhere on screen.
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
                 CompleteTyping();
         }
@@ -349,7 +328,6 @@ namespace TR.Tutorial
             _typing = null;
             if (_pop != null) StopCoroutine(_pop);
             _pop = null;
-            // Stopping the coroutine skips its own cleanup, so the loop has to be cut here too.
             StopTypingLoop(0f);
         }
 
@@ -374,7 +352,6 @@ namespace TR.Tutorial
 
         private void OnDisable()
         {
-            // Never leave the loop running if the dialogue is switched off mid-type.
             StopTypingLoop(0f);
         }
 
@@ -382,9 +359,6 @@ namespace TR.Tutorial
         {
             if (text != null) text.text = string.Empty;
 
-            // DialogueTyping is a continuous ~2.3s loop, not a per-key click. Firing it per
-            // character started a new 2.3s clip on every letter, which is why the sound ran on
-            // after the text finished. Run it as a loop for exactly as long as text is appearing.
             StartTypingLoop(content);
 
             for (int i = 0; i < content.Length; i++)

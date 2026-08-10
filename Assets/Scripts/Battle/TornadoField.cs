@@ -13,13 +13,9 @@ namespace TR.Battle
         [SerializeField] private float duration = 1.0f; 
         [SerializeField] private AnimationCurve falloff = AnimationCurve.Linear(0, 1, 1, 0); 
         [Header("Swirl/Separation")]
-        [Tooltip("Within this inner radius, enemies stop moving inward and orbit instead (prevents stacking at exact center)")]
         [SerializeField] private float innerOrbitRadius = 0.35f;
-        [Tooltip("Tangential swirl speed (units/sec) used inside innerOrbitRadius and partially outside for visual spin")]
         [SerializeField] private float tangentialStrength = 1.5f;
-        [Tooltip("Soft separation radius among enemies (tries to keep at least this distance between them)")]
         [SerializeField] private float separationRadius = 0.25f;
-        [Tooltip("How strong the separation pushes enemies apart (units/sec)")]
         [SerializeField] private float separationStrength = 1.0f;
 
         private float _time;

@@ -28,19 +28,18 @@ namespace TR.Data
         [Header("Abilities - Regeneration (fractions are per MaxHP)")]
 [SerializeField]
         private bool useRegenAbility = false;
-        [Tooltip("Base regen per second, as a fraction of MaxHP (e.g., 0.03 = 3% MaxHP/sec)")] [SerializeField] [Min(0f)]
+         [SerializeField] [Min(0f)]
         private float regenPerSecondBase = 0.03f;
-        [Tooltip("Additional regen at 100% missing health, scales linearly by missing fraction (0..1). As fraction of MaxHP/sec")] [SerializeField] [Min(0f)]
+         [SerializeField] [Min(0f)]
         private float regenMissingHealthFactor = 0.02f;
 [SerializeField] [Min(0f)]
         private float regenSuppressAfterDamageSeconds = 2.5f;
 [SerializeField] [Min(0f)]
         private float regenPerSecondCap = 0.05f;
-        [Tooltip("Maximum total regen over this enemy's lifetime, as a fraction of MaxHP (0..1)")] [SerializeField] [Range(0f, 1f)]
+         [SerializeField] [Range(0f, 1f)]
         private float regenTotalPercentCap = 0.4f;
-        [Tooltip("If false, active DoTs (burn/poison/frostbite) fully suppress regen; if true, regen is reduced by DotPenaltyMultiplier")]
         [SerializeField] private bool regenWhileDoT = false;
-        [Tooltip("Multiplier applied to regen while DoTs are active (only if RegenWhileDoT = true)")] [SerializeField] [Range(0f, 1f)]
+         [SerializeField] [Range(0f, 1f)]
         private float regenDoTPenaltyMultiplier = 0.25f;
 [SerializeField]
         private string regenVfxKey = "";
@@ -49,10 +48,10 @@ namespace TR.Data
 
         [SerializeField] private bool usePulseNukeAbility = false;
 [SerializeField] [Min(0f)] private float pulseNukeRadius = 4.5f;
-        [Tooltip("Minimum cooldown between pulses (seconds)")] [SerializeField] [Min(0f)] private float pulseNukeCooldownMin = 45f;
-        [Tooltip("Maximum cooldown between pulses (seconds)")] [SerializeField] [Min(0f)] private float pulseNukeCooldownMax = 75f;
-        [Tooltip("After the cooldown, how often to check (seconds) for a random trigger")] [SerializeField] [Min(0.1f)] private float pulseNukeRandomCheckInterval = 1.0f;
-        [Tooltip("Chance to trigger on each check after cooldown (0..1)")] [SerializeField] [Range(0f,1f)] private float pulseNukeTriggerChance = 0.2f;
+         [SerializeField] [Min(0f)] private float pulseNukeCooldownMin = 45f;
+         [SerializeField] [Min(0f)] private float pulseNukeCooldownMax = 75f;
+         [SerializeField] [Min(0.1f)] private float pulseNukeRandomCheckInterval = 1.0f;
+         [SerializeField] [Range(0f,1f)] private float pulseNukeTriggerChance = 0.2f;
         [Header("Pulse Nuke VFX/SFX")]
 [SerializeField] private string pulseNukeVfxKey = "";
         [SerializeField] private Color pulseNukeRippleColor = new Color(0.9f, 0.85f, 1f, 0.5f);
@@ -65,11 +64,11 @@ namespace TR.Data
 
         [SerializeField] private bool useStunPulseAbility = false;
 [SerializeField] [Min(0f)] private float stunPulseRadius = 4.5f;
-        [Tooltip("Minimum cooldown between stun pulses (seconds)")] [SerializeField] [Min(0f)] private float stunPulseCooldownMin = 35f;
-        [Tooltip("Maximum cooldown between stun pulses (seconds)")] [SerializeField] [Min(0f)] private float stunPulseCooldownMax = 60f;
-        [Tooltip("After the cooldown, how often to check (seconds) for a random trigger")] [SerializeField] [Min(0.1f)] private float stunPulseRandomCheckInterval = 1.0f;
-        [Tooltip("Chance to trigger on each check after cooldown (0..1)")] [SerializeField] [Range(0f,1f)] private float stunPulseTriggerChance = 0.25f;
-        [Tooltip("How long towers are stunned (seconds)")] [SerializeField] [Min(0f)] private float stunPulseDuration = 2.5f;
+         [SerializeField] [Min(0f)] private float stunPulseCooldownMin = 35f;
+         [SerializeField] [Min(0f)] private float stunPulseCooldownMax = 60f;
+         [SerializeField] [Min(0.1f)] private float stunPulseRandomCheckInterval = 1.0f;
+         [SerializeField] [Range(0f,1f)] private float stunPulseTriggerChance = 0.25f;
+         [SerializeField] [Min(0f)] private float stunPulseDuration = 2.5f;
         [Header("Stun Pulse VFX/SFX")]
 [SerializeField] private string stunPulseVfxKey = "";
         [SerializeField] private Color stunPulseRippleColor = new Color(0.8f, 0.9f, 1f, 0.55f);

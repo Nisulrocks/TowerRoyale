@@ -10,11 +10,9 @@ namespace TR.UI
     public class DuoRejoinPromptUI : MonoBehaviour
     {
         [Header("Panels")]
-        [Tooltip("The root panel that will be shown/hidden. Can be this object or a child.")]
         [SerializeField] private GameObject contentPanel;
 
         [Header("Matchmaking UI (optional)")]
-        [Tooltip("If assigned, this panel is shown with 'Reconnecting...' and the arena icon while reconnecting.")]
         [SerializeField] private DuoMatchmakingUI matchmakingUI;
 
         [Header("Text")]

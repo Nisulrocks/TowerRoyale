@@ -6,7 +6,6 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    /// The player's own profile: identity, lifetime stats, and the battle log.
     public class ProfilePanelUI : MonoBehaviour
     {
         [Header("Header")]
@@ -29,15 +28,12 @@ namespace TR.UI
         [Header("Battle Log")]
         [SerializeField] private BattleLogEntryUI logEntryPrefab;
         [SerializeField] private Transform logListRoot;
-        [Tooltip("Scroll view holding the log. Left empty, it is found from logListRoot's parents.")]
         [SerializeField] private ScrollRect logScroll;
-        [Tooltip("Shown instead of the list when no matches have been played yet.")]
         [SerializeField] private GameObject emptyStateRoot;
         [SerializeField] private TMP_Text emptyStateText;
 
         [Header("Close")]
         [SerializeField] private Button closeButton;
-        [Tooltip("Panel name in the PanelSwitcher to return to when closing. Must match the name in the switcher's list, which uses the tab names (e.g. 'Play Tab').")]
         [SerializeField] private string returnPanelName = "Play Tab";
 
         private readonly List<BattleLogEntryUI> _entries = new();
@@ -149,8 +145,6 @@ namespace TR.UI
             ScrollLogToTop();
         }
 
-        // Same trap as the deck builder: Destroy is deferred to end of frame, so the layout still
-        // counts the old rows right now. Snap once immediately and again once they are really gone.
         private void ScrollLogToTop()
         {
             if (logScroll == null && logListRoot != null)

@@ -12,13 +12,10 @@ namespace TR.Battle
         [Header("UI")]
         [SerializeField] private Transform deckRoot;             
         [SerializeField] private TR.UI.CardItemUI cardItemPrefab; 
-        [Tooltip("Optional label (e.g. \"Partner's Deck\") shown/hidden along with the partner deck.")]
         [SerializeField] private TMP_Text label;
 
         [Header("Ghost Appearance")]
-        [Tooltip("Uniform scale applied to the mirrored partner deck (smaller than the local deck).")]
         [SerializeField] private float scale = 0.6f;
-        [Tooltip("Overall transparency of the mirrored partner deck (0 = invisible, 1 = opaque).")]
         [Range(0f, 1f)]
         [SerializeField] private float alpha = 1;
 

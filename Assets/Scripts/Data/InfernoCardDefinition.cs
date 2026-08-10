@@ -19,7 +19,6 @@ namespace TR.Data
         [SerializeField] private float beamMaxWidth = 0.10f;
         [SerializeField] private bool beamJitter = true;
         [SerializeField] private float beamJitterAmplitude = 0.05f;
-        [Tooltip("Optional: Material used by the LineRenderer for this beam (use URP Unlit ShaderGraph with Emission for bloom)")]
         [SerializeField] private Material beamMaterial;
 
         public int GetMaxTargets(int level)

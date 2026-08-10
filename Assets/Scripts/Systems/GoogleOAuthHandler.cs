@@ -10,10 +10,8 @@ namespace TR.Systems
 {
     public static class GoogleOAuthHandler
     {
-        // How long to wait for the browser redirect before giving up.
         public static float TimeoutSeconds = 60f;
 
-        // Ticks down while waiting for the redirect, so UI can show progress instead of freezing.
         public static float SecondsRemaining { get; private set; }
         public static bool IsWaitingForBrowser { get; private set; }
 
@@ -60,9 +58,6 @@ namespace TR.Systems
             bool listenerDone = false;
 
             var listenerTask = listener.GetContextAsync();
-            // Closing the browser sends nothing back, so the only way out is this timeout. Two
-            // minutes of a dead-looking screen reads as a crash; a minute is still plenty to
-            // complete a Google sign-in.
             float oauthTimeout = TimeoutSeconds;
             IsWaitingForBrowser = true;
             while (!listenerTask.IsCompleted && !listenerDone && oauthTimeout > 0f)
@@ -199,9 +194,7 @@ namespace TR.Systems
         : "Something went wrong during sign-in. Please try again from the game.";
     string statusColor = success ? "#d4af37" : "#e05a5a";
     string statusIconPath = success
-        // check mark
         ? "M20 6L9 17l-5-5"
-        // x mark
         : "M18 6L6 18M6 6l12 12";
 
     return $@"<!DOCTYPE html>

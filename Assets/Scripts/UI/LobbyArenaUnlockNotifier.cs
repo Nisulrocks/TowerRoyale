@@ -26,22 +26,18 @@ namespace TR.UI
         [SerializeField] private string encouragingText = "Keep pushing forward, {0}!";
 
         [Header("Animation")]
-        [Tooltip("Seconds to wait after Lobby loads before showing the popup (to avoid competing with screen fade-in)")]
         [SerializeField] private float initialDelay = 0.75f;
         [SerializeField] private float popInTime = 0.35f;
-        [Tooltip("How much the popup overshoots during the pop-in. 0 = default pop, higher = bigger bounce.")]
         [SerializeField] private float popInOvershoot = 0f;
         [SerializeField] private float holdTime = 2.0f;
         [SerializeField] private float fadeOutTime = 0.3f;
 
         [Header("Popup References")]
-        [Tooltip("Name of the child GameObject that holds the arena icon Image.")]
         [SerializeField] private string iconChildName = "Icon";
 
         [Header("SFX (Optional)")]
         [SerializeField] private string sfxKey = "ui_lobby_arena_unlock";
 
-        [Tooltip("When disabled, this notifier will not trigger on its own and should be driven by LobbyNotificationQueue.")]
         public bool autoPlay = true;
 
         public bool IsShowing { get; private set; }

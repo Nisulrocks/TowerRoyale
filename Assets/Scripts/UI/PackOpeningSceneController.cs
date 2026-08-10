@@ -23,7 +23,6 @@ namespace TR.UI
         [SerializeField] private float revealSpacing = 160f;     
         [SerializeField] private float finalOverlapSpacing = 80f; 
         [SerializeField] private float compressDuration = 0.35f;  
-        [Tooltip("Extra beat held after a legendary/mythic celebration finishes, before the next card flips. Not scaled by pack size.")]
         [SerializeField] private float highRarityPauseSeconds = 0.1f;
 
         [Header("Reveal FX")]
@@ -31,9 +30,7 @@ namespace TR.UI
         [SerializeField] private float flipOvershootScale = 1.08f;
         [SerializeField] private float flipInterval = 0.15f;
         [Header("Rarity Pulse Background")]
-        [Tooltip("Optional prefab instantiated behind each revealed card. Should contain an Image on its root RectTransform. If null, a default colored Image is created. The script will tint it with the rarity color.")]
         [SerializeField] private GameObject rarityPulsePrefab;
-        [Tooltip("Optional outline shader for the rarity pulse. If null, 'Universal Render Pipeline/2D/Card Rarity Outline' is searched for at runtime.")]
         [SerializeField] private Shader rarityOutlineShader;
         [SerializeField] private float outlinePulseSpeed = 2.2f;
         [SerializeField] private float outlineMinThickness = 3f;
@@ -43,7 +40,6 @@ namespace TR.UI
         [SerializeField] private float glowStrength = 0.65f;
         [SerializeField] private float outlineGlowRadius = 16f;
         [Header("Back Face")]
-        [Tooltip("Optional prefab for the card back face (will be instantiated under each card). If null, a sprite or color will be used.")]
         [SerializeField] private GameObject backFacePrefab;
 
         [SerializeField] private Sprite cardBackSprite;
@@ -68,19 +64,14 @@ namespace TR.UI
         [SerializeField] private string skipLabel = "Skip";
 
         [Header("Cutscene Video (optional)")]
-        [Tooltip("VideoPlayer used to play the per-pack cutscene before opening. If null or no clip is assigned, the pack opens immediately.")]
         [SerializeField] private VideoPlayer videoPlayer;
-        [Tooltip("Optional root object to show/hide while the video plays. If null, videoPlayer.gameObject is used.")]
         [SerializeField] private GameObject videoRoot;
 
         [Header("Result Label (NEW!/points)")]
-        [Tooltip("Offset applied to the result label under each card (x,y) in anchored pixels")]
         [SerializeField] private Vector2 resultLabelOffset = new Vector2(0f, -28f);
 
         [SerializeField] private Color resultLabelNewColor = new Color(0.2f, 1f, 0.4f);
-        [Tooltip("Text color used when awarding duplicate points (e.g., +15 pts)")]
         [SerializeField] private Color resultLabelPointsColor = new Color(1f, 0.9f, 0.3f);
-        [Tooltip("Text color used when awarding soft currency on a maxed duplicate")]
         [SerializeField] private Color resultLabelSoftCurrencyColor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private float resultLabelFontSizeNew = 22f;
@@ -90,7 +81,6 @@ namespace TR.UI
         [SerializeField] private float resultLabelFontSizeSoftCurrency = 22f;
         [SerializeField] private string softCurrencyLabel = "gold";
         [Header("Upgrade / Maxed Label (separate)")]
-        [Tooltip("Offset applied to the 'Upgrade Available' label under each card (x,y) in anchored pixels")] 
         [SerializeField] private Vector2 upgradeLabelOffset = new Vector2(0f, -52f);
 
         [SerializeField] private Color upgradeLabelColor = new Color(0.6f, 1f, 0.6f);
@@ -440,16 +430,12 @@ namespace TR.UI
                 var revealedRarity = _results[i].card?.Rarity;
                 if (revealedRarity != null && revealedRarity.RevealTier > 0)
                 {
-                    // The per-card interval shrinks as pack size grows, which blew straight past a
-                    // legendary in a big multi-pack open. Hold for the celebration instead, so a
-                    // rare pull always gets its moment no matter how many cards are in flight.
                     float wait = 0f;
                     while (RarityRevealFX.IsPlaying && wait < 5f)
                     {
                         wait += Time.unscaledDeltaTime;
                         yield return null;
                     }
-                    // A short breath before the next card so it does not cut in on the fade-out.
                     yield return new WaitForSecondsRealtime(highRarityPauseSeconds);
                 }
                 else
@@ -458,10 +444,6 @@ namespace TR.UI
                 }
             }
 
-            // A legendary/mythic celebration still owns card offsets (the neighbours are shoved
-            // aside and unwinding). Compressing now would capture those temporary positions and
-            // then fight the unwind, which snapped the cards. Let it finish first — it also gives
-            // the moment room to land before the cards tidy away.
             float fxWait = 0f;
             while (RarityRevealFX.IsPlaying && fxWait < 5f)
             {
@@ -532,15 +514,12 @@ namespace TR.UI
         {
             if (!_revealInProgress) return;
             StopAllCoroutines();
-            // The reveal effect drives Time.timeScale and lives on its own object, so StopAllCoroutines
-            // here would not touch it — skipping mid-effect would strand the game in slow motion.
             RarityRevealFX.CancelAll();
             FinalizeAllCards();
         }
 
         private void OnDisable()
         {
-            // Leaving the scene mid-reveal must not leave time dilated either.
             RarityRevealFX.CancelAll();
         }
 
@@ -828,7 +807,6 @@ namespace TR.UI
             float t = 0f;
             Vector3 baseScale = card.localScale;
 
-            // Slow down BEFORE the card turns, so the reveal is anticipated rather than reacted to.
             RarityRevealFX.BeginAnticipation(res.card?.Rarity);
 
             TryPlaySfx(sfxFlipKey);
@@ -863,10 +841,7 @@ namespace TR.UI
                     var revealRarity = res.card?.Rarity;
                     if (revealRarity != null && revealRarity.RevealTier > 0)
                     {
-                        // Full cinematic takeover: dim, godrays, shockwave, slow-mo, nameplate.
-                        // The other cards are handed over so they can be shoved aside.
                         RarityRevealFX.Play(card, revealRarity, _spawned);
-                        // Confetti now plays as a finisher on top rather than being the whole show.
                         StartCoroutine(ConfettiBurst(card));
                     }
                     else if (revealRarity != null && revealRarity.ConfettiOnReveal)

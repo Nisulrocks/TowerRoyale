@@ -11,9 +11,7 @@ namespace TR.Net
     [RequireComponent(typeof(PhotonView))]
     public class EnemyNetSync : MonoBehaviourPun, IPunObservable, IPunInstantiateMagicCallback
     {
-        [Tooltip("How quickly remote clients interpolate toward the networked position.")]
         [SerializeField] private float interpolateSpeed = 12f;
-        [Tooltip("If the remote enemy is further than this (world units) from the networked position, snap instead of lerp. Prevents rubber-banding/drift after lag spikes.")]
         [SerializeField] private float snapDistance = 2.5f;
 
         private EnemyBase2D _enemy;
@@ -90,8 +88,6 @@ namespace TR.Net
         {
             if (IsSimulated)
             {
-                // We just became the authority (host migration). Anything still queued was aimed
-                // at the old host and must not be sent — we apply damage locally now.
                 _pendingDamage = 0f;
                 return;
             }
@@ -113,10 +109,6 @@ namespace TR.Net
             _flushTimer -= Time.deltaTime;
             if (_pendingDamage > 0f && _flushTimer <= 0f)
             {
-                // The enemy can die on the host inside the batching window, in which case the host
-                // has already destroyed this view and PUN warns about the arriving RPC. Checking
-                // the view is still alive and we are still in the room narrows that race; it
-                // cannot be closed entirely from this side.
                 if (photonView != null && photonView.ViewID != 0 && PhotonNetwork.InRoom
                     && _enemy != null && _enemy.gameObject.activeInHierarchy && _enemy.CurrentHealth > 0f)
                 {
@@ -222,8 +214,6 @@ namespace TR.Net
         }
 
 
-        // Pulse abilities only tick on the simulation authority, so their visuals have to be
-        // replayed on the other client. The remote reads the parameters off its own definition.
         public void BroadcastAbilityPulse(int kind)
         {
             if (!PhotonNetwork.IsMasterClient || photonView == null) return;

@@ -20,25 +20,19 @@ namespace TR.UI
         [SerializeField] private TMP_Text castleXPText;      
         [SerializeField] private TMP_Text softCurrencyText;  
         [Header("Castle Progress UI")]
-        [Tooltip("Slider for castle XP progress (0-1 value)")]
         [SerializeField] private Slider castleProgressSlider;
 
         [SerializeField] private TMP_Text castleXPGainText;
-        [Tooltip("Delay before showing the '+XP' splash (seconds)")]
         [SerializeField] private float castleXPGainDelay = 0.25f;
-        [Tooltip("Castle XP bar animation speed (XP per second, visual only)")]
         [SerializeField] private float castleXpAnimSpeed = 250f;
         [Header("Castle Level-Up VFX")]
-        [Tooltip("Particle/VFX key to play when castle levels up (uses ParticleManager via reflection)")]
         [SerializeField] private string levelUpVfxKey = "";
 
         [SerializeField] private Transform levelUpVfxParent;
 
         [SerializeField] private bool debugTriggerLevelUpVfxWithL = true;
-        [Tooltip("Delay between each VFX burst (seconds)")]
         [SerializeField] private float levelUpVfxBurstStagger = 0.08f;
         [Header("SFX")]
-        [Tooltip("SFX key to play when castle levels up (uses SFXManager)")]
         [SerializeField] private string levelUpSfxKey = "ui_level_up";
         [Header("Arena Image")]
         [SerializeField] private Image arenaImage;           

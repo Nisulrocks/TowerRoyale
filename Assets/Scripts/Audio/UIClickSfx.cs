@@ -5,27 +5,17 @@ using UnityEngine.UI;
 
 namespace TR.Audio
 {
-    // Plays one shared click sound for every uGUI Button in the game.
-    //
-    // uGUI gives no global "a button was clicked" event: Button consumes the pointer-click event
-    // itself, so a handler on a parent canvas never sees it. Instead this wires Button.onClick
-    // directly and rescans periodically, which also catches buttons spawned at runtime (list rows,
-    // popups, shop items).
     public class UIClickSfx : MonoBehaviour
     {
         public static UIClickSfx Instance { get; private set; }
 
         [Header("SFX")]
-        [Tooltip("Key from the SFX Library (Resources/SFX/SFXLibrary) played on any UI button click.")]
         [SerializeField] private string clickSfxKey = "ui_click";
 
-        [Tooltip("Buttons created after the last scan are picked up within this many seconds.")]
         [SerializeField] private float rescanInterval = 0.75f;
 
-        [Tooltip("Turn off to silence UI clicks without removing the component.")]
         [SerializeField] private bool enableClickSfx = true;
 
-        // Instance ids of buttons already wired, so a rescan never stacks duplicate listeners.
         private readonly HashSet<int> _wired = new HashSet<int>();
         private float _nextScan;
 
@@ -62,8 +52,6 @@ namespace TR.Audio
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            // Ids are not reused across scenes in practice, but clearing keeps the set from growing
-            // and forces a fresh wire-up of the new scene's buttons.
             _wired.Clear();
             _nextScan = 0f;
         }
@@ -87,7 +75,6 @@ namespace TR.Audio
                 int id = button.GetInstanceID();
                 if (!_wired.Add(id)) continue;
 
-                // Opt out per button by adding a UIClickSfxIgnore component.
                 if (button.GetComponent<UIClickSfxIgnore>() != null) continue;
 
                 button.onClick.AddListener(PlayClick);
@@ -101,6 +88,5 @@ namespace TR.Audio
         }
     }
 
-    // Add to a Button that should stay silent (or play its own sound instead).
     public class UIClickSfxIgnore : MonoBehaviour { }
 }

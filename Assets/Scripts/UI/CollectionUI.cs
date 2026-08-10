@@ -15,22 +15,15 @@ namespace TR.UI
         [SerializeField] private CollectionItemUI itemPrefab;
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private TMP_Text softCurrencyText;
-        [Tooltip("ScrollRect containing listRoot. If not assigned, searches listRoot's parent.")]
         [SerializeField] private ScrollRect scrollRect;
         [Header("Sorting")]
-        [Tooltip("Optional dropdown to control rarity order. If not assigned, defaults to ascending (Common -> Legendary).")]
         [SerializeField] private TMP_Dropdown raritySortDropdown;
-        [Tooltip("If true, rarity order is reversed (Legendary -> Common)")]
         [SerializeField] private bool rarityDescending = false;
         [Header("Rarity Order Override")]
-        [Tooltip("Optional explicit rarity order from lowest to highest (e.g., Common, Rare, Epic, Legendary). Leave empty to use GameDB order.")]
         [SerializeField] private List<RarityDefinition> rarityOrderOverride;
         [Header("Search")]
-        [Tooltip("Optional input field to filter cards by name (case-insensitive)")]
         [SerializeField] private TMP_InputField searchInput;
-        [Tooltip("Debounce time before applying search filter (seconds)")]
         [SerializeField] private float searchDebounceSeconds = 0.08f;
-        [Tooltip("When typing continuously (e.g., holding backspace), apply updates at most this often (seconds)")]
         [SerializeField] private float searchThrottleSeconds = 0.10f;
 
         private readonly List<CollectionItemUI> _items = new();

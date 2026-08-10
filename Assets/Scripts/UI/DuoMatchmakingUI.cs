@@ -10,25 +10,20 @@ namespace TR.UI
     public class DuoMatchmakingUI : MonoBehaviour
     {
         [Header("Refs")]
-        [SerializeField] private GameObject panelRoot;        // the searching panel container
-        [SerializeField] private TMP_Text statusText;         // "Searching for a partner..."
-        [SerializeField] private Button cancelButton;         // cancel matchmaking
+        [SerializeField] private GameObject panelRoot;        
+        [SerializeField] private TMP_Text statusText;         
+        [SerializeField] private Button cancelButton;         
 
         [Header("Fade")]
-        [Tooltip("CanvasGroup used to fade the whole panel in/out. If left empty, one is added to panelRoot.")]
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private float fadeInDuration = 0.25f;
         [SerializeField] private float fadeOutDuration = 0.2f;
 
         [Header("Arena Icon")]
-        [Tooltip("Image that shows which arena is being matched into.")]
         [SerializeField] private Image arenaIcon;
-        [Tooltip("Root transform to pop-animate (defaults to arenaIcon's transform).")]
         [SerializeField] private Transform arenaIconRoot;
         [SerializeField] private float arenaPopDuration = 0.45f;
-        [Tooltip("Peak scale during the pop (overshoot), settles back to 1.")]
         [SerializeField] private float arenaPopOvershoot = 1.25f;
-        [Tooltip("Delay before the arena icon pops in after the panel starts fading in.")]
         [SerializeField] private float arenaPopDelay = 0.1f;
 
         private Coroutine _fadeCo;

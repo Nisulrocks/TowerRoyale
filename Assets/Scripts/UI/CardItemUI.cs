@@ -69,7 +69,6 @@ namespace TR.UI
         }
 
         [Header("Live Preview")]
-        [Tooltip("Swap the icon for a live animation of the tower attacking while hovered.")]
         [SerializeField] private bool useLivePreview = true;
 
         private RawImage _previewImage;
@@ -94,7 +93,6 @@ namespace TR.UI
             TowerPreviewStage.Release();
         }
 
-        // Built at runtime as a stretched child of the icon so existing card prefabs need no edits.
         private void EnsurePreviewImage()
         {
             if (_previewImage != null) return;
@@ -115,7 +113,6 @@ namespace TR.UI
 
         private void OnDisable()
         {
-            // A card can be hidden or destroyed while hovered (scrolling, tab switch, rebuild).
             HideLivePreview();
         }
 

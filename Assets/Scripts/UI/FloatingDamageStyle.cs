@@ -12,18 +12,18 @@ namespace TR.UI
 public int baseFontSize = 36;
 [Min(0f)] public float mergeWindow = 0.4f;
 [Min(0f)] public float lifetime = 1.2f;
-        [Tooltip("Vertical offset above target while merging (in pixels for screen-space canvas)")] public float followOffsetY = 120f;
-        [Tooltip("Fade speed multiplier (alpha/sec); 1 = fade across lifetime")] [Min(0f)] public float fadeSpeed = 1.0f;
+         public float followOffsetY = 120f;
+         [Min(0f)] public float fadeSpeed = 1.0f;
 
         [Header("Pop Animation")] 
-        [Tooltip("Scale multiplier applied instantly when new damage is added (stacks multiplicatively)")] public float popScale = 1.15f;
+         public float popScale = 1.15f;
 public float popMaxScale = 2.0f;
 [Min(0f)] public float popReturnTime = 0.2f;
 
         [Header("Free-Fall (after merge window)")]
-        [Tooltip("Initial upward velocity when entering the fade-out phase (pixels/sec)")] public float initialUpVelocity = 80f;
-        [Tooltip("Gravity applied during fade-out (pixels/sec^2). Negative falls downward.")] public float gravity = -300f;
-        [Tooltip("Horizontal kick applied once at fade start (pixels/sec); random left/right")] public float endKickHorizontal = 80f;
+         public float initialUpVelocity = 80f;
+         public float gravity = -300f;
+         public float endKickHorizontal = 80f;
 
         [Header("Damage-Based Color")] 
 public float damageColorMin = 10f;

@@ -112,7 +112,6 @@ namespace TR.Audio
 
         private AudioSource GetFreeSource()
         {
-            // Prefer an idle source that isn't running a loop.
             for (int i = 0; i < _pool.Count; i++)
             {
                 if (!_pool[i].isPlaying && !IsLoopSource(_pool[i]))
@@ -125,7 +124,6 @@ namespace TR.Audio
                 return _pool[_pool.Count - 1];
             }
 
-            // Pool is full. Reuse a non-loop source if possible, but never steal a loop.
             for (int i = 0; i < _pool.Count; i++)
             {
                 if (!IsLoopSource(_pool[i]))

@@ -14,7 +14,7 @@ public AudioClip[] clips;
 public float pitchMin = 1f;
             public float pitchMax = 1f;
 public float cooldown = 0f;
-            [Tooltip("Optional: Limit how many of this key can overlap at once (0 = no limit)")] public int maxConcurrent = 0;
+             public int maxConcurrent = 0;
         }
 
         public Entry[] entries;

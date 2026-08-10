@@ -5,7 +5,6 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // A player card in the search results, with a button to send a friend request.
     public class PlayerSearchEntryUI : MonoBehaviour
     {
         [SerializeField] private TMP_Text nameText;
@@ -29,7 +28,6 @@ namespace TR.UI
             if (trophiesText != null) trophiesText.text = data.trophies.ToString();
             if (onlineDot != null) onlineDot.color = data.isOnline ? onlineColor : offlineColor;
 
-            // The full uid is unreadable in a list; show a short prefix players can compare.
             if (idText != null)
             {
                 string uid = data.uid ?? string.Empty;

@@ -13,14 +13,11 @@ public class CameraController2D : MonoBehaviour
     [Header("Pan Settings")]
 
     public float panSpeed = 1f;
-    [Tooltip("If true, the camera moves with the mouse drag. If false, it moves opposite (map-style drag).")]
     public bool dragFollowsMouse = true;
     public bool dragPanEnabled = true;
 
     [Header("Edge Pan (while dragging tower)")]
-    [Tooltip("Screen margin in pixels from the edge that triggers panning.")]
     public float edgePanMargin = 48f;
-    [Tooltip("World-units per second to pan when the cursor is at a screen edge.")]
     public float edgePanSpeed = 10f;
 
     [Header("Confiner (required for clamping)")]
@@ -46,8 +43,6 @@ public class CameraController2D : MonoBehaviour
     {
         if (cam == null) return;
 
-        // Update and Input both keep running at timeScale 0, so pausing does not stop camera
-        // input on its own — the pause panel would otherwise pan/zoom the board behind it.
         if (TR.UI.BattlePauseController.IsPaused) return;
 
         HandleZoom();

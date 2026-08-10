@@ -22,7 +22,7 @@ namespace TR.UI
         [SerializeField] private Color midColor = new Color(1f, 0.9f, 0.2f, 1f);
         [SerializeField] private Color highColor = new Color(0.2f, 0.9f, 0.2f, 1f);
         [Header("Stacking (Multiple Bosses)")]
-        [Tooltip("Vertical spacing (in pixels) between stacked boss health bars")] [SerializeField]
+         [SerializeField]
         private float stackSpacing = 1200f;
 
         private EnemyBase2D _boss;

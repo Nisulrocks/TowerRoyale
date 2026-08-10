@@ -9,9 +9,9 @@ namespace TR.Net
     public static class DuoPlayerColors
     {
         
-        public static readonly Color Player1 = new Color(0.30f, 0.62f, 1f);   // blue
+        public static readonly Color Player1 = new Color(0.30f, 0.62f, 1f);   
         
-        public static readonly Color Player2 = new Color(1f, 0.35f, 0.35f);   // red
+        public static readonly Color Player2 = new Color(1f, 0.35f, 0.35f);   
 
         
         

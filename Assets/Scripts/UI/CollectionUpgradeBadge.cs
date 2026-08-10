@@ -9,19 +9,12 @@ namespace TR.UI
 {
     public class CollectionUpgradeBadge : MonoBehaviour
     {
-        [Tooltip("The tab button that will display the badge. If null, the object will try to find 'Collections Tab' by name.")]
         [SerializeField] private Button targetButton;
-        [Tooltip("Fallback name to search for if no button is assigned.")]
         [SerializeField] private string fallbackTabName = "Collections Tab";
-        [Tooltip("How often to recalculate the upgrade count (seconds).")]
         [SerializeField] private float refreshInterval = 1f;
-        [Tooltip("Size of the badge circle.")]
         [SerializeField] private Vector2 badgeSize = new Vector2(28f, 28f);
-        [Tooltip("Offset from the top-right corner of the tab button.")]
         [SerializeField] private Vector2 badgeOffset = new Vector2(-8f, -8f);
-        [Tooltip("Background color of the badge.")]
         [SerializeField] private Color badgeColor = new Color(0.9f, 0.2f, 0.2f, 1f);
-        [Tooltip("Text color of the badge number.")]
         [SerializeField] private Color badgeTextColor = Color.white;
 
         private GameObject _badgeRoot;

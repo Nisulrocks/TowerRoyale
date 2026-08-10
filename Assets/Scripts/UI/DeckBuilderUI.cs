@@ -12,7 +12,6 @@ namespace TR.UI
     {
         [Header("Refs")]
         [SerializeField] private Transform collectionListRoot;
-        [Tooltip("Scroll view containing the collection list. Left empty, it is found from collectionListRoot's parents.")]
         [SerializeField] private ScrollRect collectionScroll;
         [SerializeField] private CardItemUI collectionItemPrefab;
         [SerializeField] private Transform deckSlotsRoot;
@@ -20,12 +19,9 @@ namespace TR.UI
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private TMP_Text deckCountText;
         [Header("Sorting")]
-        [Tooltip("Optional dropdown to control rarity order. If not assigned, defaults to ascending (Common -> Legendary).")]
         [SerializeField] private TMP_Dropdown raritySortDropdown;
-        [Tooltip("If true, rarity order is reversed (Legendary -> Common)")]
         [SerializeField] private bool rarityDescending = false;
         [Header("Rarity Order Override")]
-        [Tooltip("Optional explicit rarity order from lowest to highest (e.g., Common, Rare, Epic, Legendary). Leave empty to use GameDB order.")]
         [SerializeField] private List<RarityDefinition> rarityOrderOverride;
 
         [Header("Deck Presets")]
@@ -150,14 +146,8 @@ namespace TR.UI
             ScrollCollectionToTop();
         }
 
-        // The list is rebuilt from scratch every refresh, but Destroy() is deferred to the end of
-        // the frame, so the layout group still counts the old entries at this point. Snapping the
-        // scroll now lands it against a content size that is about to change, which is why the
-        // list opened part-way down. Snap immediately so nothing drifts on screen, then snap again
-        // once the old entries are actually gone and the layout has settled.
         private void ScrollCollectionToTop()
         {
-            // includeInactive matters: the panel can still be switching on when this first runs.
             if (collectionScroll == null && collectionListRoot != null)
                 collectionScroll = collectionListRoot.GetComponentInParent<ScrollRect>(true);
             if (collectionScroll == null) return;
@@ -187,7 +177,6 @@ namespace TR.UI
                 LayoutRebuilder.ForceRebuildLayoutImmediate(content);
             }
 
-            // Kill any inertia too, or the list drifts away from the top right after we set it.
             collectionScroll.velocity = Vector2.zero;
             collectionScroll.verticalNormalizedPosition = 1f;
         }

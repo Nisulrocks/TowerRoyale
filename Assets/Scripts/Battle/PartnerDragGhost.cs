@@ -11,14 +11,10 @@ namespace TR.Battle
     public class PartnerDragGhost : MonoBehaviour
     {
         [Header("Appearance")]
-        [Tooltip("Alpha applied to the partner's ghost sprites.")]
         [Range(0f, 1f)]
         [SerializeField] private float alpha = 0.5f;
-        [Tooltip("How quickly the ghost eases toward the streamed position (higher = snappier).")]
         [SerializeField] private float followLerp = 18f;
-        [Tooltip("World-space vertical offset of the info label above the ghost.")]
         [SerializeField] private float labelHeight = 1.2f;
-        [Tooltip("Font size of the world-space info label.")]
         [SerializeField] private float labelFontSize = 3f;
 
         private DuoBattleCoordinator _coordinator;

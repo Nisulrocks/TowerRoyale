@@ -44,17 +44,13 @@ namespace TR.Data
         [SerializeField] private Sprite packArtSprite;
 
         [Header("Shop Pack Art (optional)")]
-        [Tooltip("Sprite shown on the shop pack item. If empty, the Pack Art Sprite above is used.")]
         [SerializeField] private Sprite shopPackArtSprite;
 
         [Header("Pack Opening Cutscene (optional)")]
-        [Tooltip("Video clip played before the pack opening begins. If empty, the pack opens immediately.")]
         [SerializeField] private VideoClip openingVideoClip;
 
         [Header("Pack Opening SFX (optional)")]
-        [Tooltip("SFX key played when the pack seal cracks (start of pop phase)")]
         [SerializeField] private string sealCrackKey = "pack_seal_crack";
-        [Tooltip("SFX key played as the pack opens/slides (whoosh during slide phase)")]
         [SerializeField] private string openWhooshKey = "pack_open_whoosh";
 
         [Header("Unlocking")]
@@ -63,7 +59,6 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int unlockCost = 0;
 
         [Header("Shop")]
-        [Tooltip("Order for listing this pack in the shop (lower comes first). Tie-breaker is DisplayName.")]
         [SerializeField] private int shopOrder = 0;
 
         public string PackId => packId;

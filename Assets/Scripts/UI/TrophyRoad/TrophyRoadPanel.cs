@@ -27,11 +27,8 @@ namespace TR.UI.TrophyRoad
         [Header("Unified Sizing")]
 
         [SerializeField] private float sizeScale = 1f;
-        [Tooltip("Base slider height in pixels (before scaling).")]
         [SerializeField] private float baseSliderHeight = 24f;
-        [Tooltip("Base node width in pixels (before scaling).")]
         [SerializeField] private float baseNodeWidth = 110f;
-        [Tooltip("Base node height in pixels (before scaling).")]
         [SerializeField] private float baseNodeHeight = 80f;
         [SerializeField] private float nodeVerticalOffset = 0f; 
 

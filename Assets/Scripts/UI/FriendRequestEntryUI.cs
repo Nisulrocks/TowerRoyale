@@ -5,7 +5,6 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // An incoming friend request, with accept / decline.
     public class FriendRequestEntryUI : MonoBehaviour
     {
         [SerializeField] private TMP_Text nameText;
@@ -47,8 +46,6 @@ namespace TR.UI
             FriendsService.Instance.DeclineFriendRequest(_data.fromUid);
         }
 
-        // The list is rebuilt from Firestore right after either action; disabling in the meantime
-        // stops a double tap from firing the request twice.
         private void SetButtons(bool interactable)
         {
             if (acceptButton != null) acceptButton.interactable = interactable;

@@ -14,7 +14,6 @@ namespace TR.Data
         [Min(1)] [SerializeField] private int maxLevel = 10;
 
         [Header("Points Required Formula (L-1 -> L)")]
-        [Tooltip("Points needed to upgrade from previous level to this level: points = base + perLevel*(L-2). For L=2, multiplier is 0.")]
         [Min(0)] [SerializeField] private int pointsBase = 2;
         [Min(0)] [SerializeField] private int pointsPerLevel = 3;
 
@@ -29,12 +28,10 @@ namespace TR.Data
         [Min(0)] [SerializeField] private int dupSoftCurrencyMax = 0;
 
         [Header("Upgrade Cost Formula (Soft Currency)")]
-        [Tooltip("Soft cost to upgrade from previous level to target level: cost = base + perLevel*(L-2). For L=2, multiplier is 0.")]
         [Min(0)] [SerializeField] private int upgradeCostBase = 50;
         [Min(0)] [SerializeField] private int upgradeCostPerLevel = 75;
 
         [Header("Castle XP Awarded On Upgrade")]
-        [Tooltip("XP granted to the Castle when upgrading into target level L: xp = base + perLevel*(L-2). For L=2, multiplier is 0.")]
         [Min(0)] [SerializeField] private int castleXpBase = 5;
         [Min(0)] [SerializeField] private int castleXpPerLevel = 5;
 
@@ -50,7 +47,6 @@ namespace TR.Data
         public bool ConfettiOnReveal => confettiOnReveal;
 
         [Header("Pack Reveal")]
-        [Tooltip("0 = no celebration, 1 = grand reveal (rays, shockwave, slow-mo), 2 = mythic reveal (everything, dialled up).")]
         [Range(0, 2)] [SerializeField] private int revealTier = 0;
         public int RevealTier => revealTier;
 

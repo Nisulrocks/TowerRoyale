@@ -32,11 +32,9 @@ namespace TR.Battle
         [SerializeField] private Vector3 ringLocalOffset = new Vector3(0f, 0.35f, 0f);
 
         [Header("VFX")]
-        [Tooltip("ParticleManager key to play when this tower generates money (one-shot)")]
         [SerializeField] private string incomeVfxKey = "";
 
         [SerializeField] private Transform incomeVfxAnchor;
-        [Tooltip("Seconds between income VFX spawns while generating (regular cadence)")]
         [SerializeField] private float incomeVfxEverySeconds = 1.0f;
         private float _incomeVfxAccum;
 

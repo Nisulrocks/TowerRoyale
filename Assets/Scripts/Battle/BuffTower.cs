@@ -54,7 +54,6 @@ namespace TR.Battle
         private ParticleSystem _auraVfx;
 
         [SerializeField] private bool autoScaleAuraToRange = true;
-        [Tooltip("Multiplier applied to computed scale to fit your authored particle (tweak to match visuals).\nFinal scale = buffRange * auraScaleMultiplier")]
         [SerializeField] private float auraScaleMultiplier = 1.0f;
 
         public void Initialize(BuffCardDefinition def, int level)

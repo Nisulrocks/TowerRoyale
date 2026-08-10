@@ -13,11 +13,8 @@ namespace TR.UI
         [SerializeField] [TextArea] private string message = "No internet connection detected.\nPlease check your network and try again.";
 
         [Header("Buttons")]
-        [Tooltip("Optional retry button — reloads the current scene or the configured retry scene.")]
         [SerializeField] private Button retryButton;
-        [Tooltip("Optional quit button — closes the application.")]
         [SerializeField] private Button quitButton;
-        [Tooltip("If set, Retry loads this scene. If empty, Retry reloads the currently active scene.")]
         [SerializeField] private string retrySceneName = "";
 
         [Header("SFX (Optional)")]

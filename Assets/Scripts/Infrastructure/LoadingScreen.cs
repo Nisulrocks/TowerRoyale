@@ -20,7 +20,6 @@ namespace TR.Infrastructure
 
         [Header("Company Splash (Video)")]
         public GameObject blackOverlay;
-        [Tooltip("If null, auto-finds VideoPlayer on blackOverlay")]
         public VideoPlayer companyVideoPlayer;
 
         [Header("Game Splash UI")]
@@ -29,13 +28,10 @@ namespace TR.Infrastructure
         [Header("Loading UI")]
         public Slider progressBar;
         public TMP_Text progressText;
-        [Tooltip("Optional second line showing '42%  ·  Loading audio'. If left empty the detail is folded into progressText instead.")]
         public TMP_Text statusText;
 
         [Header("Loading Bar Feel")]
-        [Tooltip("How long a stage with no measurable sub-progress takes to creep most of the way across its share of the bar. Network waits have no real percentage, so the fill eases forward instead of freezing.")]
         [SerializeField] private float stageCreepSeconds = 2.5f;
-        [Tooltip("Minimum bar travel per second, so the fill is always visibly moving.")]
         [SerializeField] private float barMinSpeed = 0.10f;
 
         [Header("Timings")]
@@ -46,25 +42,17 @@ namespace TR.Infrastructure
         public float minTotalSplashTime = 2.0f;
 
         [Header("Firebase / Cloud Login")]
-        [Tooltip("Assign the FirebaseConfig asset here.")]
         public FirebaseConfig firebaseConfig;
-        [Tooltip("CloudLoginUI prefab shown during boot if not signed in.")]
         public GameObject cloudLoginUIPrefab;
-        [Tooltip("Parent for the CloudLoginUI. If null, searches for a Canvas in the boot scene.")]
         public RectTransform cloudLoginUIParent;
 
         [Header("Internet Check")]
-        [Tooltip("If enabled, the loader tries to connect to Photon to verify internet/service access before entering the Lobby.")]
         public bool checkInternetBeforeLoad = true;
-        [Tooltip("Seconds to wait for a Photon connection before treating it as no internet.")]
         public float internetCheckTimeout = 8f;
-        [Tooltip("Prefab to show when no internet is detected. If null, the message falls back to the progress text.")]
         public GameObject noInternetPopupPrefab;
 
         [Header("UI Audio")]
-        [Tooltip("SFX Library key played when any UI button is clicked. Must match an entry key in Resources/SFX/SFXLibrary.")]
         [SerializeField] private string uiClickSfxKey = "ui_click";
-        [Tooltip("Optional parent for the popup. If null, the loader searches for a Canvas in the Boot scene.")]
         public RectTransform noInternetPopupParent;
         [TextArea] public string noInternetMessage = "No internet connection detected.\nPlease check your network and try again.";
 
@@ -161,8 +149,6 @@ namespace TR.Infrastructure
                 blackOverlay.SetActive(false);
             }
 
-            // Starts streaming now and keeps going underneath every stage below, feeding the
-            // Lobby slice of the bar from Update() as it goes.
             var op = SceneManager.LoadSceneAsync(lobbySceneName, LoadSceneMode.Single);
             op.allowSceneActivation = false;
             _sceneOp = op;
@@ -196,21 +182,16 @@ namespace TR.Infrastructure
             {
                 _statusOverride = "No connection";
                 RefreshProgressUI();
-                _halted = true; // stop Update stomping the popup's fallback message
+                _halted = true; 
                 ShowNoInternetPopup();
                 return;
             }
             CompleteStage(BootStage.Connection);
 
-            // Keep watching the connection after boot so the same popup appears in Lobby / matches.
             NetworkConnectionMonitor.Initialize(noInternetPopupPrefab, SceneManager.GetActiveScene().name);
 
-            // One shared click sound for every UI button, in every scene.
             TR.Audio.UIClickSfx.Initialize(uiClickSfxKey);
 
-            // Initialize Firebase and handle cloud login before proceeding to lobby.
-            // Anything that escapes here would abort the rest of Start(), so allowSceneActivation
-            // below would never run and the player would sit on the splash forever.
             try
             {
                 await InitializeFirebaseAndLogin();
@@ -219,13 +200,10 @@ namespace TR.Infrastructure
             {
                 Debug.LogError($"[LoadingScreen] Cloud init failed, continuing offline: {ex}");
             }
-            // Whatever happened in there, those stages are done with.
             CompleteStage(BootStage.Services);
             CompleteStage(BootStage.Account);
             CompleteStage(BootStage.Profile);
 
-            // Card/rarity/pack/arena tables. This used to happen in the Lobby's Awake, where it
-            // hitched the first frame; doing it here is both honest progress and a smoother entry.
             BeginStage(BootStage.GameData);
             await Task.Yield();
             GameDB.EnsureLoaded();
@@ -245,7 +223,6 @@ namespace TR.Infrastructure
             while (op.progress < 0.9f) await Task.Yield();
             CompleteStage(BootStage.Lobby);
 
-            // Let the fill visibly finish its travel rather than cutting away part-way.
             _statusOverride = "Ready";
             await WaitForBarToReach(1f);
 
@@ -255,12 +232,7 @@ namespace TR.Infrastructure
             while (!op.isDone) { await Task.Yield(); }
         }
 
-        // ---------- real progress ----------
 
-        // Every stage below is actual work the boot does. The bar is the weighted sum of how far
-        // each one has got, so it reflects what is really happening instead of sitting at zero and
-        // snapping to full at the end. Stages run concurrently where the work does: the Lobby
-        // scene streams in the whole time the cloud calls are in flight, and contributes as it goes.
         private enum BootStage { Connection = 0, Services, Account, Profile, GameData, Audio, Lobby }
 
         private static readonly string[] StageLabels =
@@ -274,7 +246,6 @@ namespace TR.Infrastructure
             "Loading lobby",
         };
 
-        // Sums to 1.
         private static readonly float[] StageWeights = { 0.16f, 0.14f, 0.12f, 0.14f, 0.14f, 0.14f, 0.16f };
 
         private readonly float[] _stageProgress = new float[7];
@@ -286,7 +257,6 @@ namespace TR.Infrastructure
         private string _statusOverride;
         private bool _halted;
 
-        // Waiting on the player is not loading, so hold the fill still instead of creeping.
         private void FreezeStageCreep() => _activeMeasurable = true;
 
         private void BeginStage(BootStage stage, bool measurable = false)
@@ -299,29 +269,24 @@ namespace TR.Infrastructure
         private void ReportStage(BootStage stage, float fraction)
         {
             int i = (int)stage;
-            // Never let a stage walk backwards; the bar only ever moves forward.
             _stageProgress[i] = Mathf.Max(_stageProgress[i], Mathf.Clamp01(fraction));
         }
 
         private void CompleteStage(BootStage stage)
         {
             _stageProgress[(int)stage] = 1f;
-            if (_activeStage == (int)stage) _activeMeasurable = true; // stop creeping
+            if (_activeStage == (int)stage) _activeMeasurable = true; 
         }
 
         private void Update()
         {
-            // Boot gave up (no internet); leave the bar and whatever message is on screen alone.
             if (_halted) return;
 
-            // The scene keeps streaming in behind everything else, so poll it every frame.
             if (_sceneOp != null) ReportStage(BootStage.Lobby, _sceneOp.progress / 0.9f);
 
             if (_activeStage >= 0 && !_activeMeasurable)
             {
                 _activeElapsed += Time.unscaledDeltaTime;
-                // A network round trip has no honest percentage, so ease toward — but never reach —
-                // the end of this stage's band. Only the stage actually finishing fills it.
                 float creep = 0.85f * (1f - Mathf.Exp(-_activeElapsed / Mathf.Max(0.1f, stageCreepSeconds)));
                 ReportStage((BootStage)_activeStage, creep);
             }
@@ -329,7 +294,6 @@ namespace TR.Infrastructure
             float target = 0f;
             for (int i = 0; i < _stageProgress.Length; i++) target += StageWeights[i] * _stageProgress[i];
 
-            // Gap-proportional so big jumps catch up fast, with a floor so the fill never stalls.
             float speed = Mathf.Max(barMinSpeed, (target - _shown) * 4f);
             _shown = Mathf.MoveTowards(_shown, target, speed * Time.unscaledDeltaTime);
 
@@ -338,7 +302,6 @@ namespace TR.Infrastructure
 
         private void RefreshProgressUI()
         {
-            // Floor, so it never reads 100% while there is still work left.
             int pct = Mathf.Clamp(Mathf.FloorToInt(_shown * 100f), 0, 100);
             string label = _statusOverride
                         ?? (_activeStage >= 0 ? StageLabels[_activeStage] : "Starting up");
@@ -356,7 +319,6 @@ namespace TR.Infrastructure
             }
         }
 
-        // Lets the fill actually travel to its target instead of the scene cutting away mid-slide.
         private async Task WaitForBarToReach(float value, float timeout = 2f)
         {
             while (_shown < value - 0.001f && timeout > 0f)
@@ -376,8 +338,6 @@ namespace TR.Infrastructure
 
             BeginStage(BootStage.Services);
 
-            // Must exist before FirebaseService.Initialize(), because a restored session fires
-            // OnSignInComplete from inside that call and the guard has to catch it.
             SessionGuardService.Initialize(noInternetPopupPrefab, "Boot");
 
             if (FirebaseService.Instance == null)
@@ -391,9 +351,6 @@ namespace TR.Infrastructure
                 svc.Initialize();
             }
 
-            // FirebaseService keeps its signed-in state across a scene reload and will not fire
-            // OnSignInComplete a second time, so a reboot has to claim the account explicitly.
-            // ClaimSession ignores this when the account is already claimed for this session.
             if (FirebaseService.IsSignedIn && !string.IsNullOrEmpty(FirebaseService.UserId))
             {
                 SessionGuardService.Instance?.ClaimSession(FirebaseService.UserId);
@@ -417,10 +374,8 @@ namespace TR.Infrastructure
                 frGo.AddComponent<FriendsService>();
             }
 
-            // Must exist outside the Friends panel so invites arrive on any screen.
             TR.UI.DuoInviteListener.Initialize();
 
-            // Same reason as the session claim above: a reboot will not re-fire OnSignInComplete.
             if (FirebaseService.IsSignedIn && !string.IsNullOrEmpty(FirebaseService.UserId))
             {
                 FriendsService.Instance?.Initialize(FirebaseService.UserId);
@@ -432,9 +387,6 @@ namespace TR.Infrastructure
             if (CloudProfileService.Instance != null)
                 CloudProfileService.Instance.Initialize();
 
-            // FirebaseFirestore.DefaultInstance throws (not returns null) when Firebase failed to
-            // initialize. Letting that escape aborts the rest of the loading flow, including the
-            // cloud login prompt below, so degrade to offline instead.
             try
             {
                 if (LeaderboardService.Instance != null
@@ -465,8 +417,6 @@ namespace TR.Infrastructure
             }
             else
             {
-                // Sitting on the sign-in prompt is a wait on the player, not on us — say so rather
-                // than letting the bar creep as if something were still loading.
                 _statusOverride = "Waiting for sign-in";
                 FreezeStageCreep();
                 await ShowCloudLoginAndWait();
@@ -476,8 +426,6 @@ namespace TR.Infrastructure
             }
         }
 
-        // Pulls every SFX and music clip into memory here rather than letting the first play in the
-        // Lobby hitch. Clip-by-clip, so this stage reports a genuine percentage.
         private async Task PreloadAudio()
         {
             BeginStage(BootStage.Audio, measurable: true);
@@ -495,7 +443,6 @@ namespace TR.Infrastructure
                 }
             }
 
-            // Only an existing manager: constructing one here would start boot music playing.
             var bgm = FindFirstObjectByType<TR.Audio.BGMManager>(FindObjectsInactive.Include);
             if (bgm != null)
             {
@@ -521,8 +468,6 @@ namespace TR.Infrastructure
                 await Task.Yield();
             }
 
-            // LoadAudioData is asynchronous for compressed clips, so the second half of this
-            // stage is them actually landing in memory.
             float timeout = 5f;
             while (timeout > 0f)
             {
@@ -766,7 +711,6 @@ namespace TR.Infrastructure
                 return;
             }
 
-            // Fallback if no prefab is assigned: write the message into the progress text.
             if (progressText != null)
             {
                 EnsureActiveHierarchy(progressText.gameObject);

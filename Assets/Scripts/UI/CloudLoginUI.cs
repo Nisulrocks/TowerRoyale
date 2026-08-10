@@ -66,8 +66,6 @@ namespace TR.UI
             if (loadingIndicator != null) loadingIndicator.SetActive(true);
             if (signInButton != null) signInButton.interactable = false;
 
-            // Guest must stay available: if the browser is closed the sign-in cannot complete, and
-            // this is the player's only way out before the timeout.
             if (continueAsGuestButton != null) continueAsGuestButton.interactable = true;
 
             if (FirebaseService.Instance != null)
@@ -78,7 +76,6 @@ namespace TR.UI
 
         private void Update()
         {
-            // Without this the screen sits silent for the whole timeout and reads as a freeze.
             if (!GoogleOAuthHandler.IsWaitingForBrowser) return;
             if (statusText == null) return;
 
@@ -87,7 +84,6 @@ namespace TR.UI
                 $"Waiting for you to finish signing in ({secs}s)...\n" +
                 "Closed the browser? Press Sign In again or continue as a guest.";
 
-            // Let them retry immediately rather than waiting out the countdown.
             if (signInButton != null && !signInButton.interactable)
                 signInButton.interactable = true;
         }
@@ -142,7 +138,6 @@ namespace TR.UI
             if (signOutButton != null)
             {
                 signOutButton.gameObject.SetActive(signedIn);
-                // Blocked mid-match; FirebaseService.SignOut refuses too, this is just the cue.
                 signOutButton.interactable = !MatchContext.IsMatchInProgress;
             }
             if (continueAsGuestButton != null) continueAsGuestButton.gameObject.SetActive(!signedIn);

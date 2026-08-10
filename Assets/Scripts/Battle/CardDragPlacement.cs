@@ -11,8 +11,6 @@ namespace TR.Battle
     {
         [SerializeField] private CardDefinition card;
 
-        // The most reliable way to find which card a battle deck slot represents: this component
-        // sits on the exact object that receives the drag.
         public CardDefinition Card => card;
         [SerializeField] private TowerPlacementController placement;
 
@@ -165,10 +163,6 @@ namespace TR.Battle
                 if (ghostSg == null) ghostSg = _ghost.AddComponent<SortingGroup>();
                 ghostSg.sortingOrder = 10;
 
-                // Instantiate already ran OnEnable on every component, so TowerBase has spawned a
-                // pooled idle effect and parented it to the ghost. Disabling the components below
-                // releases it, but the effect object is still a child here — hand it back first so
-                // it is not destroyed along with the ghost.
                 foreach (var pooled in _ghost.GetComponentsInChildren<TR.VFX.PooledParticle>(true))
                 {
                     if (pooled != null) pooled.ForceReturn();
@@ -176,8 +170,6 @@ namespace TR.Battle
 
                 foreach (var mb in _ghost.GetComponentsInChildren<MonoBehaviour>(true)) mb.enabled = false;
 
-                // Disabling the components fires OnDisable, which can release another effect onto
-                // the ghost. Sweep once more so nothing is left parented to it.
                 foreach (var pooled in _ghost.GetComponentsInChildren<TR.VFX.PooledParticle>(true))
                 {
                     if (pooled != null) pooled.ForceReturn();

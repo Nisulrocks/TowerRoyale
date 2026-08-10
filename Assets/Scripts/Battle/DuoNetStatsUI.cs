@@ -12,16 +12,12 @@ namespace TR.Battle
     public class DuoNetStatsUI : MonoBehaviour
     {
         [Header("Placement")]
-        [Tooltip("Optional parent Canvas. If null, one is found or created automatically.")]
         [SerializeField] private Canvas targetCanvas;
-        [Tooltip("Offset from the top-left corner of the screen, in pixels.")]
         [SerializeField] private Vector2 topLeftOffset = new Vector2(16f, 16f);
         [SerializeField] private float fontSize = 20f;
 
         [Header("Toast")]
-        [Tooltip("Message shown to the local player when their connection is weak.")]
         [SerializeField] private string localWeakMessage = "Connection weak";
-        [Tooltip("Message shown when the partner's connection is weak.")]
         [SerializeField] private string partnerWeakMessage = "Partner's connection weak";
 
         private DuoNetStats _stats;

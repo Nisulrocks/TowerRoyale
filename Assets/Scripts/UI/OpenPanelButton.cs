@@ -3,12 +3,9 @@ using UnityEngine.UI;
 
 namespace TR.UI
 {
-    /// Opens a PanelSwitcher panel by name. Lets a panel be reachable from somewhere other than the
-    /// tab strip — the profile hangs off the name plate on the Play panel, because the tab row is full.
     [RequireComponent(typeof(Button))]
     public class OpenPanelButton : MonoBehaviour
     {
-        [Tooltip("Panel name as registered in the PanelSwitcher.")]
         [SerializeField] private string panelName = "Profile";
 
         private Button _button;
@@ -28,7 +25,6 @@ namespace TR.UI
         {
             if (string.IsNullOrEmpty(panelName)) return;
 
-            // The switcher lives above the panels, and this button sits inside one of them.
             var switcher = GetComponentInParent<PanelSwitcher>();
             if (switcher == null) switcher = FindFirstObjectByType<PanelSwitcher>(FindObjectsInactive.Include);
 

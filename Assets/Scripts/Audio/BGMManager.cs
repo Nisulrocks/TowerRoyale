@@ -32,7 +32,7 @@ public string sceneName;
 
         [Header("Playback")] 
         [Range(0f, 1f)] public float masterVolume = 1f;
-        [Tooltip("Fade duration (seconds) when switching scenes")] public float sceneSwitchFade = 0.5f;
+         public float sceneSwitchFade = 0.5f;
 
         private static BGMManager _instance;
         private AudioSource _a;
@@ -106,7 +106,7 @@ public string sceneName;
                 bool mute = PlayerPrefs.GetInt(PREF_MUSIC_MUTE, 0) != 0;
                 SetMasterVolume(mute ? 0f : Mathf.Clamp01(vol));
             }
-            catch { /* ignore */ }
+            catch {  }
             var active = SceneManager.GetActiveScene();
             _currentScene = active.name;
             PlayForScene(_currentScene, sceneSwitchFade);

@@ -5,11 +5,9 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    /// One row of the battle log.
     public class BattleLogEntryUI : MonoBehaviour
     {
         [Header("Refs")]
-        [Tooltip("Coloured bar down the side of the row, tinted by the outcome.")]
         [SerializeField] private Image resultStripe;
         [SerializeField] private TMP_Text resultText;
         [SerializeField] private TMP_Text modeText;
@@ -17,7 +15,6 @@ namespace TR.UI
         [SerializeField] private TMP_Text wavesText;
         [SerializeField] private TMP_Text trophyText;
         [SerializeField] private TMP_Text dateText;
-        [Tooltip("Optional background image, tinted a faint version of the outcome colour.")]
         [SerializeField] private Image background;
 
         [Header("Outcome Colours")]
@@ -50,8 +47,6 @@ namespace TR.UI
 
             if (modeText != null)
             {
-                // The partner is the only thing that distinguishes one duo run from another, so
-                // show them by name rather than just saying "Duo".
                 modeText.text = record.Mode == MatchMode.Duo
                     ? (string.IsNullOrEmpty(record.partnerName) ? "Duo" : "Duo with " + record.partnerName)
                     : "Single";
@@ -103,7 +98,6 @@ namespace TR.UI
             }
         }
 
-        // Relative for anything recent, absolute once it stops being useful.
         private static string FormatWhen(System.DateTime when)
         {
             var span = System.DateTime.Now - when;

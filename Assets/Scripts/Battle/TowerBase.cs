@@ -51,26 +51,20 @@ namespace TR.Battle
         private readonly System.Collections.Generic.Dictionary<UnityEngine.Object, BuffEntry> _buffs = new();
         public System.Action OnBuffsChanged;
         [Header("VFX")]
-        [Tooltip("ParticleManager key for a looping idle effect (e.g., Inferno tower flame). Leave empty to disable.")]
         [SerializeField] private string idleVfxKey = "";
 
         [SerializeField] private Transform idleVfxAnchor;
 
-        [Tooltip("Draw the idle effect behind the tower's sprites instead of on top of them.")]
         [SerializeField] private bool idleVfxBehindTower = true;
-        [Tooltip("How far below the tower's lowest sprite the idle effect is sorted.")]
         [SerializeField] private int idleVfxSortingOffset = -100;
 
         private ParticleSystem _idleVfx;
 
         [SerializeField] private string muzzleFlashVfxKey = "";
-        [Tooltip("Optional anchor for muzzle flash (fire point). If null, uses tower transform.")]
         [SerializeField] private Transform muzzleFlashAnchor;
 
         [SerializeField] private string projectileImpactVfxKey = "";
 
-        // Exposed so non-combat consumers (the card hover preview) can reproduce the firing
-        // visuals without running any of the combat code.
         public string MuzzleFlashVfxKey => muzzleFlashVfxKey;
         public Transform MuzzleFlashAnchor => muzzleFlashAnchor;
         public string ProjectileImpactVfxKey => projectileImpactVfxKey;
@@ -80,7 +74,6 @@ namespace TR.Battle
 
         [SerializeField] private Color buffGlowColor = new Color(0.2f, 1f, 0.6f, 1f);
         [Range(0f, 1f)] [SerializeField] private float buffGlowIntensity = 0.35f; 
-        [Tooltip("Speed of the glow pulse animation (cycles per second)")]
         [SerializeField] private float buffGlowPulseSpeed = 2.5f;
         [Range(0f, 1f)] [SerializeField] private float buffGlowPulseAmplitude = 0.25f; 
         private readonly HashSet<object> _glowSources = new HashSet<object>();
@@ -556,8 +549,6 @@ namespace TR.Battle
 
         public bool PlayedDestroyFeedback => _playedDestroyFeedback;
 
-        // Destruction feedback is deliberately not gated on ownership: a mirrored tower has to be
-        // able to play it when the simulating client reports the tower was destroyed.
         public void PlayDestroyFeedback()
         {
             if (_playedDestroyFeedback) return;
@@ -987,7 +978,6 @@ namespace TR.Battle
             }
             else
             {
-                // Instant hit (no projectile, no zap) — play impact SFX on the visual client.
                 if (target.gameObject.activeInHierarchy && target.CurrentHealth > 0f)
                 {
                     if (_lastCrit)
@@ -1171,8 +1161,6 @@ namespace TR.Battle
             => !string.IsNullOrEmpty(idleVfxKey) ? idleVfxKey
              : (definition != null ? definition.GetIdleVfxKey() : string.Empty);
 
-        // TowerBase spawns, parents, sorts and releases the tower's idle effect. Anything else that
-        // reads the card's idle VFX key must defer to this, or the effect gets spawned twice.
         public bool ManagesIdleVfx => !string.IsNullOrEmpty(ResolveIdleVfxKey());
         public ParticleSystem IdleVfxInstance => _idleVfx;
 
@@ -1181,9 +1169,6 @@ namespace TR.Battle
             string key = ResolveIdleVfxKey();
             if (string.IsNullOrEmpty(key)) return;
 
-            // A pooled effect can return itself to the pool (PooledParticle.LateUpdate), which
-            // leaves this reference non-null while the object has been handed to someone else.
-            // Treat anything no longer parented to us as gone rather than trusting the reference.
             if (_idleVfx != null)
             {
                 bool stillOurs = _idleVfx.gameObject.activeInHierarchy &&
@@ -1192,9 +1177,6 @@ namespace TR.Battle
                 _idleVfx = null;
             }
 
-            // A prefab can carry both TowerBase and a component derived from it (TowerPulse is a
-            // TowerBase). Both receive OnEnable and would each spawn their own copy, so the first
-            // to claim the effect owns it.
             var siblings = GetComponents<TowerBase>();
             if (siblings.Length > 1)
             {
@@ -1208,7 +1190,6 @@ namespace TR.Battle
 
             var pos = idleVfxAnchor != null ? idleVfxAnchor.position : transform.position;
             var parent = idleVfxAnchor != null ? idleVfxAnchor : transform;
-            // Keep the effect's authored rotation, and let it follow the tower's orientation.
             _idleVfx = ParticleManager.Spawn(key, pos, parent.rotation, parent, true, preservePrefabRotation: true);
             if (_idleVfx != null)
             {
@@ -1220,9 +1201,6 @@ namespace TR.Battle
             }
         }
 
-        // The tower has a SortingGroup, so its children are sorted against each other by their own
-        // sorting order. Putting the effect below the tower's lowest sprite draws it behind.
-        // Pooled effects are reused, so this must be reapplied on every spawn.
         private void ApplyIdleVfxSorting()
         {
             if (!idleVfxBehindTower || _idleVfx == null) return;
@@ -1246,7 +1224,6 @@ namespace TR.Battle
             {
                 var r = psRenderers[i];
                 if (r == null) continue;
-                // Sorting order only compares within the same sorting layer, so match the tower's.
                 if (haveLayer) r.sortingLayerID = layerId;
                 r.sortingOrder = lowest + idleVfxSortingOffset;
             }

@@ -38,20 +38,16 @@ namespace TR.Data
         [SerializeField] private float slowDurPercentBase = 0.0f;    [SerializeField] private float slowDurPercentPerLevel = 0.0f;
         
         [SerializeField] private bool buffStun = false;
-        [Tooltip("Percent bonus applied multiplicatively to stun chance, e.g., 0.25 = +25% more chance (capped at 100%)")] 
         [SerializeField] private float stunChancePercentBase = 0.0f;  [SerializeField] private float stunChancePercentPerLevel = 0.0f;
 
         [SerializeField] private float stunDurPercentBase = 0.0f;     [SerializeField] private float stunDurPercentPerLevel = 0.0f;
 
         [Header("Economy Buffs")]
         [SerializeField] private bool buffEconomyIncome = false;
-        [Tooltip("Percent increase to EconomyTower income per second (e.g., 0.25 = +25%)")] 
         [SerializeField] private float economyIncomePercentBase = 0.0f; [SerializeField] private float economyIncomePercentPerLevel = 0.0f;
 
         [Header("Lifetime (base + perLevel*(level-1))")]
-        [Tooltip("Maximum HP for the buff tower (decays over time)")]
         [SerializeField] private float maxHealthBase = 10f;          [SerializeField] private float maxHealthPerLevel = 0f;
-        [Tooltip("HP decay per second (how fast it expires)")]
         [SerializeField] private float decayPerSecBase = 1f;         [SerializeField] private float decayPerSecPerLevel = 0f;
 
         public float GetBuffRange(int level)

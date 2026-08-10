@@ -7,7 +7,6 @@ using TR.Net;
 
 namespace TR.UI
 {
-    // Friends tab: friends list, incoming requests, player search, and duo invites.
     public class FriendsPanelUI : MonoBehaviour
     {
         [Header("Tabs")]
@@ -38,9 +37,7 @@ namespace TR.UI
         [SerializeField] private TMP_Text searchStatusText;
 
         [Header("Guest Mode")]
-        [Tooltip("Optional. Shown instead of the friends UI when the player has not signed in.")]
         [SerializeField] private GameObject guestNoticeRoot;
-        [Tooltip("Optional. Message inside the guest notice.")]
         [SerializeField] private TMP_Text guestNoticeText;
         [TextArea]
         [SerializeField] private string guestMessage =
@@ -57,7 +54,6 @@ namespace TR.UI
         [SerializeField] private Button refreshButton;
 
         [Header("Presence")]
-        [Tooltip("How often the friends list is re-read so online status stays current.")]
         [SerializeField] private float presenceRefreshSeconds = 10f;
 
         private float _nextPresenceRefresh;
@@ -74,7 +70,6 @@ namespace TR.UI
             FriendsService.OnSearchFailed += HandleSearchFailed;
             FriendsService.OnActionSucceeded += HandleActionMessage;
             FriendsService.OnActionFailed += HandleActionMessage;
-            // Incoming invites are handled by DuoInviteListener so they arrive on any screen.
 
             if (friendsTabButton != null) friendsTabButton.onClick.AddListener(ShowFriendsTab);
             if (requestsTabButton != null) requestsTabButton.onClick.AddListener(ShowRequestsTab);
@@ -124,8 +119,6 @@ namespace TR.UI
                 if (statusText != null) statusText.text = string.Empty;
             }
 
-            // Presence was previously only read when the panel opened, so a friend coming online or
-            // going offline never showed up until the player reopened the tab.
             if (FirebaseService.IsGuest) return;
 
             if (presenceRefreshSeconds > 0f && Time.unscaledTime >= _nextPresenceRefresh)
@@ -135,8 +128,6 @@ namespace TR.UI
             }
         }
 
-        // Guests have no account to hang friends off, so present the tab as unavailable rather than
-        // letting it look broken (empty lists, searches that always fail).
         private void ApplyGuestState()
         {
             if (guestNoticeRoot != null) guestNoticeRoot.SetActive(true);
@@ -157,8 +148,6 @@ namespace TR.UI
             if (requestsBadge != null) requestsBadge.SetActive(false);
             if (myIdText != null) myIdText.text = "Playing as Guest";
 
-            // No prefab wired for the notice: fall back to the status line so the reason is still
-            // visible rather than showing an empty panel.
             if (guestNoticeRoot == null && statusText != null)
             {
                 statusText.text = guestMessage;
@@ -171,7 +160,6 @@ namespace TR.UI
             if (button != null) button.interactable = value;
         }
 
-        // ---------- tabs ----------
 
         public void ShowFriendsTab() => SetTab(0);
         public void ShowRequestsTab() => SetTab(1);
@@ -197,7 +185,6 @@ namespace TR.UI
             FriendsService.Instance.RefreshRequests();
         }
 
-        // ---------- friends ----------
 
         private void HandleFriendsLoaded(List<FriendsService.PlayerSummary> friends)
         {
@@ -222,7 +209,6 @@ namespace TR.UI
                 friendsEmptyText.gameObject.SetActive(friends.Count == 0);
         }
 
-        // ---------- requests ----------
 
         private void HandleRequestsLoaded(List<FriendsService.FriendRequestInfo> requests)
         {
@@ -246,7 +232,6 @@ namespace TR.UI
             if (requestsBadgeText != null) requestsBadgeText.text = requests.Count.ToString();
         }
 
-        // ---------- search ----------
 
         public void RunSearch()
         {
@@ -281,7 +266,6 @@ namespace TR.UI
             if (searchStatusText != null) searchStatusText.text = error;
         }
 
-        // ---------- context menu / invites ----------
 
         public void ShowContextMenu(FriendsService.PlayerSummary target, Vector2 screenPos)
         {
@@ -293,8 +277,6 @@ namespace TR.UI
             if (target == null || FriendsService.Instance == null) return;
             if (DuoNetworkManager.Instance == null) { SetStatus("Matchmaking unavailable."); return; }
 
-            // Enforced here as well as on the buttons: a list refreshed a moment ago can leave a
-            // button enabled after the friend's trophies moved them to another arena.
             if (!target.isOnline)
             {
                 SetStatus($"{target.playerName} is offline.");
@@ -311,8 +293,6 @@ namespace TR.UI
                 return;
             }
 
-            // The inviter hosts the room and hands its name plus its arena to the friend, so both
-            // clients load the same battle scene.
             string roomName = DuoNetworkManager.NewFriendRoomName();
             string arenaKey = DuoInviteListener.LocalArenaKey();
             string friendName = target.playerName;
@@ -325,8 +305,6 @@ namespace TR.UI
 
             SetStatus($"Inviting {friendName}...");
 
-            // Only host once the invite is actually on the server — otherwise a rejected write left
-            // the inviter sitting alone in a room nobody could ever be told about.
             FriendsService.Instance.SendDuoInvite(target.uid, roomName, arenaKey, (ok, error) =>
             {
                 if (!ok)
@@ -339,7 +317,6 @@ namespace TR.UI
             });
         }
 
-        // ---------- helpers ----------
 
         private void CopyMyId()
         {

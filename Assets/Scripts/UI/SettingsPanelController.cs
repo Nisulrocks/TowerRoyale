@@ -25,7 +25,6 @@ namespace TR.UI
         [Header("Keybinds")]
         [SerializeField] private TMP_Dropdown pauseHotkeyDropdown; 
         [Header("Screen Shake")]
-        [Tooltip("Optional toggle to enable/disable screen shake. If left empty, a toggle is generated automatically.")]
         [SerializeField] private Toggle screenShakeToggle;
 
         [Header("Action Buttons")]

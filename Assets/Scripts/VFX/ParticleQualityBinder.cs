@@ -15,7 +15,6 @@ namespace TR.VFX
 
         [SerializeField] private bool includeChildren = true;
 
-        [Tooltip("If true, when VFX is enabled this binder will Play() the systems if the object is active.")]
         [SerializeField] private bool autoPlayWhenEnabled = true;
 
         private ParticleSystem[] _systems;

@@ -64,7 +64,6 @@ namespace TR.Net
                 amount = PlayerPrefs.GetInt(key, 0);
                 return true;
             }
-            // Legacy fallback for the pre-split global key.
             if (PlayerPrefs.HasKey(PrefsMoney))
             {
                 amount = PlayerPrefs.GetInt(PrefsMoney, 0);
@@ -77,7 +76,7 @@ namespace TR.Net
         public static void ClearMatchMoney()
         {
             PlayerPrefs.DeleteKey(GetMoneyKey());
-            PlayerPrefs.DeleteKey(PrefsMoney); // legacy
+            PlayerPrefs.DeleteKey(PrefsMoney); 
             PlayerPrefs.Save();
         }
 

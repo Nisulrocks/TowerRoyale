@@ -17,13 +17,10 @@ namespace TR.Net
         public const string PROP_PING = "png";
 
         [Header("Publish")]
-        [Tooltip("How often (seconds) the local ping is published to the room so the partner can display it.")]
         [SerializeField] private float publishInterval = 1f;
 
         [Header("Lag thresholds (ms)")]
-        [Tooltip("At or above this ping the connection is considered weak (toast shown).")]
         [SerializeField] private int weakThresholdMs = 250;
-        [Tooltip("Ping must drop below this to be considered recovered (hysteresis).")]
         [SerializeField] private int recoverThresholdMs = 160;
 
         
@@ -143,10 +140,10 @@ namespace TR.Net
         
         public static Color QualityColor(int ping)
         {
-            if (ping <= 0) return new Color(0.6f, 0.6f, 0.6f);       // unknown / grey
-            if (ping < 100) return new Color(0.35f, 0.9f, 0.4f);     // green
-            if (ping < 200) return new Color(1f, 0.85f, 0.3f);       // yellow
-            return new Color(1f, 0.4f, 0.4f);                        // red
+            if (ping <= 0) return new Color(0.6f, 0.6f, 0.6f);       
+            if (ping < 100) return new Color(0.35f, 0.9f, 0.4f);     
+            if (ping < 200) return new Color(1f, 0.85f, 0.3f);       
+            return new Color(1f, 0.4f, 0.4f);                        
         }
     }
 }

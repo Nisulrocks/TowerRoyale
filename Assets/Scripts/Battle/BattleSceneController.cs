@@ -59,7 +59,6 @@ namespace TR.Battle
         
         private const string PROP_DUO_WAVE = "DuoWave";
         [Header("Skip Settings")]
-        [Tooltip("Player can only skip the wait if (active enemies + pending spawns this wave) are less than or equal to this number.")]
         [SerializeField] private int maxEnemiesToAllowSkip = 5;
 
         public static BattleSceneController Instance { get; private set; }
@@ -84,8 +83,6 @@ namespace TR.Battle
             SetupArenaFromContext();
             UpdateTopBar();
             SetupDeckAndPlacement();
-            // Must run after SetupDeckAndPlacement: TowerPlacementController.Configure is what
-            // subscribes to the sync response.
             RequestDuoStateSyncIfRejoining();
             TR.Net.DuoRejoinService.IsRejoinAttempt = false;
             HookCastle();
@@ -296,8 +293,6 @@ namespace TR.Battle
             UpdateEnemiesRemainingText();
         }
 
-        // Raised when a match resolves, so systems outside the battle (the tutorial) can react to
-        // the outcome instead of assuming one.
         public static event System.Action OnMatchVictory;
         public static event System.Action OnMatchDefeat;
 
@@ -308,9 +303,6 @@ namespace TR.Battle
             MarkRoomMatchEnded();
             OnMatchVictory?.Invoke();
             var rewards = ArenaService.AwardMatchCompletion(_arena, _arena != null ? _arena.WaveCount : _wavesCleared);
-            // A victory means every wave fell, but _wavesCleared is only incremented as each wave
-            // ends, so the final one is not counted yet — hence logs reading "Wave 4/5" on a win.
-            // The reward call above already treats a victory as the full count for the same reason.
             RecordMatchToLog(TR.Systems.MatchOutcome.Victory, rewards.trophiesEarned,
                              _arena != null ? _arena.WaveCount : _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
@@ -873,17 +865,11 @@ namespace TR.Battle
         }
 
         
-        // Whether this match already produced a battle-log entry, and whether it ever actually
-        // started. _ended is deliberately NOT used for this: the normal single-player victory path
-        // never sets it, so leaving the results screen after a win looked like walking out of a
-        // live match and logged a bogus "Left" on top of the victory.
         private bool _matchLogged;
         private bool _matchBegan;
 
         public void OnClickReturnToLobby()
         {
-            // Both the post-results exit and the pause menu's leave button come through here.
-            // Anything already logged its own outcome; anything that never started is not a match.
             if (_matchBegan && !_matchLogged)
                 RecordMatchToLog(TR.Systems.MatchOutcome.Abandoned, 0, _wavesCleared);
 
@@ -917,10 +903,6 @@ namespace TR.Battle
                 _arena != null ? _arena.WaveCount : _totalWaves);
         }
 
-        // A partner's Photon nickname is arbitrary remote input, and it is about to be written into
-        // the HMAC-signed profile blob. Anything JsonUtility could round-trip imperfectly would make
-        // the save fail its own integrity check on the next load, which is treated as tampering and
-        // wipes the account. Keep it to plain printable ASCII, bounded.
         private static string SanitizeForSave(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return string.Empty;
@@ -1181,7 +1163,6 @@ namespace TR.Battle
             {
                 if (waveSpawner != null && waveSpawner.IsWaveSpawning(wave))
                 {
-                    // Defer payout until the spawner has finished this wave.
                 }
                 else
                 {

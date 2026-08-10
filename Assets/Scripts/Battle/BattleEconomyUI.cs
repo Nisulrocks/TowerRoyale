@@ -17,7 +17,6 @@ namespace TR.Battle
         [SerializeField] private TMP_Text deltaTextPrefab;
 
         [SerializeField] private Vector2 deltaOffset = new Vector2(0f, 0f);
-        [Tooltip("How far (in UI units) the text floats up before disappearing.")]
         [SerializeField] private float floatUpDistance = 30f;
 
         [SerializeField] private float floatDuration = 0.6f;

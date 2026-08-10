@@ -22,7 +22,6 @@ namespace TR.Data
         [SerializeField] private string displayName;
         [SerializeField] private Sprite icon;
         [SerializeField] private RarityDefinition rarity;
-        [Tooltip("If false, this card definition is excluded from the in-game card pool, collections, decks, and packs.")]
         [SerializeField] private bool showInGame = true;
 
         [Header("Battle Prefab")]
@@ -40,11 +39,11 @@ namespace TR.Data
         [SerializeField] private int costBase = 50;         [SerializeField] private int costPerLevel = 7;
 
         [Header("Critical Hits (optional)")]
-        [Tooltip("Chance to critically hit (0..1) at level 1 and per level increment")] [SerializeField]
+         [SerializeField]
         private float critChanceBase = 0f; [SerializeField] private float critChancePerLevel = 0f;
-        [Tooltip("Critical damage multiplier at level 1 and per level increment (e.g., 2 = double damage)")] [SerializeField]
+         [SerializeField]
         private float critMultiplierBase = 2f; [SerializeField] private float critMultiplierPerLevel = 0f;
-        [Tooltip("Burst text to display when a critical hit occurs (e.g., 'CRIT!', 'HEADSHOT!')")] [SerializeField]
+         [SerializeField]
         private string critBurstText = "CRIT!";
 
         [Header("On-Hit Effects (optional)")]
@@ -54,27 +53,22 @@ namespace TR.Data
         [SerializeField] private float poisonDpsBase = 0f;      [SerializeField] private float poisonDpsPerLevel = 0f;
         [SerializeField] private float poisonDurBase = 0f;       [SerializeField] private float poisonDurPerLevel = 0f;
         [Header("Hit Visual Overrides (optional)")]
-        [Tooltip("If true, overrides projectile prefab and uses a lightning zap visual on hit (instant).")]
         [SerializeField] private bool useLightningZapOnHit = false;
         [SerializeField] private float zapDuration = 0.12f;
         [SerializeField] private float zapWidth = 0.06f;
         [SerializeField] private float zapJitter = 0.18f;
         [SerializeField] private int zapSegments = 12;
         [SerializeField] private Color zapColor = new Color(0.7f, 0.9f, 1f, 1f);
-        [Tooltip("Optional ParticleManager key to spawn at hit point with the zap (one-shot)")]
         [SerializeField] private string zapHitVfxKey = "";
 
         [SerializeField] private bool forceDefaultZapMaterial = false;
         [Header("Lightning Zap Material (optional)")]
-        [Tooltip("Optional custom material for LightningZap line renderer (both override and chain). Leave empty to use default.")]
         [SerializeField] private Material zapMaterial;
         [Header("Lightning Zap Glow (override)")]
-        [Tooltip("Enable HDR glow (bloom-friendly) for the Lightning Zap visual override")]
         [SerializeField] private bool zapGlowEnabled = true;
 
         [SerializeField] private float zapGlowBoost = 2.0f;
         [Header("Chain Ricochet Glow")]
-        [Tooltip("Enable HDR glow (bloom-friendly) for chain ricochet zaps")]
         [SerializeField] private bool chainGlowEnabled = true;
 
         [SerializeField] private float chainGlowBoost = 2.0f;
@@ -83,7 +77,7 @@ namespace TR.Data
         private bool tornadoOnHit = false;
 [SerializeField]
         private float tornadoRadiusBase = 0f; [SerializeField] private float tornadoRadiusPerLevel = 0f;
-        [Tooltip("Tornado pull strength (units per second) at level 1 and per level increment")] [SerializeField]
+         [SerializeField]
         private float tornadoStrengthBase = 0f; [SerializeField] private float tornadoStrengthPerLevel = 0f;
 [SerializeField]
         private float tornadoDurationBase = 0f; [SerializeField] private float tornadoDurationPerLevel = 0f;
@@ -92,17 +86,13 @@ namespace TR.Data
         [Header("Tornado Allowed Enemy Tiers")] [SerializeField] private bool tornadoAllowEasy = true;
         [SerializeField] private bool tornadoAllowMedium = true; [SerializeField] private bool tornadoAllowHard = true; [SerializeField] private bool tornadoAllowBoss = true;
         [Header("Tornado VFX (optional)")]
-        [Tooltip("ParticleManager key for the tornado visual (looping). Leave empty to disable visuals.")]
         [SerializeField] private string tornadoVfxKey = "";
-        [Tooltip("Multiplier to make the tornado VFX match the gameplay radius (used when auto-scaling VFX).\nFinal VFX radius = tornadoRadius * tornadoVfxScaleMultiplier")] 
         [SerializeField] private float tornadoVfxScaleMultiplier = 1.0f;
         [Header("Tornado Behavior (optional)")]
-        [Tooltip("If true, enemies can stack at the very center (disables inner orbit + reduces separation). If false, they will orbit around a small core.")]
         [SerializeField] private bool tornadoAllowCenterStack = false;
 
         [SerializeField] private float tornadoFalloffPower = 1.0f;
         [Header("Targeting Behavior (optional)")]
-        [Tooltip("If true and this card applies any on-hit effect (burn/poison/slow), the tower will hit a target once then switch to a new target, letting the effect tick.")]
         [SerializeField] private bool moveOnAfterEffect = false;
 
         [SerializeField] private float moveOnIgnoreSeconds = 0.6f;
@@ -112,36 +102,34 @@ namespace TR.Data
         [Header("On-Hit Slow (optional)")]
 
         [SerializeField] private bool slowOnHit = false;
-        [Tooltip("Slow percent as a fraction (e.g., 0.3 = 30%) base value at level 1")] [SerializeField]
+         [SerializeField]
         private float slowPercentBase = 0f; [SerializeField] private float slowPercentPerLevel = 0f;
 [SerializeField]
         private float slowDurationBase = 0f; [SerializeField] private float slowDurationPerLevel = 0f;
 
         [Header("On-Hit Stun (optional)")]
-        [Tooltip("If enabled, hits from this card have a chance to stun the enemy (disables movement/attacks)")]
         [SerializeField] private bool stunOnHit = false;
-        [Tooltip("Stun chance at level 1 and per level increment (0..1 range per step)")] [SerializeField]
+         [SerializeField]
         private float stunChanceBase = 0f; [SerializeField] private float stunChancePerLevel = 0f;
-        [Tooltip("Stun duration (seconds) at level 1 and per level increment")] [SerializeField]
+         [SerializeField]
         private float stunDurationBase = 0f; [SerializeField] private float stunDurationPerLevel = 0f;
 
         [Header("On-Hit Frostbite (optional)")]
-        [Tooltip("If enabled, hits apply a Frostbite DoT (DPS for a duration). Requires Slow to be enabled on this card.")]
         [SerializeField] private bool frostbiteOnHit = false;
 [SerializeField]
         private float frostbiteDpsBase = 0f; [SerializeField] private float frostbiteDpsPerLevel = 0f;
-        [Tooltip("Frostbite duration (seconds) at level 1 and per level increment")] [SerializeField]
+         [SerializeField]
         private float frostbiteDurBase = 0f; [SerializeField] private float frostbiteDurPerLevel = 0f;
 
         [Header("SFX (Keys)")]
-        [Tooltip("Sound key when the tower fires (muzzle)")] [SerializeField] private string sfxFireKey = "Fire";
+         [SerializeField] private string sfxFireKey = "Fire";
 [SerializeField] private string sfxHitKey = "tower_hit";
 [SerializeField] private string sfxSplashKey = "tower_splash";
 [SerializeField] private string sfxChainJumpKey = "tower_chain_jump";
 [SerializeField] private string sfxZapFireKey = "tower_zap_fire";
 [SerializeField] private string sfxZapHitKey = "tower_zap_hit";
-        [Tooltip("Looping beam sound key for Inferno (will fade in/out)")] [SerializeField] private string sfxBeamKey = "tower_beam_loop";
-        [Tooltip("Looping tornado sound key (will fade in/out)")] [SerializeField] private string sfxTornadoKey = "tornado_loop";
+         [SerializeField] private string sfxBeamKey = "tower_beam_loop";
+         [SerializeField] private string sfxTornadoKey = "tornado_loop";
 [SerializeField] private string sfxBurnApplyKey = "status_burn";
 [SerializeField] private string sfxPoisonApplyKey = "status_poison";
 [SerializeField] private string sfxSlowApplyKey = "status_slow";
@@ -149,7 +137,6 @@ namespace TR.Data
 [SerializeField] private string sfxCritKey = "tower_crit";
 
         [Header("Aiming (Regular Towers)")]
-        [Tooltip("If true, regular towers rotate to face their current target (Economy/Inferno ignore this).")]
         [SerializeField] private bool rotateToTarget = true;
 
         [SerializeField] private float rotateSpeedDegPerSec = 360f;
@@ -159,10 +146,8 @@ namespace TR.Data
         [SerializeField] private GameObject projectilePrefab;
 
         [SerializeField] private float projectileSpeed = 8f;
-        [Tooltip("Optional particle VFX key to spawn at projectile impact position (one-shot)")]
         [SerializeField] private string projectileImpactVfxKey = "";
         [Header("Idle VFX (optional)")]
-        [Tooltip("ParticleManager key for a looping idle effect (e.g., muzzle glow). Leave empty to disable.")]
         [SerializeField] private string idleVfxKey = "";
         [Header("Defeat Cleanup (optional)")]
 
@@ -172,13 +157,10 @@ namespace TR.Data
         [Header("On-Hit Chain (Ricochet)")]
 
         [SerializeField] private bool chainOnHit = false;
-        [Tooltip("Max additional enemies (not counting the main target) at level 1 and per level increment")]
         [SerializeField] private int chainMaxJumpsBase = 0; [SerializeField] private int chainMaxJumpsPerLevel = 0;
-        [Tooltip("Damage multiplier applied per jump (e.g., 0.7 means 30% less per jump) at level 1 and per level increment")]
         [Range(0f, 1f)] [SerializeField] private float chainFalloffPerJumpBase = 0.7f; [SerializeField] private float chainFalloffPerJumpPerLevel = 0f;
 
         [SerializeField] private Color chainZapColor = new Color(0.6f, 0.85f, 1f, 1f);
-        [Tooltip("Chain zap duration (seconds). If 0, falls back to main zap duration.")]
         [SerializeField] private float chainZapDuration = 0.08f;
 
         [SerializeField] private float chainZapWidth = 0.04f;
@@ -186,7 +168,6 @@ namespace TR.Data
         [SerializeField] private float chainZapJitter = 0.15f;
 
         [SerializeField] private int chainZapSegments = 10;
-        [Tooltip("If true, on-hit effects (burn/poison/slow/stun) are also applied to chained targets.")]
         [SerializeField] private bool chainTransfersOnHitEffects = false;
 
         

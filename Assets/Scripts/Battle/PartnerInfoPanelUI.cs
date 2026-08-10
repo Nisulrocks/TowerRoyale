@@ -11,18 +11,15 @@ namespace TR.Battle
     public class PartnerInfoPanelUI : MonoBehaviourPunCallbacks
     {
         [Header("UI")]
-        [Tooltip("Root object that holds the whole panel. Hidden entirely in single player.")]
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text trophiesText;
         [SerializeField] private TMP_Text castleLevelText;
 
         [Header("Disconnect State")]
-        [Tooltip("Optional graphic tinted red when the partner disconnects.")]
         [SerializeField] private Graphic backgroundGraphic;
         [SerializeField] private Color connectedColor = new Color(1f, 1f, 1f, 1f);
         [SerializeField] private Color disconnectedColor = new Color(0.8f, 0.15f, 0.15f, 1f);
-        [Tooltip("Text appended / shown when the partner leaves.")]
         [SerializeField] private TMP_Text statusText;
 
         private Player _partner;

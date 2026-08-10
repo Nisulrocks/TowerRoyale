@@ -14,15 +14,11 @@ namespace TR.Net
         public static NetworkConnectionMonitor Instance { get; private set; }
 
         [Header("Popup")]
-        [Tooltip("Same NoInternetPopup prefab used by LoadingScreen.")]
         [SerializeField] private GameObject noInternetPopupPrefab;
-        [Tooltip("Scene to load when Retry is pressed. Use your Boot scene name.")]
         [SerializeField] private string bootSceneName = "Boot";
 
         [Header("Polling")]
-        [Tooltip("If true, also poll Application.internetReachability between Photon callbacks.")]
         [SerializeField] private bool checkInternetReachability = true;
-        [Tooltip("Seconds between reachability polls.")]
         [SerializeField] private float checkInterval = 1f;
 
         [Header("Ignored Disconnect Causes")]

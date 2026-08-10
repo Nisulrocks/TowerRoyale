@@ -8,13 +8,10 @@ namespace TR.Battle
     public class TowerClickSelector : MonoBehaviour
     {
         [Header("Config")]
-        [Tooltip("Layers considered as towers for selection (set to your Towers layer). If zero, all layers are used.")]
         [SerializeField] private LayerMask towersLayerMask;
-        [Tooltip("Max world distance from click point to accept a tower (safety). 0 = no limit.")]
         [SerializeField] private float maxPickDistance = 0f;
 
         [SerializeField] private bool respectUIBlocks = false;
-        [Tooltip("If no exact point hit is found, use this radius to search nearby (world units). 0 disables fallback.")]
         [SerializeField] private float pickRadius = 0.15f;
 
         private Camera _cam;

@@ -7,7 +7,7 @@ namespace TR.Data
     {
         [Header("Deck")]
         [Min(1)] [SerializeField] private int maxDeckSize = 8;
-        [Min(1)] [Tooltip("How many deck presets the player can save and switch between")]
+        [Min(1)] 
         [SerializeField] private int maxDeckPresets = 3;
 
         public int MaxDeckSize => Mathf.Max(1, maxDeckSize);
@@ -16,7 +16,7 @@ namespace TR.Data
         [System.Serializable]
         public class CardPointsOfferSlot
         {
-            [Tooltip("Rarity Id this slot should target (e.g., 'common','rare','epic','legendary')")] public string rarityId;
+             public string rarityId;
             [Min(0)] public int pointsMin = 5;
             [Min(0)] public int pointsMax = 15;
             [Min(0)] public int costPerPointMin = 10;
@@ -26,6 +26,6 @@ namespace TR.Data
         [Header("Shop: Card Points Offers")]
 
         public CardPointsOfferSlot[] cardPointsOfferSlots = System.Array.Empty<CardPointsOfferSlot>();
-        [Tooltip("UTC hour (0-23) at which daily offers refresh")] [Range(0,23)] public int offersRefreshHourUTC = 0;
+         [Range(0,23)] public int offersRefreshHourUTC = 0;
     }
 }

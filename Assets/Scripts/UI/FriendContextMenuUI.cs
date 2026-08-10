@@ -6,8 +6,6 @@ using TR.Systems;
 
 namespace TR.UI
 {
-    // Small right-click popup over a friend row: invite to a duo match, or remove the friend.
-    // Closes on any click that lands outside its own rect.
     public class FriendContextMenuUI : MonoBehaviour
     {
         [SerializeField] private RectTransform panel;
@@ -44,7 +42,6 @@ namespace TR.UI
 
             if (headerText != null) headerText.text = target.playerName;
 
-            // Same rule as the row's button: online, and in our arena.
             if (inviteButton != null) inviteButton.interactable = target.CanInviteToDuo;
             if (inviteLabel != null)
             {
@@ -77,7 +74,6 @@ namespace TR.UI
             }
         }
 
-        // Keep the whole menu on screen when it is opened near an edge.
         private void ClampInsideParent(RectTransform parentRect)
         {
             Vector2 size = panel.rect.size;
@@ -99,7 +95,6 @@ namespace TR.UI
         {
             if (!gameObject.activeSelf) return;
 
-            // Dismiss on a click outside the menu.
             bool clicked = Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1);
             if (!clicked) return;
 

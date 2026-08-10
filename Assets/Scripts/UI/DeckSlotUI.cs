@@ -14,7 +14,6 @@ namespace TR.UI
         [SerializeField] private Button removeButton;
         [SerializeField] private TMP_Text levelText;
         [SerializeField] private TMP_Text costText;
-        [Tooltip("UI to show when this deck slot is empty")]
         [SerializeField] private RectTransform emptyUI;
 
         private string _cardId;

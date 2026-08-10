@@ -14,9 +14,7 @@ namespace TR.UI
         [SerializeField] private int dailyCooldownHours = 24;
 
         [Header("Rejoin")]
-        [Tooltip("Optional prefab with a DuoRejoinPromptUI. If assigned, it is spawned when a saved duo match exists.")]
         [SerializeField] private GameObject rejoinPromptPrefab;
-        [Tooltip("Optional canvas/parent transform to place the spawned prompt under. If null, the prompt is spawned at the root.")]
         [SerializeField] private RectTransform rejoinPromptParent;
 
         private void Awake()

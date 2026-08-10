@@ -18,10 +18,8 @@ namespace TR.UI
         [SerializeField] private string bodyFormat = "Lvl {0} - {1}\nHealth {2} - {3}";
 
         [Header("Animation")]
-        [Tooltip("Seconds to wait before showing the popup")]
         [SerializeField] private float initialDelay = 0.75f;
         [SerializeField] private float popInTime = 0.35f;
-        [Tooltip("How much the popup overshoots during the pop-in. 0 = default pop, higher = bigger bounce.")]
         [SerializeField] private float popInOvershoot = 0f;
         [SerializeField] private float holdTime = 2.0f;
         [SerializeField] private float fadeOutTime = 0.3f;
@@ -29,7 +27,6 @@ namespace TR.UI
         [Header("SFX (Optional)")]
         [SerializeField] private string sfxKey = "ui_lobby_level_up";
 
-        [Tooltip("When disabled, this notifier will not trigger on its own and should be driven by LobbyNotificationQueue.")]
         public bool autoPlay = true;
 
         public bool IsShowing { get; private set; }

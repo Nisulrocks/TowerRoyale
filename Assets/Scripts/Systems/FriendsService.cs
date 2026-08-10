@@ -6,16 +6,6 @@ using Firebase.Firestore;
 
 namespace TR.Systems
 {
-    // Firestore-backed friends list, friend requests, presence and duo invites.
-    //
-    // Layout:
-    //   profiles/{uid}                          playerName, nameLower, trophies, onlineAt
-    //   friends/{uid}/list/{friendUid}          name, since
-    //   friendRequests/{uid}/incoming/{fromUid} fromName, sentAt
-    //   duoInvites/{uid}/incoming/{fromUid}     fromName, roomName, sentAt
-    //
-    // Requests and invites are written into the *recipient's* subtree, so the security rules must
-    // allow a signed-in user to create documents under another user's friendRequests/duoInvites.
     public class FriendsService : MonoBehaviour
     {
         public static FriendsService Instance { get; private set; }
@@ -39,25 +29,17 @@ namespace TR.Systems
         private const string FieldSince = "since";
         private const string FieldName = "name";
 
-        // Upper bound for a Firestore prefix range query. Written as an escape rather than a
-        // literal so the source stays plain ASCII.
         private const string HighCodePoint = "\uf8ff";
 
-        // How long an unanswered invite stays valid before it is swept.
         private const int InviteLifetimeSeconds = 120;
 
-        // Anti-spam. Client-side only, so it stops accidental and casual spam, not a modified
-        // client — real enforcement would need a Cloud Function or a rules-based rate limit.
         private const float GlobalInviteCooldownSeconds = 4f;
         private const float PerFriendInviteCooldownSeconds = 30f;
 
-        // A player counts as online if they wrote a heartbeat within this window. The window must
-        // comfortably exceed the heartbeat interval or a client looks offline between beats.
         private const int OnlineWindowSeconds = 45;
         private const float HeartbeatSeconds = 15f;
         private const int SearchLimit = 20;
 
-        [Tooltip("Logs what onlineAt value was read for each friend and why they resolved online/offline.")]
         [SerializeField] private bool verbosePresenceLogging = true;
 
         public class PlayerSummary
@@ -67,18 +49,14 @@ namespace TR.Systems
             public int trophies;
             public bool isOnline;
 
-            // Online but unavailable: in a battle, or already searching for a match.
             public bool isInMatch;
 
-            // Duo matches are arena-locked, so a friend's arena is derived from their trophies and
-            // compared with ours. No extra Firestore field is needed for this.
             public string arenaKey;
             public string arenaName;
 
             public bool IsSameArenaAsLocal =>
                 !string.IsNullOrEmpty(arenaKey) && arenaKey == ArenaService.GetLocalArenaKey();
 
-            // Everything that must be true before an invite can be sent.
             public bool CanInviteToDuo => isOnline && !isInMatch && IsSameArenaAsLocal;
         }
 
@@ -94,8 +72,6 @@ namespace TR.Systems
             public string fromUid;
             public string fromName;
             public string roomName;
-            // The host's arena decides the battle scene, so both players load the same one even if
-            // their trophy counts would otherwise put them in different arenas.
             public string arenaKey;
             public long sentAt;
         }
@@ -106,8 +82,6 @@ namespace TR.Systems
         public static event Action<List<FriendRequestInfo>> OnRequestsLoaded;
         public static event Action<DuoInviteInfo> OnDuoInviteReceived;
 
-        // An invite that expired while the player was offline. The room is long gone, so this is
-        // purely "you missed this" — it must never be treated as joinable.
         public static event Action<DuoInviteInfo> OnMissedInvite;
         public static event Action<string> OnActionFailed;
         public static event Action<string> OnActionSucceeded;
@@ -119,11 +93,8 @@ namespace TR.Systems
         private ListenerRegistration _inviteListener;
         private Coroutine _heartbeat;
 
-        // Last invite room seen per sender, so a re-delivered snapshot is not surfaced twice.
         private readonly Dictionary<string, string> _lastInviteRoom = new Dictionary<string, string>();
 
-        // Invites we have sent, so a crossed invite (both friends inviting each other at once) can
-        // be detected and resolved. Local bookkeeping only, so a local clock is fine here.
         private class OutgoingInvite
         {
             public string roomName;
@@ -131,7 +102,6 @@ namespace TR.Systems
         }
         private readonly Dictionary<string, OutgoingInvite> _outgoing = new Dictionary<string, OutgoingInvite>();
 
-        // The room we offered this friend, or null if we have no live invite out to them.
         public string GetOutgoingInviteRoom(string toUid)
         {
             if (string.IsNullOrEmpty(toUid)) return null;
@@ -152,7 +122,6 @@ namespace TR.Systems
         private float _nextInviteAllowed;
         private readonly Dictionary<string, float> _nextInviteToFriend = new Dictionary<string, float>();
 
-        // Seconds until this friend can be invited again, or 0 when they can be invited now.
         public float GetInviteCooldownRemaining(string toUid)
         {
             float now = Time.realtimeSinceStartup;
@@ -162,7 +131,6 @@ namespace TR.Systems
             return Mathf.Max(0f, remaining);
         }
 
-        // Invites arrive on a Firestore callback thread; queue them for the main thread.
         private readonly Queue<DuoInviteInfo> _pendingInvites = new Queue<DuoInviteInfo>();
         private readonly Queue<DuoInviteInfo> _pendingMissed = new Queue<DuoInviteInfo>();
         private readonly object _inviteLock = new object();
@@ -205,8 +173,6 @@ namespace TR.Systems
 
             StartListeners();
             if (_heartbeat == null) _heartbeat = StartCoroutine(HeartbeatLoop());
-            // Invites that expired while this player was offline are never surfaced by the
-            // listener, so sweep them on the way in.
             StartCoroutine(PruneStaleInvites());
             Debug.Log($"[FriendsService] Ready for {uid}.");
         }
@@ -219,7 +185,6 @@ namespace TR.Systems
             _uid = null;
         }
 
-        // ---------- presence ----------
 
         private IEnumerator HeartbeatLoop()
         {
@@ -227,8 +192,6 @@ namespace TR.Systems
             {
                 WritePresence();
 
-                // Learn the device/server clock offset from our own stamp, then refresh it
-                // occasionally in case the system clock is corrected while running.
                 if (!_serverOffsetKnown || Time.unscaledTime >= _nextClockSync)
                 {
                     _nextClockSync = Time.unscaledTime + 120f;
@@ -236,8 +199,6 @@ namespace TR.Systems
                     yield return SyncServerClock();
                 }
 
-                // A fresh instance each pass: yield instructions hold state and reusing one across
-                // iterations is version-dependent behaviour that can silently stop the loop.
                 yield return new WaitForSecondsRealtime(HeartbeatSeconds);
             }
         }
@@ -245,10 +206,8 @@ namespace TR.Systems
         private void WritePresence()
         {
             if (!_ready || string.IsNullOrEmpty(_uid)) return;
-            // A kicked session must stop advertising itself as online.
             if (SessionGuardService.IsKicked) return;
 
-            // Stamped by Firestore so every client's presence is on one clock.
             var data = new Dictionary<string, object>
             {
                 { FieldOnlineAt, FieldValue.ServerTimestamp },
@@ -257,8 +216,6 @@ namespace TR.Systems
             _db.Collection(ProfilesCollection).Document(_uid).SetAsync(data, SetOptions.MergeAll)
                .ContinueWith(t =>
                {
-                   // A silently rejected heartbeat is exactly what makes a player look offline to
-                   // everyone else while looking fine to themselves, so surface it.
                    if (t.IsFaulted)
                        Debug.LogError($"[FriendsService] Presence write REJECTED for {_uid}: " +
                                       $"{t.Exception?.GetBaseException()?.Message}");
@@ -267,9 +224,6 @@ namespace TR.Systems
                });
         }
 
-        // Deliberately narrower than MatchContext.IsMatchInProgress, which stays true while merely
-        // sitting in a Photon room back in the lobby — that would advertise us as busy forever.
-        // Being mid-search counts too: an invite then is just as futile as one sent mid-battle.
         private static bool IsLocallyBusy()
         {
             if (TR.Battle.BattleSceneController.Instance != null) return true;
@@ -287,17 +241,9 @@ namespace TR.Systems
         {
             if (onlineAt <= 0) return false;
             long age = ServerNowSeconds() - onlineAt;
-            // A small negative age is normal (our clock estimate lags the writer by up to one
-            // heartbeat); treat anything not-yet-expired as online.
             return age <= OnlineWindowSeconds;
         }
 
-        // ---------- server clock ----------
-        //
-        // Presence and invites are stamped by Firestore, not the client, because device clocks
-        // drift. Comparing a writer's local clock against a reader's local clock made a healthy
-        // client look permanently offline (and made fresh invites look already expired) whenever
-        // the two devices disagreed by more than the expiry window.
 
         private static long _serverOffsetSeconds;
         private static bool _serverOffsetKnown;
@@ -308,7 +254,6 @@ namespace TR.Systems
         private static long ServerNowSeconds()
             => LocalNowSeconds() + (_serverOffsetKnown ? _serverOffsetSeconds : 0L);
 
-        // Reads back our own server-stamped heartbeat to learn how far this device's clock is off.
         private IEnumerator SyncServerClock()
         {
             var task = _db.Collection(ProfilesCollection).Document(_uid).GetSnapshotAsync();
@@ -328,7 +273,6 @@ namespace TR.Systems
                           "(device clock is " + (offset > 0 ? "behind" : "ahead") + " of Firestore)");
         }
 
-        // ---------- search ----------
 
         public void SearchPlayers(string query)
         {
@@ -342,7 +286,6 @@ namespace TR.Systems
         {
             var results = new List<PlayerSummary>();
 
-            // A player id is an exact document id, so try a direct lookup first.
             var byIdTask = _db.Collection(ProfilesCollection).Document(query).GetSnapshotAsync();
             yield return new WaitUntil(() => byIdTask.IsCompleted);
 
@@ -352,8 +295,6 @@ namespace TR.Systems
                 if (summary != null && summary.uid != _uid) results.Add(summary);
             }
 
-            // Then a prefix match on the lowercased name. U+F8FF is the standard high code point
-            // used to bound a Firestore prefix range.
             string lower = query.ToLowerInvariant();
             var nameQuery = _db.Collection(ProfilesCollection)
                 .WhereGreaterThanOrEqualTo(FieldNameLower, lower)
@@ -367,7 +308,6 @@ namespace TR.Systems
             {
                 string err = byNameTask.Exception?.Message ?? "Search failed";
                 Debug.LogWarning($"[FriendsService] Name search failed: {err}");
-                // An id hit is still a usable result, so only fail outright if we have nothing.
                 if (results.Count == 0) { OnSearchFailed?.Invoke(err); yield break; }
             }
             else if (byNameTask.Result != null)
@@ -402,17 +342,12 @@ namespace TR.Systems
                 playerName = string.IsNullOrEmpty(name) ? "Player" : name,
                 trophies = trophies,
                 isOnline = online,
-                // Only meaningful while they are actually online; a stale flag on an offline
-                // player would otherwise read as "in a match" indefinitely.
                 isInMatch = online && inMatch,
                 arenaKey = ArenaService.ResolveArenaKey(arena),
                 arenaName = arena != null ? arena.DisplayName : null
             };
         }
 
-        // Firestore can hand a stored number back as long, int or double depending on how it was
-        // written. A typed TryGetValue<long> can miss those, which reads as "never online".
-        // Raw onlineAt per friend, kept only so the presence log can show what was actually read.
         private static readonly Dictionary<string, long> _lastReadOnlineAt = new Dictionary<string, long>();
 
         private static long ReadUnixSeconds(DocumentSnapshot doc, string field)
@@ -428,12 +363,10 @@ namespace TR.Systems
                 long value;
                 if (raw is Timestamp ts)
                 {
-                    // Server-stamped fields come back as Timestamp.
                     value = ts.ToDateTimeOffset().ToUnixTimeSeconds();
                 }
                 else
                 {
-                    // Legacy client-clock values already in the database.
                     value = Convert.ToInt64(raw);
                 }
 
@@ -447,8 +380,6 @@ namespace TR.Systems
             }
         }
 
-        // One-shot read of a single player's live profile. Cached list data can be up to a refresh
-        // interval old, which is not good enough right before committing to hosting a match.
         public void FetchPlayerSummary(string uid, Action<PlayerSummary> onComplete)
         {
             if (!_ready || string.IsNullOrEmpty(uid)) { onComplete?.Invoke(null); return; }
@@ -468,7 +399,6 @@ namespace TR.Systems
             onComplete?.Invoke(ToSummary(task.Result));
         }
 
-        // ---------- friend requests ----------
 
         public void SendFriendRequest(string toUid)
         {
@@ -533,7 +463,6 @@ namespace TR.Systems
 
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            // Both sides of the friendship are written so either player can list the other.
             _db.Collection(FriendsCollection).Document(_uid).Collection(SubList).Document(fromUid)
                .SetAsync(new Dictionary<string, object> { { FieldName, fromName ?? "Player" }, { FieldSince, now } });
 
@@ -566,7 +495,6 @@ namespace TR.Systems
             RefreshFriends();
         }
 
-        // ---------- friends list ----------
 
         public void RefreshFriends()
         {
@@ -592,7 +520,6 @@ namespace TR.Systems
             var ids = new List<string>();
             foreach (var doc in listTask.Result.Documents) ids.Add(doc.Id);
 
-            // Each friend's live name/trophies/presence lives on their profile, so read those.
             foreach (string id in ids)
             {
                 var profTask = _db.Collection(ProfilesCollection).Document(id).GetSnapshotAsync();
@@ -624,11 +551,7 @@ namespace TR.Systems
             OnFriendsLoaded?.Invoke(friends);
         }
 
-        // ---------- duo invites ----------
 
-        // Confirms the write before reporting success. The previous fire-and-forget version claimed
-        // "Invite sent." even when Firestore rejected it, which is why an empty duoInvites
-        // collection looked like a delivery problem rather than a write problem.
         public void SendDuoInvite(string toUid, string roomName, string arenaKey, Action<bool, string> onComplete = null)
         {
             if (!_ready)
@@ -643,8 +566,6 @@ namespace TR.Systems
                 return;
             }
 
-            // An invite of ours is still live for this friend — resending would only overwrite the
-            // one they are already looking at.
             if (!string.IsNullOrEmpty(GetOutgoingInviteRoom(toUid)))
             {
                 onComplete?.Invoke(false, "They already have your invite.");
@@ -658,8 +579,6 @@ namespace TR.Systems
                 return;
             }
 
-            // Reserve the slots before the write so rapid repeat clicks cannot all pass the check
-            // while the first request is still in flight.
             float now = Time.realtimeSinceStartup;
             _nextInviteAllowed = now + GlobalInviteCooldownSeconds;
             _nextInviteToFriend[toUid] = now + PerFriendInviteCooldownSeconds;
@@ -674,8 +593,6 @@ namespace TR.Systems
                 { FieldFromName, LocalName() },
                 { FieldRoomName, roomName },
                 { FieldArenaKey, arenaKey ?? string.Empty },
-                // Server-stamped: a client clock ahead of the recipient's made every invite look
-                // already expired, so the recipient deleted it on arrival.
                 { FieldSentAt, FieldValue.ServerTimestamp }
             };
 
@@ -689,10 +606,8 @@ namespace TR.Systems
 
             if (task.IsFaulted)
             {
-                // Almost always a security-rules rejection on the recipient's subtree.
                 string msg = task.Exception?.GetBaseException()?.Message ?? "unknown error";
                 Debug.LogError($"[FriendsService] Invite write REJECTED at {path}: {msg}");
-                // Nothing was delivered, so do not hold the player on the long per-friend cooldown.
                 _nextInviteToFriend.Remove(toUid);
                 OnActionFailed?.Invoke("Invite could not be sent.");
                 onComplete?.Invoke(false, msg);
@@ -712,7 +627,6 @@ namespace TR.Systems
             yield return new WaitUntil(() => task.IsCompleted);
             if (task.IsFaulted || task.Result == null) yield break;
 
-            // Without a known clock offset we cannot age these safely; leave them for the listener.
             if (!_serverOffsetKnown) yield break;
 
             long now = ServerNowSeconds();
@@ -732,8 +646,6 @@ namespace TR.Systems
                     fromName = string.IsNullOrEmpty(fromName) ? "A friend" : fromName,
                     sentAt = sentAt
                 };
-                // Several friends may have tried while we were away; only the latest is worth
-                // interrupting the player about.
                 if (mostRecent == null || missed.sentAt > mostRecent.sentAt) mostRecent = missed;
 
                 doc.Reference.DeleteAsync();
@@ -750,7 +662,6 @@ namespace TR.Systems
         public void ClearInviteFrom(string fromUid)
         {
             if (!_ready || string.IsNullOrEmpty(fromUid)) return;
-            // Forget the dedupe entry too, so the same friend can invite again immediately.
             _lastInviteRoom.Remove(fromUid);
             _db.Collection(InvitesCollection).Document(_uid).Collection(SubIncoming).Document(fromUid).DeleteAsync();
         }
@@ -769,10 +680,6 @@ namespace TR.Systems
                         if (snapshot == null) return;
                         foreach (var change in snapshot.GetChanges())
                         {
-                            // Modified counts too: an invite document is keyed by sender, so a
-                            // second invite from the same friend overwrites the existing document
-                            // and arrives as Modified, not Added. Only reacting to Added meant a
-                            // re-invite was never delivered.
                             if (change.ChangeType == DocumentChange.Type.Removed) continue;
                             var doc = change.Document;
                             if (doc == null || !doc.Exists) continue;
@@ -781,12 +688,6 @@ namespace TR.Systems
                             doc.TryGetValue<string>(FieldRoomName, out string roomName);
                             long sentAt = ReadUnixSeconds(doc, FieldSentAt);
 
-                            // A server timestamp is null on the local echo of a write, and the
-                            // clock offset may not be known yet on the very first invite. Never
-                            // discard an invite we cannot age reliably — show it instead.
-                            // Firestore re-delivers a document on metadata changes (the server
-                            // timestamp resolving, for one), so dedupe on the room name — every
-                            // invite carries a fresh GUID room, making it a stable identity.
                             if (!string.IsNullOrEmpty(roomName))
                             {
                                 if (_lastInviteRoom.TryGetValue(doc.Id, out string seenRoom) && seenRoom == roomName)

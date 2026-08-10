@@ -54,8 +54,6 @@ namespace TR.Battle
             float step = _speed * Time.deltaTime;
             if (dist <= step || dist <= 0.001f)
             {
-                // Destroy unconditionally: if Impact throws, an undestroyed projectile would
-                // re-impact every frame and flood the log.
                 try { Impact(dest); }
                 finally { Destroy(gameObject); }
                 return;
@@ -124,8 +122,6 @@ namespace TR.Battle
                     if (DuoRuntime.IsDuo)
                         DuoBattleCoordinator.Instance?.BroadcastTowerCrit(_target.transform.position, _def.GetCritBurstText());
                 }
-                // TakeDamage can kill the enemy, which removes it from EnemyBase2D.All mid-loop.
-                // Snapshot first, as the other splash sites do.
                 _splashSnapshot.Clear();
                 foreach (var e in EnemyBase2D.All) _splashSnapshot.Add(e);
                 for (int i = 0; i < _splashSnapshot.Count; i++)

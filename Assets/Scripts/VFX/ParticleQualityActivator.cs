@@ -123,10 +123,6 @@ namespace TR.VFX
             {
                 var tower = GetComponent<TR.Battle.TowerBase>();
 
-                // TowerBase already spawns this exact effect, parented to the tower and sorted
-                // behind it. ParticleManager.TryScanAndBindAll adds this component to every tower
-                // at runtime, so spawning here produced a second, unparented, unsorted copy.
-                // Bind to the tower's instance instead of creating our own.
                 if (tower != null && tower.ManagesIdleVfx)
                 {
                     var owned = tower.IdleVfxInstance;

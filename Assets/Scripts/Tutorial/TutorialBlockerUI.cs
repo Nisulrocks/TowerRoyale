@@ -16,13 +16,9 @@ namespace TR.Tutorial
         [SerializeField] private bool _enabled;
 
         [Header("Spotlight")]
-        [Tooltip("Colour of the dimmed area. Alpha is the fully-focused darkness.")]
         [SerializeField] private Color dimColor = new Color(0f, 0f, 0f, 0.72f);
-        [Tooltip("How long the darkness takes to close in on the target.")]
         [SerializeField] private float focusSeconds = 0.55f;
-        [Tooltip("Breathing room left around the target inside the lit hole.")]
         [SerializeField] private Vector2 holePadding = new Vector2(18f, 18f);
-        [Tooltip("How far the hole breathes in and out once focused, to keep the eye on it. 0 disables.")]
         [SerializeField] private float holePulse = 6f;
         [SerializeField] private float holePulseSpeed = 3.2f;
 
@@ -30,9 +26,6 @@ namespace TR.Tutorial
         private Image _img;
         private Camera _uiCam;
 
-        // Four panels arranged around a hole. Punching a real hole in one image would need a
-        // stencil shader; a frame of four rects does the same job with plain uGUI and lets the
-        // hole animate freely.
         private readonly RectTransform[] _dimParts = new RectTransform[4];
         private readonly Image[] _dimImages = new Image[4];
         private readonly Vector3[] _corners = new Vector3[4];
@@ -40,7 +33,6 @@ namespace TR.Tutorial
         private bool _spotlight;
         private float _focusT;
 
-        /// When false the dim still draws but clicks pass through everywhere.
         public bool BlockInput { get; set; } = true;
 
         private void Awake()
@@ -102,10 +94,7 @@ namespace TR.Tutorial
             gameObject.SetActive(false);
         }
 
-        // ---------- spotlight ----------
 
-        /// restart replays the close-in sweep. Callers that re-apply the blocker every frame while
-        /// polling for a target must pass false, or the animation restarts forever and never lands.
         public void SetSpotlight(bool on, bool restart = false)
         {
             if (_spotlight == on && !restart)
@@ -140,7 +129,7 @@ namespace TR.Tutorial
                 rt.pivot = new Vector2(0.5f, 0.5f);
 
                 var img = go.AddComponent<Image>();
-                img.raycastTarget = false; // the blocker itself owns every raycast decision
+                img.raycastTarget = false; 
                 img.color = Color.clear;
 
                 _dimParts[i] = rt;
@@ -161,12 +150,9 @@ namespace TR.Tutorial
 
             if (TryGetTargetRect(out Rect targetRect))
             {
-                // Once focused, breathe gently so the lit area keeps pulling the eye.
                 float pulse = holePulse * Mathf.Sin(Time.unscaledTime * holePulseSpeed) * e;
                 targetRect = Expand(targetRect, holePadding.x + pulse, holePadding.y + pulse);
 
-                // Starting from the full screen means the darkness sweeps inward from the edges
-                // and converges on the target, rather than just fading in flat.
                 hole = LerpRect(full, targetRect, e);
             }
 
@@ -185,7 +171,6 @@ namespace TR.Tutorial
             Mathf.Lerp(a.xMin, b.xMin, t), Mathf.Lerp(a.yMin, b.yMin, t),
             Mathf.Lerp(a.xMax, b.xMax, t), Mathf.Lerp(a.yMax, b.yMax, t));
 
-        // Union of every pass-through target, in this blocker's local space.
         private bool TryGetTargetRect(out Rect rect)
         {
             rect = default;
@@ -237,16 +222,15 @@ namespace TR.Tutorial
 
         private void ApplyHole(Rect full, Rect hole)
         {
-            // Keep the hole inside the screen so the frame never gets negative dimensions.
             float hx0 = Mathf.Clamp(hole.xMin, full.xMin, full.xMax);
             float hx1 = Mathf.Clamp(hole.xMax, full.xMin, full.xMax);
             float hy0 = Mathf.Clamp(hole.yMin, full.yMin, full.yMax);
             float hy1 = Mathf.Clamp(hole.yMax, full.yMin, full.yMax);
 
-            SetPart(0, full.xMin, hy1, full.xMax, full.yMax); // above
-            SetPart(1, full.xMin, full.yMin, full.xMax, hy0); // below
-            SetPart(2, full.xMin, hy0, hx0, hy1);             // left of the hole
-            SetPart(3, hx1, hy0, full.xMax, hy1);             // right of the hole
+            SetPart(0, full.xMin, hy1, full.xMax, full.yMax); 
+            SetPart(1, full.xMin, full.yMin, full.xMax, hy0); 
+            SetPart(2, full.xMin, hy0, hx0, hy1);             
+            SetPart(3, hx1, hy0, full.xMax, hy1);             
         }
 
         private void SetPart(int index, float xMin, float yMin, float xMax, float yMax)
@@ -260,7 +244,6 @@ namespace TR.Tutorial
             rt.anchoredPosition = new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f);
         }
 
-        // ---------- raycast filtering ----------
 
         public bool IsRaycastLocationValid(Vector2 sp, Camera eventCamera)
         {
