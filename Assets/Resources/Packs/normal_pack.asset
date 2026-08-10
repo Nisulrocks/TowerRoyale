@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   packId: normal_pack
   displayName: Normal Pack
-  cost: 1
+  cost: 25
   cardsPerPack: 5
   rarityWeights:
   - rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}
@@ -40,4 +40,5 @@ MonoBehaviour:
   sealCrackKey: pack_seal_crack
   openWhooshKey: pack_open_whoosh
   unlockArena: {fileID: 0}
+  unlockCost: 0
   shopOrder: 0

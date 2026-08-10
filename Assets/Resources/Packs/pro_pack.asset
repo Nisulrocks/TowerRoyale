@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   packId: pro_pack
   displayName: Pro Pack
-  cost: 1
+  cost: 75
   cardsPerPack: 5
   rarityWeights:
   - rarity: {fileID: 11400000, guid: cf8ce2b70f3b41a4aad9290b8c73c678, type: 2}

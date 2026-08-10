@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   packId: godly_pack
   displayName: Godly Pack
-  cost: 1
+  cost: 500
   cardsPerPack: 5
   rarityWeights:
   - rarity: {fileID: 11400000, guid: dc81e319aa7f1c442852f5e0b8c30168, type: 2}
