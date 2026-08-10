@@ -2246,6 +2246,7 @@ MonoBehaviour:
   castleLevelText: {fileID: 4383478405600588496}
   castleXPText: {fileID: 7109966092516441746}
   softCurrencyText: {fileID: 8628426183827267067}
+  softCurrencyIcon: {fileID: 569690789249619522}
   castleProgressSlider: {fileID: 1063234243915357030}
   castleXPGainText: {fileID: 5487238332394696972}
   castleXPGainDelay: 0.5

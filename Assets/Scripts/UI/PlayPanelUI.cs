@@ -11,6 +11,33 @@ namespace TR.UI
     
     public class PlayPanelUI : MonoBehaviour
     {
+
+        private static PlayPanelUI _instance;
+
+        public static RectTransform CoinCounterRect =>
+            _instance != null && _instance.softCurrencyText != null && _instance.softCurrencyText.isActiveAndEnabled
+                ? _instance.softCurrencyText.rectTransform
+                : null;
+
+        private static Sprite _cachedCoinIcon;
+
+        public static Sprite CoinIcon => _cachedCoinIcon;
+
+        private static int? _coinDisplayOverride;
+
+        public static void SetCoinDisplayOverride(int? value)
+        {
+            _coinDisplayOverride = value;
+            if (_instance != null) _instance.RefreshCoinText();
+        }
+
+        private void RefreshCoinText()
+        {
+            if (softCurrencyText == null) return;
+            int shown = _coinDisplayOverride ?? PlayerProfile.GetSoftCurrency();
+            softCurrencyText.text = $"Coins: {shown}";
+        }
+
         [Header("Texts")]
         [SerializeField] private TMP_Text accountNameText;
         [SerializeField] private TMP_Text trophiesText;
@@ -18,7 +45,8 @@ namespace TR.UI
         [SerializeField] private TMP_Text nextArenaText;
         [SerializeField] private TMP_Text castleLevelText;   
         [SerializeField] private TMP_Text castleXPText;      
-        [SerializeField] private TMP_Text softCurrencyText;  
+        [SerializeField] private TMP_Text softCurrencyText;
+        [SerializeField] private Image softCurrencyIcon;
         [Header("Castle Progress UI")]
         [SerializeField] private Slider castleProgressSlider;
 
@@ -56,6 +84,9 @@ namespace TR.UI
 
         private void OnEnable()
         {
+            _instance = this;
+            if (softCurrencyIcon != null && softCurrencyIcon.sprite != null)
+                _cachedCoinIcon = softCurrencyIcon.sprite;
             Refresh();
             PlayerProfile.OnSoftCurrencyChanged += HandleSoftCurrencyChanged;
             PlayerProfile.OnTrophiesChanged += HandleTrophiesChanged;
@@ -88,6 +119,7 @@ namespace TR.UI
 
         private void OnDisable()
         {
+            if (_instance == this) _instance = null;
             PlayerProfile.OnSoftCurrencyChanged -= HandleSoftCurrencyChanged;
             PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
             StopDeckFlash();
@@ -110,10 +142,7 @@ namespace TR.UI
 
         private void HandleSoftCurrencyChanged(int newBalance)
         {
-            if (softCurrencyText)
-            {
-                softCurrencyText.text = $"Coins: {newBalance}";
-            }
+            RefreshCoinText();
             UpdateBanGatingUI();
         }
 
@@ -139,8 +168,7 @@ namespace TR.UI
 
             if (trophiesText)
                 trophiesText.text = $"Trophies: {trophies}";
-            if (softCurrencyText)
-                softCurrencyText.text = $"Coins: {soft}";
+            RefreshCoinText();
 
             if (arenaNameText)
                 arenaNameText.text = currentArena != null ? $"Arena: {currentArena.DisplayName}" : "Arena: -";

@@ -54,11 +54,15 @@ namespace TR.UI.TrophyRoad
 
         private void OnClick()
         {
-            
+            // Read the balance either side of the grant so the reward animation knows how much to
+            // fly in, and can hold the counter at the old value until the coins land.
+            int before = PlayerProfile.GetSoftCurrency();
+
             var res = TrophyRoadService.Claim(_index);
             if (res.ok)
             {
                 RefreshState();
+                RewardClaimFX.Present(_milestone?.reward, before, PlayerProfile.GetSoftCurrency());
             }
             else
             {

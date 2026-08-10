@@ -37,6 +37,10 @@ namespace TR.UI.TrophyRoad
         private readonly List<TMPro.TMP_Text> _markerLabels = new();
         private TrophyRoadDefinition _road;
 
+        /// True while the Trophy Road is on screen. Reward coin animations wait on this so coins
+        /// never fly to a counter hidden behind this panel.
+        public static bool IsOpen { get; private set; }
+
         private void Awake()
         {
             if (root == null) root = gameObject;
@@ -52,6 +56,7 @@ namespace TR.UI.TrophyRoad
                 return;
             }
             if (root != null && !root.activeSelf) root.SetActive(true);
+            IsOpen = true;
             EnsureScrollBindings();
             BuildOrRefresh();
             AutoScrollToLatest();
@@ -60,6 +65,7 @@ namespace TR.UI.TrophyRoad
         public void Hide()
         {
             if (root != null && root.activeSelf) root.SetActive(false);
+            IsOpen = false;
         }
 
         public void ForceRefresh() => BuildOrRefresh();
@@ -433,6 +439,8 @@ namespace TR.UI.TrophyRoad
         private void OnDisable()
         {
             PlayerProfile.OnTrophiesChanged -= HandleTrophiesChanged;
+            // Covers the panel being switched off without Hide() being called.
+            IsOpen = false;
         }
 
         private void HandleTrophiesChanged(int newTrophies)
