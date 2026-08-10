@@ -67,7 +67,20 @@ namespace TR.Systems
         public List<TR.Systems.ShopService.CardPointsOffer> cardPointOffers = new();
         public int cardPointOffersDayKey = 0;
 
-        public List<string> unlockedPackIds = new(); 
+        public List<string> unlockedPackIds = new();
+
+        // Battle log. Newest first, capped by BattleLogService.MaxEntries — this blob is signed and
+        // uploaded on every save, so it cannot grow without bound.
+        public List<MatchRecord> matchLog = new();
+
+        // Lifetime totals are counted separately because the log above gets truncated.
+        public int lifetimeMatches = 0;
+        public int lifetimeWins = 0;
+        public int lifetimeLosses = 0;
+        public int lifetimeAbandons = 0;
+        public int bestTrophies = 0;
+        public int currentWinStreak = 0;
+        public int longestWinStreak = 0;
 
         public int GetPackCount(string packId)
         {

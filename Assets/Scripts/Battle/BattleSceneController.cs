@@ -192,6 +192,8 @@ namespace TR.Battle
             _wavesCleared = Mathf.Max(0, startWave);
             SetRoomWaveProperty(_wavesCleared);
             _ended = false;
+            _matchLogged = false;
+            _matchBegan = true;
             ClearWaveTracking();
             _totalWaves = _arena != null ? _arena.WaveCount : 10;
             if (resultsPanel) resultsPanel.SetActive(false);
@@ -306,6 +308,11 @@ namespace TR.Battle
             MarkRoomMatchEnded();
             OnMatchVictory?.Invoke();
             var rewards = ArenaService.AwardMatchCompletion(_arena, _arena != null ? _arena.WaveCount : _wavesCleared);
+            // A victory means every wave fell, but _wavesCleared is only incremented as each wave
+            // ends, so the final one is not counted yet — hence logs reading "Wave 4/5" on a win.
+            // The reward call above already treats a victory as the full count for the same reason.
+            RecordMatchToLog(TR.Systems.MatchOutcome.Victory, rewards.trophiesEarned,
+                             _arena != null ? _arena.WaveCount : _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
             {
@@ -331,6 +338,7 @@ namespace TR.Battle
             MarkRoomMatchEnded();
             OnMatchDefeat?.Invoke();
             var rewards = ArenaService.AwardMatchDefeat(_arena, _wavesCleared);
+            RecordMatchToLog(TR.Systems.MatchOutcome.Defeat, rewards.trophiesEarned, _wavesCleared);
             if (resultsPanel) resultsPanel.SetActive(false); 
             if (resultsText)
             {
@@ -865,12 +873,67 @@ namespace TR.Battle
         }
 
         
+        // Whether this match already produced a battle-log entry, and whether it ever actually
+        // started. _ended is deliberately NOT used for this: the normal single-player victory path
+        // never sets it, so leaving the results screen after a win looked like walking out of a
+        // live match and logged a bogus "Left" on top of the victory.
+        private bool _matchLogged;
+        private bool _matchBegan;
+
         public void OnClickReturnToLobby()
         {
-            
+            // Both the post-results exit and the pause menu's leave button come through here.
+            // Anything already logged its own outcome; anything that never started is not a match.
+            if (_matchBegan && !_matchLogged)
+                RecordMatchToLog(TR.Systems.MatchOutcome.Abandoned, 0, _wavesCleared);
+
             TR.Net.DuoRejoinService.ClearActiveMatch();
             MatchContext.Reset();
             _ = SceneFader.Instance.LoadSceneWithFade("Lobby");
+        }
+
+        private void RecordMatchToLog(TR.Systems.MatchOutcome outcome, int trophyDelta, int wavesCleared)
+        {
+            if (_matchLogged) return;
+            _matchLogged = true;
+
+            var mode = MatchContext.IsDuo ? TR.Systems.MatchMode.Duo : TR.Systems.MatchMode.Single;
+
+            string partner = string.Empty;
+            if (MatchContext.IsDuo)
+            {
+                var others = Photon.Pun.PhotonNetwork.PlayerListOthers;
+                if (others != null && others.Length > 0 && others[0] != null)
+                    partner = SanitizeForSave(others[0].NickName);
+            }
+
+            TR.Systems.BattleLogService.Record(
+                outcome,
+                mode,
+                _arena != null ? _arena.DisplayName : "Arena",
+                partner,
+                trophyDelta,
+                wavesCleared,
+                _arena != null ? _arena.WaveCount : _totalWaves);
+        }
+
+        // A partner's Photon nickname is arbitrary remote input, and it is about to be written into
+        // the HMAC-signed profile blob. Anything JsonUtility could round-trip imperfectly would make
+        // the save fail its own integrity check on the next load, which is treated as tampering and
+        // wipes the account. Keep it to plain printable ASCII, bounded.
+        private static string SanitizeForSave(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return string.Empty;
+
+            var sb = new System.Text.StringBuilder(raw.Length);
+            foreach (char c in raw)
+            {
+                if (c < 32 || c > 126) continue;
+                if (c == '"' || c == '\\') continue;
+                sb.Append(c);
+                if (sb.Length >= 24) break;
+            }
+            return sb.ToString();
         }
 
         
