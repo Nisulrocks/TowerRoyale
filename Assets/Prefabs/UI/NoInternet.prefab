@@ -242,7 +242,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -517761917504111046, guid: cb6c3b7768750164790eab971959da07, type: 3}
+  m_Sprite: {fileID: -697591595611531157, guid: c94cc9f2e5878c5478ac5831c3f36dab, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -319,7 +319,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 4444425708672713351, guid: 628495d3b40f28548bcf1635d96e813b, type: 3}
+  m_Sprite: {fileID: -697591595611531157, guid: b3ee7f3a5cbb44044b8cefbe0147a979, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -444,14 +444,14 @@ MonoBehaviour:
     again.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: c8a33f10c6e9a1b408bf85594ec651a9, type: 2}
+  m_sharedMaterial: {fileID: -2945076405667729338, guid: a2d33775aed83724cbfd1338c9c31c4c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -580,7 +580,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 4444425708672713351, guid: 628495d3b40f28548bcf1635d96e813b, type: 3}
+  m_Sprite: {fileID: -697591595611531157, guid: b3ee7f3a5cbb44044b8cefbe0147a979, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
