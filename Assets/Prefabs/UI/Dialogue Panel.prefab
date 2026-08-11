@@ -254,6 +254,10 @@ MonoBehaviour:
     anchorMax: {x: 0, y: 0.5}
     pivot: {x: 0, y: 0.5}
     anchoredPosition: {x: 40, y: 0}
+  popupSfxKey: ui_dialogue_popup
+  typingSfxKey: ui_dialogue_typing
+  clickToCompleteTyping: 1
+  completeInputGrace: 0.15
   popDuration: 0.25
   popScaleCurve:
     serializedVersion: 2
