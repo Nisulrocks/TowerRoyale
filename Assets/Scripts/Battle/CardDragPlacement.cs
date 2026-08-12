@@ -224,8 +224,6 @@ namespace TR.Battle
                 ringGO.transform.SetParent(_ghost.transform, false);
                 ringGO.transform.localPosition = Vector3.zero;
                 _rangeRing = ringGO.AddComponent<RangeRing>();
-                _rangeRing.Thickness = 0.05f;
-                _rangeRing.Segments = 48;
             }
             _rangeRing.Radius = _cachedRange;
             _rangeRing.Color = new Color(0.2f, 1f, 0.2f, 0.6f);

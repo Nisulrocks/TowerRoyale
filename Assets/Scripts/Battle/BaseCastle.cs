@@ -38,6 +38,14 @@ namespace TR.Battle
 
         [SerializeField] private string deathSfxKey = "castle_death";
 
+        [Header("Siege Ring")]
+
+        [SerializeField] private float siegeRadius = 1.25f;
+
+        [SerializeField] private float siegeRingSpacing = 0.8f;
+
+        [SerializeField] private float siegeSlotSpacing = 0.8f;
+
         [Header("Runtime")]
         [SerializeField] private int maxHealth;
         [SerializeField] private int currentHealth;
@@ -49,7 +57,12 @@ namespace TR.Battle
 
         private void Start()
         {
-            
+
+
+            CastleSiegeRing.BaseRadius = Mathf.Max(0.1f, siegeRadius);
+            CastleSiegeRing.RingSpacing = Mathf.Max(0.1f, siegeRingSpacing);
+            CastleSiegeRing.SlotArc = Mathf.Max(0.1f, siegeSlotSpacing);
+
             maxHealth = DuoRuntime.IsDuo ? ComputeDuoAveragedMaxHealth() : PlayerProfile.GetCastleMaxHealth();
             currentHealth = maxHealth;
             

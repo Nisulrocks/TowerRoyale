@@ -143,28 +143,28 @@ namespace TR.Audio
             return false;
         }
 
-        public void Play(string key, float volumeScale = 1f)
+        public AudioSource Play(string key, float volumeScale = 1f)
         {
-            if (library == null || string.IsNullOrEmpty(key)) return;
+            if (library == null || string.IsNullOrEmpty(key)) return null;
             var e = library.Get(key);
-            if (e == null) return;
-            
+            if (e == null) return null;
+
             float now = Time.unscaledTime;
             if (e.cooldown > 0f && _lastPlay.TryGetValue(key, out var last) && (now - last) < e.cooldown)
             {
-                return;
+                return null;
             }
-            
+
             if (e.maxConcurrent > 0)
             {
                 _concurrent.TryGetValue(key, out var cur);
-                if (cur >= e.maxConcurrent) return;
+                if (cur >= e.maxConcurrent) return null;
             }
             var clip = library.GetRandomClip(e);
-            if (clip == null) return;
+            if (clip == null) return null;
             var src = GetFreeSource();
-            if (src == null) return;
-            
+            if (src == null) return null;
+
             if (e.maxConcurrent > 0)
             {
                 _concurrent[key] = (_concurrent.TryGetValue(key, out var c) ? c : 0) + 1;
@@ -181,6 +181,38 @@ namespace TR.Audio
             if (e.maxConcurrent > 0)
             {
                 StartCoroutine(ReleaseAfter(src, key));
+            }
+
+            return src;
+        }
+
+
+        public void FadeOutOneShot(AudioSource src, AudioClip expected, float fadeSeconds = 0.25f)
+        {
+            if (src == null || !src.isPlaying) return;
+
+            if (expected != null && src.clip != expected) return;
+            if (IsLoopSource(src)) return;
+            StartCoroutine(FadeOutOneShotRoutine(src, expected, Mathf.Max(0f, fadeSeconds)));
+        }
+
+        private System.Collections.IEnumerator FadeOutOneShotRoutine(AudioSource src, AudioClip expected, float duration)
+        {
+            float start = src.volume;
+            float t = 0f;
+            while (t < 1f)
+            {
+                if (src == null || !src.isPlaying) yield break;
+
+                if (expected != null && src.clip != expected) yield break;
+                t += Time.unscaledDeltaTime / Mathf.Max(0.01f, duration);
+                src.volume = Mathf.Lerp(start, 0f, t);
+                yield return null;
+            }
+            if (src != null && (expected == null || src.clip == expected))
+            {
+                src.Stop();
+                src.volume = 0f;
             }
         }
 

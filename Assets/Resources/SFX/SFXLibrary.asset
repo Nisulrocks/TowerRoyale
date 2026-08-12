@@ -69,6 +69,22 @@ MonoBehaviour:
     pitchMax: 1
     cooldown: 0
     maxConcurrent: 0
+  - key: game_defeat
+    clips:
+    - {fileID: 8300000, guid: 12eeb467463a2ad4ea4b098f59c887f6, type: 3}
+    volume: 0.9
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 1
+  - key: game_victory
+    clips:
+    - {fileID: 8300000, guid: a717d3ab51e361f45b72f6fa0810b621, type: 3}
+    volume: 0.9
+    pitchMin: 1
+    pitchMax: 1
+    cooldown: 0
+    maxConcurrent: 1
   - key: insufficient_funds
     clips:
     - {fileID: 8300000, guid: 98886cb16acbed04d938919decb33219, type: 3}

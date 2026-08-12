@@ -417,6 +417,12 @@ namespace TR.Battle
         private void OnDisable()
         {
             s_all.Remove(this);
+
+
+            CastleSiegeRing.Release(this);
+            _siegeSlotClaimed = false;
+            _siegeSlot = default;
+
             if (_healthBarInstance != null)
             {
                 Destroy(_healthBarInstance);
@@ -728,6 +734,11 @@ namespace TR.Battle
             var wps = path.Waypoints;
             if (waypointIndex >= wps.Length)
             {
+
+
+
+                if (_castleTr != null && TickSiegeApproach(_castleTr.position, baseDirX))
+                    return;
 
                 SetAnimRunning(false);
                 SetAnimAttacking(true);
@@ -1384,6 +1395,83 @@ namespace TR.Battle
         {
             if (_arena != null && definition != null) return _arena.GetTier(definition);
             return ArenaDefinition.EnemyTier.Medium;
+        }
+
+        [Header("Siege Ring")]
+        [SerializeField] private bool useSiegeRing = true;
+        [SerializeField] private float siegeArriveThreshold = 0.06f;
+        private CastleSiegeRing.Slot _siegeSlot;
+        private bool _siegeSlotClaimed;
+
+
+
+
+
+
+
+
+
+
+        private bool TickSiegeApproach(Vector3 castle, float baseDirX)
+        {
+            if (!useSiegeRing) return false;
+
+            if (!_siegeSlotClaimed)
+            {
+                _siegeSlot = CastleSiegeRing.Claim(this, castle);
+                _siegeSlotClaimed = true;
+            }
+            if (!_siegeSlot.valid) return false;
+
+            Vector3 pos = transform.position;
+            Vector3 slotPos = CastleSiegeRing.SlotPosition(castle, _siegeSlot);
+
+            if ((slotPos - pos).sqrMagnitude <= siegeArriveThreshold * siegeArriveThreshold)
+            {
+                transform.position = slotPos;
+                return false;
+            }
+
+            float speed = GetEffectiveMoveSpeed();
+            float step = speed * Time.deltaTime;
+
+            Vector2 offset = new Vector2(pos.x - castle.x, pos.y - castle.y);
+            float curRadius = offset.magnitude;
+            float targetRadius = CastleSiegeRing.RadiusOfRing(_siegeSlot.ring);
+            float targetAngle = CastleSiegeRing.AngleOfSlot(_siegeSlot.ring, _siegeSlot.index);
+            float curAngle = curRadius > 1e-4f ? Mathf.Atan2(offset.y, offset.x) : targetAngle;
+
+
+
+
+            float newRadius = Mathf.MoveTowards(curRadius, targetRadius, step);
+
+
+
+
+            float angularStep = step / Mathf.Max(0.2f, curRadius);
+            float delta = Mathf.DeltaAngle(curAngle * Mathf.Rad2Deg, targetAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
+            float newAngle = curAngle + Mathf.Clamp(delta, -angularStep, angularStep);
+
+            Vector3 next = castle + new Vector3(Mathf.Cos(newAngle) * newRadius, Mathf.Sin(newAngle) * newRadius, 0f);
+            Vector3 moveDir = next - pos;
+            transform.position = next;
+
+            SetAnimRunning(true);
+            SetAnimAttacking(false);
+            SetAnimSpeed(speed);
+
+            if (moveDir.sqrMagnitude > 1e-8f)
+            {
+                _desiredLookDirection = new Vector2(moveDir.x, moveDir.y).normalized;
+                if (!rotateToMovement)
+                {
+                    if (Mathf.Abs(moveDir.x) > 1e-4f) UpdateFacing(Mathf.Sign(moveDir.x));
+                    else if (baseDirX != 0f) UpdateFacing(baseDirX);
+                }
+            }
+
+            return true;
         }
 
         private void TickAttackBase()

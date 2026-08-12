@@ -484,7 +484,7 @@ namespace TR.UI
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = rarity.Color;
             tmp.raycastTarget = false;
-            tmp.enableWordWrapping = false;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
             return cg;
         }
 

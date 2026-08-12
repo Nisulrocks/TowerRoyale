@@ -256,7 +256,7 @@ public int maxPoolSize = 0;
 
                 var rigidbodies2D = root.GetComponentsInChildren<Rigidbody2D>(true);
                 for (int i = 0; i < rigidbodies2D.Length; i++)
-                    if (rigidbodies2D[i] != null) rigidbodies2D[i].isKinematic = true;
+                    if (rigidbodies2D[i] != null) rigidbodies2D[i].bodyType = RigidbodyType2D.Kinematic;
             }
 
             var systems = root.GetComponentsInChildren<ParticleSystem>(true);

@@ -43,9 +43,19 @@ public string sceneName;
         private string _currentScene;
         private SceneTrack _currentTrack;
 
+
+
+        private float _baseVolume;
+        private float _duck = 1f;
+        private Coroutine _duckCo;
+
         
         private const string PREF_MUSIC_VOL = "tr_music_volume";
         private const string PREF_MUSIC_MUTE = "tr_music_mute";
+
+
+
+        public static BGMManager Active => _instance;
 
         public static BGMManager Instance
         {
@@ -157,9 +167,10 @@ public string sceneName;
             }
             if (_active.clip == clip)
             {
-                
+
                 _active.loop = loop;
-                _active.volume = volume * masterVolume;
+                _baseVolume = Mathf.Clamp01(volume * masterVolume);
+                ApplyActiveVolume();
                 if (!_active.isPlaying) _active.Play();
                 return;
             }
@@ -186,9 +197,73 @@ public string sceneName;
         public void SetMasterVolume(float volume)
         {
             masterVolume = Mathf.Clamp01(volume);
-            float target = masterVolume * GetCurrentTrackVolume();
-            if (_active != null) _active.volume = target;
-            
+            _baseVolume = masterVolume * GetCurrentTrackVolume();
+            ApplyActiveVolume();
+        }
+
+
+
+
+
+        public void DuckFor(float seconds, float level = 0.25f, float downSeconds = 0.25f, float upSeconds = 0.8f)
+        {
+            if (_duckCo != null) StopCoroutine(_duckCo);
+            level = Mathf.Clamp01(level);
+            downSeconds = Mathf.Max(0f, downSeconds);
+            float hold = Mathf.Max(0f, seconds - downSeconds);
+            _duckCo = StartCoroutine(DuckRoutine(level, hold, downSeconds, Mathf.Max(0f, upSeconds)));
+        }
+
+
+
+        public void ClearDuck(float upSeconds = 0.4f)
+        {
+            if (_duckCo != null) StopCoroutine(_duckCo);
+            _duckCo = StartCoroutine(DuckRoutine(_duck, 0f, 0f, Mathf.Max(0f, upSeconds)));
+        }
+
+
+
+
+        private void ApplyActiveVolume()
+        {
+            if (_fadeCo != null) return;
+            if (_active != null) _active.volume = Mathf.Clamp01(_baseVolume * _duck);
+        }
+
+        private IEnumerator DuckRoutine(float level, float hold, float down, float up)
+        {
+            float from = _duck;
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / Mathf.Max(0.01f, down);
+                _duck = Mathf.Lerp(from, level, Mathf.Clamp01(t));
+                ApplyActiveVolume();
+                yield return null;
+            }
+            _duck = level;
+            ApplyActiveVolume();
+
+            float h = 0f;
+            while (h < hold)
+            {
+                h += Time.unscaledDeltaTime;
+                ApplyActiveVolume();
+                yield return null;
+            }
+
+            t = 0f;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / Mathf.Max(0.01f, up);
+                _duck = Mathf.Lerp(level, 1f, Mathf.Clamp01(t));
+                ApplyActiveVolume();
+                yield return null;
+            }
+            _duck = 1f;
+            ApplyActiveVolume();
+            _duckCo = null;
         }
 
         public float GetCurrentTrackVolume()
@@ -241,13 +316,14 @@ public string sceneName;
             float t = 0f;
             if (duration <= 0f)
             {
-                
+
                 _active.Stop();
                 _active.clip = null;
-                
+
                 var tmp = _active; _active = _idle; _idle = tmp;
-                _active.volume = targetVolume;
+                _baseVolume = targetVolume;
                 _fadeCo = null;
+                ApplyActiveVolume();
                 yield break;
             }
             while (t < 1f)
@@ -255,16 +331,21 @@ public string sceneName;
                 t += Time.deltaTime / Mathf.Max(0.01f, duration);
                 float k = Mathf.Clamp01(t);
                 _active.volume = Mathf.Lerp(startActive, 0f, k);
-                _idle.volume = Mathf.Lerp(0f, targetVolume, k);
+
+
+
+                _idle.volume = Mathf.Lerp(0f, targetVolume * _duck, k);
                 yield return null;
             }
-            
+
             _active.Stop();
             _active.clip = null;
             var swap = _active; _active = _idle; _idle = swap;
-            
+
             _idle.volume = 0f;
+            _baseVolume = targetVolume;
             _fadeCo = null;
+            ApplyActiveVolume();
         }
     }
 }

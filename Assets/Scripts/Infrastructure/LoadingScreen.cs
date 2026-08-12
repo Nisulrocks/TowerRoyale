@@ -311,11 +311,11 @@ namespace TR.Infrastructure
             if (statusText != null)
             {
                 if (progressText != null) progressText.text = pct + "%";
-                statusText.text = pct + "%  ·  " + label;
+                statusText.text = pct + "%  |  " + label;
             }
             else if (progressText != null)
             {
-                progressText.text = pct + "%  ·  " + label;
+                progressText.text = pct + "%  |  " + label;
             }
         }
 
@@ -531,13 +531,13 @@ namespace TR.Infrastructure
             }
 
             bool loginResolved = false;
-            bool signedIn = false;
-            System.Action<string, string> onSignIn = (uid, name) => signedIn = true;
+
+
+
             System.Action onLoaded = () => loginResolved = true;
             System.Action onGuest = () => loginResolved = true;
             System.Action<string> onProfileFailed = (error) => loginResolved = true;
 
-            FirebaseService.OnSignInComplete += onSignIn;
             PlayerProfile.OnCloudProfileLoaded += onLoaded;
             CloudProfileService.OnProfileLoadFailed += onProfileFailed;
 
@@ -554,7 +554,6 @@ namespace TR.Infrastructure
             }
             finally
             {
-                FirebaseService.OnSignInComplete -= onSignIn;
                 PlayerProfile.OnCloudProfileLoaded -= onLoaded;
                 CloudProfileService.OnProfileLoadFailed -= onProfileFailed;
                 if (loginUI != null)

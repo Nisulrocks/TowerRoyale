@@ -90,8 +90,7 @@ namespace TR.Battle
         private static Material s_baseOutlineMaterial;
         private Material _outlineMaterialInstance;
         private Material[] _cachedRendererMaterials;
-        private bool _outlineActive;
-        
+
         private float _stunTimeFromEnemy;
 
         
@@ -595,8 +594,6 @@ namespace TR.Battle
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = Vector3.zero;
                 _rangeRing = go.AddComponent<RangeRing>();
-                _rangeRing.Segments = 48;
-                _rangeRing.Thickness = 0.05f;
                 _rangeRing.Color = new Color(0.2f, 0.8f, 1f, 0.6f);
             }
             float ringRadius = GetEffectiveRange();
@@ -641,7 +638,6 @@ namespace TR.Battle
                         _cachedRendererMaterials[i] = sr.sharedMaterial;
                     sr.sharedMaterial = _outlineMaterialInstance;
                 }
-                _outlineActive = true;
             }
             else
             {
@@ -652,7 +648,6 @@ namespace TR.Battle
                     if (_cachedRendererMaterials[i] != null)
                         sr.sharedMaterial = _cachedRendererMaterials[i];
                 }
-                _outlineActive = false;
             }
         }
 

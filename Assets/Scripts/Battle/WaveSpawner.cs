@@ -19,24 +19,34 @@ namespace TR.Battle
         private readonly Dictionary<Transform, ParticleSystem> _activePortals = new();
 
         private ArenaDefinition _arena;
-        
-        private int _plannedThisWave;
-        private int _spawnedThisWave;
-        private bool _spawning;
+
+
+
+        private readonly Dictionary<int, int> _remainingToSpawn = new();
 
         public int CurrentWaveNumber { get; private set; }
-        public bool IsSpawning => _spawning;
-        public bool IsWaveSpawning(int waveNumber) => _spawning && CurrentWaveNumber == waveNumber;
+        public bool IsSpawning => _remainingToSpawn.Count > 0;
+        public bool IsWaveSpawning(int waveNumber) => _remainingToSpawn.ContainsKey(waveNumber);
 
         public int GetPendingSpawns()
         {
-            if (!_spawning) return 0;
-            return Mathf.Max(0, _plannedThisWave - _spawnedThisWave);
+            int total = 0;
+            foreach (var kv in _remainingToSpawn) total += Mathf.Max(0, kv.Value);
+            return total;
         }
 
         public void Configure(ArenaDefinition arena)
         {
             _arena = arena;
+        }
+
+
+
+        public void ResetSpawnTracking()
+        {
+            StopAllCoroutines();
+            _remainingToSpawn.Clear();
+            CloseAllPortalsLocal();
         }
 
         public void CloseAllPortals()
@@ -97,29 +107,31 @@ namespace TR.Battle
             if (_arena == null)
             {
                 Debug.LogWarning("[WaveSpawner] Arena not configured; call Configure before spawning.");
+                FinishWave(waveNumber);
                 return;
             }
-            
+
             var any = _arena.Enemies;
             if (any == null || any.Length == 0)
             {
                 Debug.LogWarning($"[WaveSpawner] Arena '{_arena.DisplayName}' has no enemies assigned.");
+                FinishWave(waveNumber);
                 return;
             }
             CurrentWaveNumber = waveNumber;
             _arena.GetEnemyCountRangeForWave(waveNumber, out int min, out int max);
             int count = Random.Range(min, max + 1);
 
-            
+
             bool spawnBoss = _arena.ShouldSpawnBoss(waveNumber, out string warn);
             if (!string.IsNullOrEmpty(warn)) Debug.LogWarning($"[WaveSpawner] {warn}");
             EnemyDefinition boss = spawnBoss ? _arena.BossEnemy : null;
 
-            
-            _plannedThisWave = count + (boss != null ? 1 : 0);
-            _spawnedThisWave = 0;
-            _spawning = true;
-            StartCoroutine(SpawnWaveRoutine(waveNumber, count, boss));
+
+
+            int regular = boss != null ? Mathf.Max(0, count - 1) : count;
+            _remainingToSpawn[waveNumber] = regular + (boss != null ? 1 : 0);
+            StartCoroutine(SpawnWaveRoutine(waveNumber, regular, boss));
         }
 
         private IEnumerator SpawnWaveRoutine(int waveNumber, int count, EnemyDefinition boss)
@@ -127,9 +139,10 @@ namespace TR.Battle
             if (spawnPoints == null || spawnPoints.Length == 0)
             {
                 Debug.LogWarning("[WaveSpawner] No spawn points assigned.");
+                FinishWave(waveNumber);
                 yield break;
             }
-            
+
             OpenSpawnPortals();
             
             
@@ -142,9 +155,8 @@ namespace TR.Battle
                 
                 var bossDef = ResolveDuoSpawnable(boss);
                 if (bossDef != null) SpawnEnemyScaled(bossDef, sp, hMul * coop, dMul * coop, sMul, waveNumber);
-                _spawnedThisWave++;
-                
-                count = Mathf.Max(0, count - 1);
+                MarkSpawned(waveNumber);
+
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
 
@@ -152,15 +164,33 @@ namespace TR.Battle
             {
                 var def = ResolveDuoSpawnable(GetWeightedEnemyForWave(waveNumber));
                 var sp = GetSpawnPoint(i % spawnPoints.Length);
-                
+
                 if (def != null) SpawnEnemyScaled(def, sp, coop, coop, 1f, waveNumber);
-                _spawnedThisWave++;
+                MarkSpawned(waveNumber);
                 yield return new WaitForSeconds(Mathf.Max(0f, spawnInterval));
             }
-            
-            CloseAllPortals();
+
+
+
+            if (_remainingToSpawn.Count <= 1) CloseAllPortals();
             Debug.Log($"[WaveSpawner] Spawned wave {waveNumber} with {count} enemies (interval {spawnInterval:F2}s).");
-            _spawning = false;
+            FinishWave(waveNumber);
+        }
+
+
+
+        private void MarkSpawned(int waveNumber)
+        {
+            if (_remainingToSpawn.TryGetValue(waveNumber, out int left))
+                _remainingToSpawn[waveNumber] = Mathf.Max(0, left - 1);
+        }
+
+
+
+
+        private void FinishWave(int waveNumber)
+        {
+            _remainingToSpawn.Remove(waveNumber);
             BattleSceneController.Instance?.OnWaveSpawnComplete(waveNumber);
         }
 

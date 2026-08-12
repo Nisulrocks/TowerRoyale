@@ -70,6 +70,11 @@ namespace TR.Battle
         private void Awake()
         {
             Instance = this;
+
+
+
+
+            RangeRing.Warm();
         }
 
         private static void LeaveMatchRoomIfNeeded()
@@ -247,7 +252,7 @@ namespace TR.Battle
                     if (startSkipButton != null) startSkipButton.gameObject.SetActive(false);
                     
                     BroadcastWaveState(i + 1, total, 0f, TR.Net.DuoBattleCoordinator.PHASE_FINAL, false);
-                    yield return StartCoroutine(WaitForAllEnemiesCleared());
+                    yield return StartCoroutine(WaitForAllEnemiesCleared(i + 1));
                 }
             }
 
@@ -327,8 +332,9 @@ namespace TR.Battle
                 string trophyLine = rewards.trophiesCapped && rewards.trophiesEarned <= 0
                     ? $"Trophies: Maxed (Total {rewards.totalTrophiesAfter})"
                     : $"Trophies: +{rewards.trophiesEarned} (Total {rewards.totalTrophiesAfter})";
+                // No "Victory!" here any more — MatchResultBannerFX owns the outcome. This panel is
+                // just the breakdown.
                 resultsText.text =
-                    $"Victory!\n" +
                     trophyLine + "\n" +
                     $"Money: +{rewards.moneyEarned}\n" +
                     $"Castle XP: +{rewards.castleXPEarned}\n" +
@@ -336,7 +342,8 @@ namespace TR.Battle
                         ? $"Unlocked: {rewards.arenaAfter.DisplayName}!"
                         : "");
             }
-            StartCoroutine(FadeInResultsPanelSimple());
+
+            TR.UI.MatchResultBannerFX.Show(true, () => StartCoroutine(FadeInResultsPanelSimple()));
         }
 
         private void ShowResultsDefeat()
@@ -363,11 +370,11 @@ namespace TR.Battle
                         : $"Trophies: 0 (Total {rewards.totalTrophiesAfter})";
                 }
                 resultsText.text =
-                    $"Defeat\n" +
                     trophyLine + "\n" +
                     $"Castle XP: +{rewards.castleXPEarned}";
             }
-            StartCoroutine(FadeInResultsPanelSimple());
+
+            TR.UI.MatchResultBannerFX.Show(false, () => StartCoroutine(FadeInResultsPanelSimple()));
         }
 
         private void MarkRoomMatchEnded()
@@ -893,6 +900,7 @@ namespace TR.Battle
             TR.Net.DuoRejoinService.ClearActiveMatch();
             LeaveMatchRoomIfNeeded();
             TR.UI.BattleToast.ClearAll();
+            TR.UI.MatchResultBannerFX.Dismiss();
             MatchContext.Reset();
 
             if (Instance == this) Instance = null;
@@ -981,14 +989,17 @@ namespace TR.Battle
             }
         }
 
-        private IEnumerator WaitForAllEnemiesCleared()
+        private IEnumerator WaitForAllEnemiesCleared(int wave)
         {
-            
+
             while (true)
             {
+
+
+                bool spawnDone = waveSpawner == null || _waveSpawnDone.Contains(wave);
                 int active = EnemyBase2D.All != null ? EnemyBase2D.All.Count : 0;
                 int pending = waveSpawner != null ? waveSpawner.GetPendingSpawns() : 0;
-                if (active <= 0 && pending <= 0) break;
+                if (spawnDone && active <= 0 && pending <= 0) break;
                 UpdateEnemiesRemainingText();
                 yield return null;
             }
@@ -1130,7 +1141,7 @@ namespace TR.Battle
             cg.alpha = 0f;
             resultsPanel.SetActive(true);
             float t = 0f;
-            const float dur = 2.0f;
+            const float dur = 0.7f;
             while (t < 1f)
             {
                 t += Time.unscaledDeltaTime / Mathf.Max(0.01f, dur);
@@ -1149,6 +1160,10 @@ namespace TR.Battle
             _waveKillMoney.Clear();
             _waveSpawnDone.Clear();
             _wavePaid.Clear();
+
+
+            if (waveSpawner != null) waveSpawner.ResetSpawnTracking();
+            CastleSiegeRing.Reset();
         }
 
         public void RegisterWaveEnemy(int wave)
